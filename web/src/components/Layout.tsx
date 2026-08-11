@@ -7,19 +7,28 @@ export default function Layout() {
 
   return (
     <div className="app-shell">
-      <header className="app-nav">
-        <NavLink to="/settings/profile">Profile</NavLink>
-        <NavLink to="/settings/system">System</NavLink>
-        <NavLink to="/weight-log">Weight log</NavLink>
-        <span className="app-nav-spacer" />
-        <span className="app-nav-user">{user?.email}</span>
-        <button type="button" onClick={() => signOut()}>
+      <header className="app-header">
+        <span className="app-header-user">{user?.email}</span>
+        <button type="button" className="app-header-signout" onClick={() => signOut()}>
           ออกจากระบบ
         </button>
       </header>
+
       <div className="app-content">
         <Outlet />
       </div>
+
+      <nav className="app-tabbar">
+        <NavLink to="/settings/profile" className={({ isActive }) => (isActive ? "active" : "")}>
+          Profile
+        </NavLink>
+        <NavLink to="/settings/system" className={({ isActive }) => (isActive ? "active" : "")}>
+          System
+        </NavLink>
+        <NavLink to="/weight-log" className={({ isActive }) => (isActive ? "active" : "")}>
+          Weight
+        </NavLink>
+      </nav>
     </div>
   );
 }

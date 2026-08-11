@@ -1,6 +1,13 @@
 -- Vmacro schema v1 (P0)
--- Ref: docs/PROJECT_BIBLE.md §4 Data Model, docs/REQUIREMENTS.md FR-AUTH-1
+-- Ref: docs/PROJECT_BIBLE.md §4 Data Model + D-011, docs/REQUIREMENTS.md FR-AUTH-1 / FR-FOOD-2/3
 -- Run this whole file once in the Supabase SQL Editor.
+--
+-- `nutrients` jsonb (D-011): full nutrition panel beyond kcal/protein/carbs/fat,
+-- stored only as much as the source provides. Suggested (not enforced) keys:
+--   saturated_fat_g, trans_fat_g, polyunsaturated_fat_g, monounsaturated_fat_g,
+--   cholesterol_mg, sodium_mg, fiber_g, sugar_g,
+--   vitamins: { vitamin_a_mcg, vitamin_c_mg, ... },
+--   minerals: { calcium_mg, iron_mg, potassium_mg, ... }
 
 -- ============================================================
 -- shared helper: auto-bump updated_at
@@ -68,9 +75,7 @@ create table public.custom_foods (
   protein_g numeric not null,
   carbs_g numeric not null,
   fat_g numeric not null,
-  fiber_g numeric,
-  sugar_g numeric,
-  sodium_mg numeric,
+  nutrients jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -93,9 +98,7 @@ create table public.dishes (
   protein_g numeric not null,
   carbs_g numeric not null,
   fat_g numeric not null,
-  fiber_g numeric,
-  sugar_g numeric,
-  sodium_mg numeric,
+  nutrients jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -108,6 +111,8 @@ create index dishes_creator_id_idx on public.dishes(creator_id);
 
 -- ingredient lines for a dish; either a custom_food or a FatSecret item
 -- (FatSecret items aren't stored locally, so they're referenced by id + a name snapshot)
+-- Snapshot values (kcal/protein/carbs/fat/nutrients) only change when the dish's
+-- creator explicitly recalculates (FR-FOOD-3 AC "Recalculate from source") — never automatically.
 create table public.dish_ingredients (
   id uuid primary key default gen_random_uuid(),
   dish_id uuid not null references public.dishes(id) on delete cascade,
@@ -121,6 +126,7 @@ create table public.dish_ingredients (
   protein_g numeric not null,
   carbs_g numeric not null,
   fat_g numeric not null,
+  nutrients jsonb not null default '{}'::jsonb,
   constraint dish_ingredients_source_ref check (
     (source = 'custom_food' and custom_food_id is not null and fatsecret_food_id is null)
     or (source = 'fatsecret' and fatsecret_food_id is not null and custom_food_id is null)
@@ -149,6 +155,7 @@ create table public.diary_entries (
   protein_g numeric not null,
   carbs_g numeric not null,
   fat_g numeric not null,
+  nutrients jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
 
@@ -173,7 +180,12 @@ create table public.meal_template_items (
   fatsecret_food_id text,
   fatsecret_food_name text,
   quantity numeric not null,
-  serving_size_g numeric
+  serving_size_g numeric,
+  kcal numeric not null,
+  protein_g numeric not null,
+  carbs_g numeric not null,
+  fat_g numeric not null,
+  nutrients jsonb not null default '{}'::jsonb
 );
 
 create index meal_template_items_template_id_idx on public.meal_template_items(template_id);

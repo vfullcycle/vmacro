@@ -1,4 +1,4 @@
-# PROJECT_BIBLE — Vmacro v1.1
+# PROJECT_BIBLE — Vmacro v1.2
 
 > Single source of truth ของโปรเจกต์ ถ้าไฟล์อื่นขัดกับไฟล์นี้ ให้ยึดไฟล์นี้แล้วแจ้งวีเพื่อ sync
 
@@ -60,10 +60,10 @@ Apple Health (iPhone/Watch)
 | Table | สาระสำคัญ |
 |---|---|
 | `profiles` | sex, birth_date, height, weight (log ล่าสุด), body_fat_pct (nullable), activity_level, goal (lose/maintain/gain), formula_choice |
-| `custom_foods` | อาหาร/วัตถุดิบที่ user สร้าง — **creator_id ผูกทุก record**, ค้นหาเจอได้ทุก user (D-002), แก้/ลบได้เฉพาะ creator |
-| `dishes` | จานประกอบจากหลาย ingredient (custom หรือ FatSecret snapshot) พร้อม serving แปลงหน่วย, รวม macro อัตโนมัติ |
-| `diary_entries` | บันทึกต่อมื้อ/วัน อ้าง food/dish + quantity, เก็บ macro snapshot ณ เวลาบันทึก (กัน food ต้นทางถูกแก้ทีหลัง) |
-| `meal_templates` | ชุดมื้อซ้ำ + favorites/recent สำหรับ FR-DIARY-3 |
+| `custom_foods` | อาหาร/วัตถุดิบที่ user สร้าง — **creator_id ผูกทุก record**, ค้นหาเจอได้ทุก user (D-002), แก้/ลบได้เฉพาะ creator — kcal/f/c/p เป็น typed column + `nutrients` jsonb เก็บ panel เต็ม (D-011) |
+| `dishes` (+ `dish_ingredients`) | จานประกอบจากหลาย ingredient (custom หรือ FatSecret snapshot) พร้อม serving แปลงหน่วย, รวม macro+nutrients อัตโนมัติ, snapshot ไม่เปลี่ยนตามต้นทางเว้นแต่ creator กด "Recalculate from source" (D-011, FR-FOOD-3) |
+| `diary_entries` | บันทึกต่อมื้อ/วัน อ้าง food/dish + quantity (serving count หรือกรัม, scale แบบ rule of three), เก็บ macro+nutrients snapshot ณ เวลาบันทึก (กัน food ต้นทางถูกแก้ทีหลัง) |
+| `meal_templates` (+ `meal_template_items`) | ชุดมื้อซ้ำ + favorites/recent สำหรับ FR-DIARY-3 — private ต่อ user (ไม่ shared แบบ custom_foods/dishes) |
 | `health_samples` | workout, HR, active energy ที่ ingest จาก Shortcut #2 (ผูก user, timestamp, source) |
 | `weight_logs` | ประวัติน้ำหนัก (แยกจาก profile เพื่อทำ trend) |
 
@@ -84,6 +84,7 @@ RLS หลัก: ข้อมูลส่วนตัว (diary, health, profil
 | D-008 | Frontend host บน GitHub Pages, repo public, secret ทั้งหมดอยู่ VPS env เท่านั้น | ตามความต้องการวี + zero hosting cost ฝั่ง client | 2026-08-11 |
 | D-009 | VPS ต้องมี domain + TLS (Let's Encrypt) ก่อนเชื่อมกับ PWA | GitHub Pages เป็น HTTPS — เรียก http:// ตรงจะโดน browser block (mixed content) | 2026-08-11 |
 | D-010 | Monorepo เดียวชื่อ `vmacro` (owner: vfullcycle) โครง `docs/ web/ server/ shortcuts/`, CLAUDE.md อยู่ root — git: trunk-based บน `main`, Conventional Commits อ้าง FR ID, tag semver ผูก phase gate (v0.1.0=P0 ... v1.0.0=P2) | Solo dev: repo เดียวลด overhead และ Claude Code เห็นภาพรวมจากที่เดียว, tag ผูก gate ทำให้ version สื่อความคืบหน้าจริง | 2026-08-11 |
+| D-011 | Nutrient storage: ทุกตาราง food/dish/snapshot (`custom_foods`, `dishes`, `dish_ingredients`, `diary_entries`, `meal_template_items`) เก็บ kcal/protein/carbs/fat เป็น typed column หลัก + คอลัมน์ `nutrients` jsonb เก็บ panel เต็มเท่าที่ต้นทางให้มา (sat/trans/poly/mono fat, cholesterol, sodium, fiber, sugar, vitamins, minerals) — snapshot copy jsonb ไปด้วยทุกจุด. Dish snapshot คงที่หลัง save เว้นแต่ creator สั่ง "Recalculate from source" เอง (manual only, ไม่มี auto-update). ปริมาณ (FR-FOOD-1/FR-DIARY-1) กรอกได้ทั้งจำนวน serving หรือน้ำหนักจริง (g) แล้ว scale ทุก nutrient ตามสัดส่วนจาก serving ต้นทาง (rule of three) | typed column ให้ query/sort เร็วสำหรับ 4 ตัวหลักที่ใช้บ่อย (TDEE/diary summary), jsonb กันต้องแก้ schema ทุกครั้งที่ต้องการ nutrient เพิ่ม + รองรับข้อมูลไม่ครบจาก FatSecret ได้โดยไม่ต้อง NULL เกลื่อน; recalculate แบบ manual กันจานที่คนอื่นใช้ diary แล้วเปลี่ยนค่าย้อนหลังโดยไม่ตั้งใจ | 2026-08-11 |
 
 ### Evidence notes (ไม่ใช่ decision ใหม่ — บันทึกผลทดสอบสนับสนุน decision ที่มีอยู่)
 
@@ -110,5 +111,6 @@ RLS หลัก: ข้อมูลส่วนตัว (diary, health, profil
 
 ## Changelog
 
+- v1.2 (2026-08-11): เพิ่ม D-011 (nutrient storage: typed columns + `nutrients` jsonb, manual recalculate-from-source, quantity scaling rule of three) ตามคำสั่งวีระหว่างทำ Supabase schema P0, อัปเดต §4 ให้ตรง REQUIREMENTS v1.1
 - v1.1 (2026-08-11): เพิ่ม D-010 (monorepo + git conventions), ยุติ §7 Naming, อัปเดต architecture ให้ระบุ URL จริง
 - v1.0 (2026-08-11): สร้างครั้งแรกหลัง freeze decisions D-001–D-009

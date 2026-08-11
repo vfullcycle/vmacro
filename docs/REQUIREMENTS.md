@@ -1,4 +1,4 @@
-# REQUIREMENTS — Vmacro (FROZEN v1.0, 2026-08-11)
+# REQUIREMENTS — Vmacro (FROZEN v1.1, 2026-08-11)
 
 > แก้ไขได้เฉพาะเมื่อวีสั่ง + bump version + บันทึก changelog ท้ายไฟล์
 > ทุก FR ระบุ phase ที่ implement ตาม SCOPE.md
@@ -37,21 +37,32 @@ body fat % (optional — จำเป็นเฉพาะเมื่อเล�
 ## FR-FOOD — Food Database & Search (P2)
 
 **FR-FOOD-1** ค้นหาอาหารจาก FatSecret API (ผ่าน VPS proxy) พร้อม autocomplete และแสดง fatsecret attribution ถาวรบนหน้า search
-*AC: เลือกผลลัพธ์แล้วเห็น f/c/p/kcal ต่อ serving และปรับ quantity/หน่วยได้*
+*AC: เลือกผลลัพธ์แล้วเห็น f/c/p/kcal ต่อ serving; ปรับปริมาณได้ 2 ทาง — (a) จำนวน serving (เช่น 1.5 serving) หรือ (b) น้ำหนักจริงเป็นกรัม —
+ระบบ scale ทุก nutrient (รวม nutrients panel เต็ม) ตามสัดส่วนจาก serving size ต้นทางเสมอ (rule of three)*
 
-**FR-FOOD-2** สร้าง custom food ได้เอง (ชื่อ, serving, f/c/p/kcal และ field เสริม fiber/sugar/sodium)
+**FR-FOOD-2** สร้าง custom food ได้เอง — ชื่อ, serving, kcal/protein/carb/fat เป็น typed field หลัก
++ nutrients panel เต็มเท่าที่มีข้อมูล (saturated/trans/poly/mono fat, cholesterol, sodium, fiber, sugar, vitamins, minerals)
 ทุก record ผูก creator — **user อื่นในระบบค้นหาเจอและใช้บันทึกได้ แต่แก้/ลบได้เฉพาะ creator**
 *AC: ผลค้นหารวม 2 แหล่ง (FatSecret + custom) แยก label ชัดเจน และแสดงชื่อ creator บน custom food*
 
 **FR-FOOD-3** Dish builder: ประกอบจานจากหลายวัตถุดิบ (custom หรือ FatSecret) ระบุปริมาณต่อวัตถุดิบ
-→ ระบบรวม macro อัตโนมัติ → save เป็นจานที่ค้นหา/บันทึกซ้ำได้เหมือน food ปกติ (แชร์ข้าม user แบบเดียวกับ FR-FOOD-2)
-*AC: แก้ปริมาณวัตถุดิบใน builder แล้วยอดรวมอัปเดตทันที; จานที่ save แล้วเก็บ snapshot ไม่เปลี่ยนตามวัตถุดิบต้นทาง*
+→ ระบบรวม macro อัตโนมัติ (รวม nutrients panel เต็ม) → save เป็นจานที่ค้นหา/บันทึกซ้ำได้เหมือน food ปกติ (แชร์ข้าม user แบบเดียวกับ FR-FOOD-2)
+*AC: แก้ปริมาณวัตถุดิบใน builder แล้วยอดรวมอัปเดตทันที; จานที่ save แล้วเก็บ snapshot ไม่เปลี่ยนตามวัตถุดิบต้นทาง
+เว้นแต่ creator กดปุ่ม "Recalculate from source" เพื่อดึงค่า macro/nutrients ปัจจุบันของแต่ละวัตถุดิบมาคำนวณ snapshot ใหม่ทั้งจาน
+(manual only — ไม่มี auto-update เมื่อวัตถุดิบต้นทางถูกแก้)*
+
+**FR-FOOD-4 (P2)** หน้ารายละเอียดอาหาร/จาน แสดง nutrition panel แบบ Nutrition Facts label (สไตล์ FDA)
+ครบตาม nutrients ที่มีข้อมูล (kcal, f/c/p, saturated/trans/poly/mono fat, cholesterol, sodium, fiber, sugar, vitamins, minerals)
+พร้อม fatsecret attribution เมื่อข้อมูลมาจาก FatSecret API
+*AC: เปิดจาก search result, custom food, หรือ dish ก็เข้าหน้านี้ได้; nutrient ที่ไม่มีข้อมูลจากต้นทางไม่แสดง (ไม่โชว์ 0 ปลอม);
+attribution แสดงเฉพาะเมื่อ source เป็น FatSecret*
 
 ## FR-DIARY — Daily Logging (P2)
 
 **FR-DIARY-1** บันทึกอาหารรายมื้อ (เช้า/กลางวัน/เย็น/ว่าง) ระบุ quantity — หน้าสรุปวันแสดงยอดรวม f/c/p/kcal
 เทียบ target พร้อม progress ต่อ macro
-*AC: เพิ่ม/แก้/ลบ entry แล้วยอดวันอัปเดตทันที; entry เก็บ macro snapshot ณ เวลาบันทึก*
+*AC: เพิ่ม/แก้/ลบ entry แล้วยอดวันอัปเดตทันที; ระบุ quantity ได้ 2 ทางเหมือน FR-FOOD-1 — จำนวน serving หรือน้ำหนักจริง (g) —
+scale nutrient ตามสัดส่วนจาก serving ต้นทาง (rule of three); entry เก็บ macro/nutrients snapshot (ค่าที่ scale แล้ว) ณ เวลาบันทึก*
 
 **FR-DIARY-2** Meal template: save ชุดอาหารทั้งมื้อไว้เรียกใช้ซ้ำได้ในคลิกเดียว
 *AC: apply template ลงมื้อใดก็ได้ของวันใดก็ได้*
@@ -93,4 +104,8 @@ RLS: diary/health/profile/weight เห็นเฉพาะเจ้าขอ�
 
 ## Changelog
 
+- v1.1 (2026-08-11): แก้ตามคำสั่งวี (session C1, ระหว่างทำ Supabase schema ของ P0) —
+  เพิ่ม FR-FOOD-4 (Nutrition Facts label page), อัปเดต FR-FOOD-2 ให้เก็บ nutrients panel เต็มไม่ใช่แค่ fiber/sugar/sodium,
+  อัปเดต FR-FOOD-3 AC เพิ่ม "Recalculate from source" (manual only), อัปเดต FR-FOOD-1/FR-DIARY-1 AC ให้ระบุ logic
+  scale ปริมาณแบบ rule of three ชัดเจน (serving count หรือกรัม) — ดู D-011 ใน PROJECT_BIBLE
 - v1.0 (2026-08-11): Freeze ครั้งแรก — FR-PROF, FR-CALC, FR-SET, FR-FOOD, FR-DIARY, FR-HLTH, FR-ANLT, FR-AUTH ตาม decisions D-001–D-009

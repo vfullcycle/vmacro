@@ -1,0 +1,37 @@
+.body-data-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.body-data-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.body-data-fields input,
+.body-data-fields select {
+  padding: 0.65rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px; /* prevents iOS Safari auto-zoom on focus */
+  min-height: 44px; /* Apple HIG minimum touch target */
+  box-sizing: border-box;
+}
+
+.body-data-fields .field-help {
+  font-size: 0.78rem;
+  color: var(--text);
+  font-weight: 400;
+}
+
+.body-data-fields .warning {
+  color: #b45309;
+  font-size: 0.875rem;
+  background: rgba(180, 83, 9, 0.1);
+  padding: 0.6rem;
+  border-radius: 8px;
+}

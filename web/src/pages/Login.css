@@ -40,3 +40,11 @@
   color: #dc2626;
   font-size: 0.875rem;
 }
+
+.auth-page .guest-link {
+  display: block;
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  color: var(--accent);
+  text-align: center;
+}

@@ -2,6 +2,7 @@ import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import { AuthProvider } from "./lib/auth-context";
+import Calculator from "./pages/Calculator";
 import HealthCheck from "./pages/HealthCheck";
 import Login from "./pages/Login";
 import SettingsProfile from "./pages/SettingsProfile";
@@ -14,6 +15,7 @@ function App() {
       <HashRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/calculator" element={<Calculator />} />
           <Route path="/debug/health" element={<HealthCheck />} />
           <Route
             element={

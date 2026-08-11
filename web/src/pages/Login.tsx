@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import "./Login.css";
 
@@ -45,6 +45,9 @@ export default function Login() {
           {submitting ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
         </button>
       </form>
+      <Link to="/calculator" className="guest-link">
+        ลองคำนวณ TDEE ดูก่อนโดยไม่ต้อง login
+      </Link>
     </main>
   );
 }

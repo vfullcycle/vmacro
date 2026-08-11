@@ -1,0 +1,28 @@
+.tdee-preview {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 10px;
+  background: var(--code-bg);
+}
+
+.tdee-preview h2 {
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+}
+
+.tdee-preview dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.4rem 1rem;
+  margin: 0;
+}
+
+.tdee-preview dt {
+  color: var(--text);
+  font-size: 0.875rem;
+}
+
+.tdee-preview dd {
+  margin: 0;
+  font-weight: 600;
+}

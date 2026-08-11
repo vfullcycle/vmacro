@@ -40,13 +40,12 @@ vmacro/
 
 ## สถานะปัจจุบัน
 
-- **Docs version:** v1.2 (2026-08-11)
-- **Phase ปัจจุบัน:** P0 (Infra Spike) — **จบแล้ว, tag `v0.1.0`** — ถัดไปคือ P1 (Profile & Engine)
-- **R-01 (FatSecret IP whitelist):** ปิดแล้ว 2026-08-11
-- **R-02 (domain + TLS):** ปิดแล้ว 2026-08-11 — `https://vmacro.persiq.net`, cert renewal ยืนยันด้วย `certbot renew --dry-run` แล้ว
-- **P0 gate:** ใช้ข้อยกเว้นตาม `docs/SCOPE.md` §Phase Gate Rule (P0 ไม่มี dogfood surface จริง) — ตี tag ทันทีหลัง risk ปิดครบ + พิสูจน์ residual risk ด้วย test แทนเวลา (token cache refresh, cert renewal dry-run)
+- **Docs version:** v1.3 (2026-08-11)
+- **Phase ปัจจุบัน:** P1 (Profile & Engine) — **จบแล้ว, tag `v0.2.0`** — ถัดไปคือ P2 (Food & Diary)
+- **P0:** จบแล้ว, tag `v0.1.0` — R-01/R-02 ปิด, ดูรายละเอียดใน PROJECT_BIBLE §Risks
+- **P1:** TDEE/macro engine (unit test 18 เคส), Supabase auth + routing, Settings/Profile (FR-PROF-1), Settings/System (FR-SET-1), weight log + กราฟ (FR-PROF-2), guest calculator `/calculator` (ไม่ต้อง login), mobile-first UI (iPhone 12 Pro Max+) — วี dogfood แล้ว ผ่านครบ ไม่มีปัญหา
+- **Backlog (R-07):** food search แบบไม่ต้อง login — ตัดสินใจตอนวางแผน P2 (ดู PROJECT_BIBLE §6)
 - **รู้ไว้:** พบ bug เดิมไม่เกี่ยวกับ Vmacro บน VPS 2 จุด — `persiq.net`/`ssdhr.persiq.net` certbot renewal พังอยู่ (แยกแก้ทีหลัง ไม่ block Vmacro)
-- **Session C1 ทำเสร็จ:** repo init, FatSecret OAuth2 proxy (`server/`), Supabase schema v1 + RLS + invite วีเป็น user แรก, PWA skeleton deploy GitHub Pages เรียก proxy สำเร็จ end-to-end, REQUIREMENTS bump เป็น v1.1 (nutrients jsonb, D-011)
 
 ## Six-Layer Funnel ที่ใช้สร้างชุดเอกสารนี้
 
@@ -61,5 +60,6 @@ Vision → Boundary → Requirement → Decision → Freeze → Working Rules
 
 ## Changelog
 
+- v1.3 (2026-08-11): P1 จบ — tag `v0.2.0`, อัปเดตสถานะ + backlog R-07
 - v1.1 (2026-08-11): ย้ายเข้าโครง monorepo — CLAUDE.md อยู่ root, docs อยู่ `docs/`, เพิ่มข้อมูล repo/URL
 - v1.0 (2026-08-11): สร้างครั้งแรก

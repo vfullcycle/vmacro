@@ -24,6 +24,7 @@ vmacro/
 │   └── REQUIREMENTS.md
 ├── web/                 ← PWA (React + TypeScript + Vite)
 ├── server/              ← VPS proxy (FatSecret OAuth2, Health ingest, LLM insight)
+├── supabase/            ← SQL migrations (schema + RLS) รันมือใน SQL Editor
 └── shortcuts/           ← Shortcut definitions + คู่มือติดตั้ง
 ```
 

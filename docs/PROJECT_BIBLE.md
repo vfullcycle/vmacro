@@ -1,4 +1,4 @@
-# PROJECT_BIBLE — Vmacro v1.2
+# PROJECT_BIBLE — Vmacro v1.3
 
 > Single source of truth ของโปรเจกต์ ถ้าไฟล์อื่นขัดกับไฟล์นี้ ให้ยึดไฟล์นี้แล้วแจ้งวีเพื่อ sync
 
@@ -100,6 +100,7 @@ RLS หลัก: ข้อมูลส่วนตัว (diary, health, profil
 | R-04 | Serving size ข้อมูล US (oz, cup) vs การใช้จริงของวี (กรัม) | UX บันทึกช้า | Unit conversion layer + default กรัมสำหรับ custom foods | เปิด |
 | R-05 | Repo public — ความเสี่ยง secret หลุด | สูงมาก | Secret hygiene ใน CLAUDE.md + `.env` อยู่ VPS เท่านั้น + `.gitignore` ตั้งแต่ commit แรก | ควบคุมแล้ว |
 | R-06 | attribution ของ fatsecret หายจาก UI โดยไม่ตั้งใจ (refactor) | ผิดเงื่อนไข tier | ใส่เป็น permanent component + ห้ามลบใน CLAUDE.md | ควบคุมแล้ว |
+| R-07 | (backlog, ตัดสินใจตอนเริ่ม P2) วีอยากค้นหา/ดู macro อาหารได้โดยไม่ต้อง login (ตอนนี้ FR-FOOD-1 ผูก auth ทั้งหมดเหมือน feature อื่น) — ตอน P1 เข้าใจผิดว่าหมายถึง TDEE calculator เลยทำ `/calculator` guest mode ไปก่อน (ยังใช้งานได้ แต่ไม่ตรงโจทย์นี้) | Friction สูงกว่าที่วีต้องการตอนค้นอาหารครั้งแรก | ตัดสินใจตอนวางแผน P2 ว่า food search จะเปิด public (อ่านอย่างเดียว ผ่าน proxy) หรือยังคงต้อง login | เปิด |
 
 ## 7. Naming (ยุติแล้ว — D-010)
 
@@ -111,6 +112,7 @@ RLS หลัก: ข้อมูลส่วนตัว (diary, health, profil
 
 ## Changelog
 
+- v1.3 (2026-08-11): เพิ่ม R-07 (backlog) — วีทดสอบ P1 แล้วชี้ว่า "ใช้งานไม่ต้อง login" ที่ต้องการจริงคือ food search (FR-FOOD-1, P2) ไม่ใช่ TDEE calculator ที่ทำไปก่อนหน้านี้ — ตัดสินใจตอนวางแผน P2
 - v1.2 (2026-08-11): เพิ่ม D-011 (nutrient storage: typed columns + `nutrients` jsonb, manual recalculate-from-source, quantity scaling rule of three) ตามคำสั่งวีระหว่างทำ Supabase schema P0, อัปเดต §4 ให้ตรง REQUIREMENTS v1.1
 - v1.1 (2026-08-11): เพิ่ม D-010 (monorepo + git conventions), ยุติ §7 Naming, อัปเดต architecture ให้ระบุ URL จริง
 - v1.0 (2026-08-11): สร้างครั้งแรกหลัง freeze decisions D-001–D-009

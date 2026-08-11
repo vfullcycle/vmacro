@@ -1,0 +1,15 @@
+.health-check {
+  max-width: 32rem;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+  text-align: center;
+  font-family: system-ui, sans-serif;
+}
+
+.health-check .ok {
+  color: #16a34a;
+}
+
+.health-check .error {
+  color: #dc2626;
+}

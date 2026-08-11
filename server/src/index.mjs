@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { searchFoods } from "./fatsecret.mjs";
+import { getFood, searchFoods } from "./fatsecret.mjs";
 
 const PORT = process.env.PORT || 3000;
 const HOST = "127.0.0.1";
@@ -40,6 +40,22 @@ const server = createServer(async (req, res) => {
     }
     try {
       const data = await searchFoods(q);
+      sendJson(res, 200, data);
+    } catch (err) {
+      console.error(err);
+      sendJson(res, 502, { error: "upstream FatSecret request failed" });
+    }
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/food/get") {
+    const id = url.searchParams.get("id");
+    if (!id) {
+      sendJson(res, 400, { error: "missing query param: id" });
+      return;
+    }
+    try {
+      const data = await getFood(id);
       sendJson(res, 200, data);
     } catch (err) {
       console.error(err);

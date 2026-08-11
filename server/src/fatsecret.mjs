@@ -1,5 +1,6 @@
 const TOKEN_URL = "https://oauth.fatsecret.com/connect/token";
 const SEARCH_URL = "https://platform.fatsecret.com/rest/foods/search/v1";
+const FOOD_GET_URL = "https://platform.fatsecret.com/rest/food/v4";
 
 let cachedToken = null;
 let cachedExpiresAt = 0;
@@ -52,6 +53,23 @@ export async function searchFoods(searchExpression) {
 
   if (!res.ok) {
     throw new Error(`FatSecret search failed: ${res.status} ${await res.text()}`);
+  }
+
+  return res.json();
+}
+
+export async function getFood(foodId) {
+  const token = await getAccessToken();
+  const url = new URL(FOOD_GET_URL);
+  url.searchParams.set("food_id", foodId);
+  url.searchParams.set("format", "json");
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    throw new Error(`FatSecret food.get failed: ${res.status} ${await res.text()}`);
   }
 
   return res.json();

@@ -89,7 +89,7 @@ RLS หลัก: ข้อมูลส่วนตัว (diary, health, profil
 
 | ID | Risk | Impact | Mitigation | สถานะ |
 |---|---|---|---|---|
-| R-01 | FatSecret IP whitelist อาจมีเงื่อนไขเพิ่มนอกจาก IP เดี่ยว | P0 block | ทดสอบ OAuth2 token request จาก VPS เป็นงานแรกของ P0 | เปิด |
+| R-01 | FatSecret IP whitelist อาจมีเงื่อนไขเพิ่มนอกจาก IP เดี่ยว | P0 block | ทดสอบ OAuth2 token request จาก VPS เป็นงานแรกของ P0 | ปิดแล้ว (2026-08-11: `server/scripts/test-fatsecret-oauth.sh` รันบน VPS — ขอ token + `foods.search` สำเร็จ) |
 | R-02 | ยังไม่มี domain ชี้ VPS + TLS | PWA เรียก API ไม่ได้ | จัด domain (subdomain ที่มีอยู่ก็ได้) + certbot ใน P0 | เปิด |
 | R-03 | Shortcuts ไม่มี background sync แท้จริง | Health data ไม่ real-time | ยอมรับ manual run / time-based automation — ระบุใน SCOPE เป็น constraint | ยอมรับแล้ว |
 | R-04 | Serving size ข้อมูล US (oz, cup) vs การใช้จริงของวี (กรัม) | UX บันทึกช้า | Unit conversion layer + default กรัมสำหรับ custom foods | เปิด |

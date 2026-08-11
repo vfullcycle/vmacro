@@ -1,33 +1,35 @@
-import { useEffect, useState } from "react";
-import { API_BASE_URL } from "./config";
-import "./App.css";
-
-type HealthState =
-  | { status: "loading" }
-  | { status: "ok" }
-  | { status: "error"; message: string };
+import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout";
+import { AuthProvider } from "./lib/auth-context";
+import HealthCheck from "./pages/HealthCheck";
+import Login from "./pages/Login";
+import SettingsProfile from "./pages/SettingsProfile";
+import SettingsSystem from "./pages/SettingsSystem";
+import WeightLog from "./pages/WeightLog";
 
 function App() {
-  const [health, setHealth] = useState<HealthState>({ status: "loading" });
-
-  useEffect(() => {
-    fetch(`${API_BASE_URL}/health`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then(() => setHealth({ status: "ok" }))
-      .catch((err) => setHealth({ status: "error", message: String(err) }));
-  }, []);
-
   return (
-    <main className="health-check">
-      <h1>Vmacro</h1>
-      <p>Proxy: {API_BASE_URL}</p>
-      {health.status === "loading" && <p>กำลังเช็ค /health...</p>}
-      {health.status === "ok" && <p className="ok">✓ proxy เชื่อมต่อสำเร็จ</p>}
-      {health.status === "error" && <p className="error">✗ เชื่อมต่อไม่สำเร็จ: {health.message}</p>}
-    </main>
+    <AuthProvider>
+      <HashRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/debug/health" element={<HealthCheck />} />
+          <Route
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/" element={<Navigate to="/settings/profile" replace />} />
+            <Route path="/settings/profile" element={<SettingsProfile />} />
+            <Route path="/settings/system" element={<SettingsSystem />} />
+            <Route path="/weight-log" element={<WeightLog />} />
+          </Route>
+        </Routes>
+      </HashRouter>
+    </AuthProvider>
   );
 }
 

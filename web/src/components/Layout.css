@@ -1,0 +1,41 @@
+.app-shell {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.app-nav a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.app-nav a.active {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.app-nav-spacer {
+  flex: 1;
+}
+
+.app-nav-user {
+  font-size: 0.875rem;
+  color: var(--text);
+}
+
+.app-content {
+  flex: 1;
+  padding: 1.5rem;
+  max-width: 40rem;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}

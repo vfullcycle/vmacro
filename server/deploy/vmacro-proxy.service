@@ -1,0 +1,15 @@
+[Unit]
+Description=Vmacro backend proxy (FatSecret OAuth2 passthrough)
+After=network.target
+
+[Service]
+Type=simple
+User=vmacro
+WorkingDirectory=/home/vmacro/vmacro/server
+EnvironmentFile=/home/vmacro/vmacro/server/.env
+ExecStart=/usr/bin/node /home/vmacro/vmacro/server/src/index.mjs
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

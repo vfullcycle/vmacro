@@ -85,6 +85,10 @@ RLS หลัก: ข้อมูลส่วนตัว (diary, health, profil
 | D-009 | VPS ต้องมี domain + TLS (Let's Encrypt) ก่อนเชื่อมกับ PWA | GitHub Pages เป็น HTTPS — เรียก http:// ตรงจะโดน browser block (mixed content) | 2026-08-11 |
 | D-010 | Monorepo เดียวชื่อ `vmacro` (owner: vfullcycle) โครง `docs/ web/ server/ shortcuts/`, CLAUDE.md อยู่ root — git: trunk-based บน `main`, Conventional Commits อ้าง FR ID, tag semver ผูก phase gate (v0.1.0=P0 ... v1.0.0=P2) | Solo dev: repo เดียวลด overhead และ Claude Code เห็นภาพรวมจากที่เดียว, tag ผูก gate ทำให้ version สื่อความคืบหน้าจริง | 2026-08-11 |
 
+### Evidence notes (ไม่ใช่ decision ใหม่ — บันทึกผลทดสอบสนับสนุน decision ที่มีอยู่)
+
+- **D-002** (2026-08-11): ทดสอบจริงจาก VPS ด้วย token ที่ใช้งานอยู่ — ยิง `foods/search/v1` พร้อม `region=TH&language=th` เทียบกับไม่ใส่ region เลย ได้ผลลัพธ์เหมือนกันทุกตัวอักษร (ไม่ localize, ไม่ error) สอดคล้องกับเอกสาร FatSecret ที่ระบุว่า *"Localization is a premium feature only made available to select accounts for specific languages and regions"* — ยืนยันว่า account เราไม่มีสิทธิ์นี้ ต้องพึ่ง Thai custom food DB ตาม D-002 ต่อไป ไม่มีทางลัดจาก FatSecret
+
 ## 6. Risks & Open Questions
 
 | ID | Risk | Impact | Mitigation | สถานะ |

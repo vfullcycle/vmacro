@@ -17,6 +17,11 @@ interface ProfileRow {
   formula_choice: Formula;
 }
 
+interface SettingsDefaults {
+  default_protein_g_per_kg: number | null;
+  default_fat_pct: number | null;
+}
+
 const ACTIVITY_LABELS: Record<ActivityLevel, string> = {
   sedentary: "Sedentary (นั่งทำงาน ไม่ค่อยขยับ)",
   light: "Light (ออกกำลังกายเบา 1-3 วัน/สัปดาห์)",
@@ -40,6 +45,7 @@ const FORMULA_LABELS: Record<Formula, string> = {
 export default function SettingsProfile() {
   const { user } = useAuth();
   const [form, setForm] = useState<ProfileRow | null>(null);
+  const [defaults, setDefaults] = useState<SettingsDefaults>({ default_protein_g_per_kg: null, default_fat_pct: null });
   const [initialWeight, setInitialWeight] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -50,7 +56,9 @@ export default function SettingsProfile() {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("sex, birth_date, height_cm, current_weight_kg, body_fat_pct, activity_level, goal, formula_choice")
+      .select(
+        "sex, birth_date, height_cm, current_weight_kg, body_fat_pct, activity_level, goal, formula_choice, default_protein_g_per_kg, default_fat_pct",
+      )
       .eq("id", user.id)
       .single()
       .then(({ data, error }) => {
@@ -59,6 +67,7 @@ export default function SettingsProfile() {
         } else if (data) {
           setForm(data as ProfileRow);
           setInitialWeight((data as ProfileRow).current_weight_kg);
+          setDefaults({ default_protein_g_per_kg: data.default_protein_g_per_kg, default_fat_pct: data.default_fat_pct });
         }
         setLoading(false);
       });
@@ -79,9 +88,15 @@ export default function SettingsProfile() {
     });
     const tdee = calculateTDEE(bmrResult.bmr, form.activity_level);
     const target = calculateTarget({ tdee, goal: form.goal });
-    const macros = calculateMacros({ target_kcal: target.target_kcal, weight_kg: form.current_weight_kg, goal: form.goal });
+    const macros = calculateMacros({
+      target_kcal: target.target_kcal,
+      weight_kg: form.current_weight_kg,
+      goal: form.goal,
+      protein_g_per_kg: defaults.default_protein_g_per_kg ?? undefined,
+      fat_pct: defaults.default_fat_pct ?? undefined,
+    });
     return { age, bmrResult, tdee, target, macros };
-  }, [form]);
+  }, [form, defaults]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();

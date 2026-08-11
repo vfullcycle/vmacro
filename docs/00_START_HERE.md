@@ -41,9 +41,11 @@ vmacro/
 ## สถานะปัจจุบัน
 
 - **Docs version:** v1.2 (2026-08-11)
-- **Phase ปัจจุบัน:** P0 (Infra Spike) — infra work ครบตาม checklist ใน `docs/SCOPE.md` แล้ว, รอ dogfood ตาม Phase Gate Rule ก่อนตี tag `v0.1.0`
+- **Phase ปัจจุบัน:** P0 (Infra Spike) — **จบแล้ว, tag `v0.1.0`** — ถัดไปคือ P1 (Profile & Engine)
 - **R-01 (FatSecret IP whitelist):** ปิดแล้ว 2026-08-11
-- **R-02 (domain + TLS):** ปิดแล้ว 2026-08-11 — `https://vmacro.persiq.net`
+- **R-02 (domain + TLS):** ปิดแล้ว 2026-08-11 — `https://vmacro.persiq.net`, cert renewal ยืนยันด้วย `certbot renew --dry-run` แล้ว
+- **P0 gate:** ใช้ข้อยกเว้นตาม `docs/SCOPE.md` §Phase Gate Rule (P0 ไม่มี dogfood surface จริง) — ตี tag ทันทีหลัง risk ปิดครบ + พิสูจน์ residual risk ด้วย test แทนเวลา (token cache refresh, cert renewal dry-run)
+- **รู้ไว้:** พบ bug เดิมไม่เกี่ยวกับ Vmacro บน VPS 2 จุด — `persiq.net`/`ssdhr.persiq.net` certbot renewal พังอยู่ (แยกแก้ทีหลัง ไม่ block Vmacro)
 - **Session C1 ทำเสร็จ:** repo init, FatSecret OAuth2 proxy (`server/`), Supabase schema v1 + RLS + invite วีเป็น user แรก, PWA skeleton deploy GitHub Pages เรียก proxy สำเร็จ end-to-end, REQUIREMENTS bump เป็น v1.1 (nutrients jsonb, D-011)
 
 ## Six-Layer Funnel ที่ใช้สร้างชุดเอกสารนี้

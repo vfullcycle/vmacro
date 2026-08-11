@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.1
+# SCOPE — Vmacro v1.2
 
 ## In Scope
 
@@ -65,7 +65,16 @@
 จบแต่ละ phase ต้อง: ผ่าน acceptance criteria ของ FR ใน phase นั้นครบ + วีใช้งานจริงอย่างน้อย 2–3 วัน
 ก่อนอนุมัติเข้า phase ถัดไป (dogfooding คือ QA หลักของโปรเจกต์นี้) — ผ่าน gate แล้วจึงตี tag ตามที่ระบุ
 
+**ข้อยกเว้น P0:** P0 เป็น infra spike ล้วน ไม่มี user-facing feature ให้ dogfood จริง (เริ่มมีตั้งแต่ P1)
+— เกณฑ์ "ใช้งานจริง 2–3 วัน" จึงเริ่มนับบังคับตั้งแต่ P1 เป็นต้นไป P0 ตี tag ได้ทันทีที่ risk ทุกตัวปิด
++ AC ผ่านครบ โดยต้องทดสอบความเสี่ยงที่ปกติจะเจอจากการใช้งานจริงข้ามคืน/หลายวันแทน (เช่น cert renewal
+dry-run, service restart resilience) ก่อนตี tag แทนการรอเวลาจริง
+
 ## Changelog
 
+- v1.2 (2026-08-11): เพิ่มข้อยกเว้น Phase Gate Rule สำหรับ P0 (ไม่มี dogfood surface จริง จนกว่าจะถึง P1) —
+  ตัดสินใจโดยวีหลังพิสูจน์ residual risk ด้วย test แทนการรอเวลา: certbot renew --dry-run
+  (vmacro.persiq.net ผ่าน — พบ bug เดิมไม่เกี่ยวกับ Vmacro ที่ persiq.net/ssdhr.persiq.net แยกไปแจ้งต่างหาก)
+  + token cache expiry/refetch (ผ่าน)
 - v1.1 (2026-08-11): เพิ่มงาน repo init ใน P0 + ผูก tag semver กับแต่ละ phase gate (D-010)
 - v1.0 (2026-08-11): สร้างครั้งแรก

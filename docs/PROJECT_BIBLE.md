@@ -1,4 +1,4 @@
-# PROJECT_BIBLE — Vmacro v1.5
+# PROJECT_BIBLE — Vmacro v1.6
 
 > Single source of truth ของโปรเจกต์ ถ้าไฟล์อื่นขัดกับไฟล์นี้ ให้ยึดไฟล์นี้แล้วแจ้งวีเพื่อ sync
 
@@ -87,6 +87,7 @@ RLS หลัก: ข้อมูลส่วนตัว (diary, health, profil
 | D-011 | Nutrient storage: ทุกตาราง food/dish/snapshot (`custom_foods`, `dishes`, `dish_ingredients`, `diary_entries`, `meal_template_items`) เก็บ kcal/protein/carbs/fat เป็น typed column หลัก + คอลัมน์ `nutrients` jsonb เก็บ panel เต็มเท่าที่ต้นทางให้มา (sat/trans/poly/mono fat, cholesterol, sodium, fiber, sugar, vitamins, minerals) — snapshot copy jsonb ไปด้วยทุกจุด. Dish snapshot คงที่หลัง save เว้นแต่ creator สั่ง "Recalculate from source" เอง (manual only, ไม่มี auto-update). ปริมาณ (FR-FOOD-1/FR-DIARY-1) กรอกได้ทั้งจำนวน serving หรือน้ำหนักจริง (g) แล้ว scale ทุก nutrient ตามสัดส่วนจาก serving ต้นทาง (rule of three) | typed column ให้ query/sort เร็วสำหรับ 4 ตัวหลักที่ใช้บ่อย (TDEE/diary summary), jsonb กันต้องแก้ schema ทุกครั้งที่ต้องการ nutrient เพิ่ม + รองรับข้อมูลไม่ครบจาก FatSecret ได้โดยไม่ต้อง NULL เกลื่อน; recalculate แบบ manual กันจานที่คนอื่นใช้ diary แล้วเปลี่ยนค่าย้อนหลังโดยไม่ตั้งใจ | 2026-08-11 |
 | D-012 | Food search (FatSecret + custom foods) เปิด public ไม่ต้อง login — เพิ่ม RLS policy ให้ `anon` role `select` บน `custom_foods` ได้ (read-only) ส่วนเขียน/แก้/ลบ custom food, dish builder, diary, favorites, weight log, profile ยังต้อง login เหมือนเดิมทั้งหมด (ผูก auth.uid()/creator_id) | ปิด R-07 backlog — วีต้องการดู macro อาหารได้ทันทีไม่ต้องสมัครก่อน ลด friction ตอนค้นครั้งแรก, เขียนข้อมูลยังปลอดภัยเพราะ policy เปิดเฉพาะ select | 2026-08-12 |
 | D-013 | **Research Gate**: feature ที่เข้าเกณฑ์ (ก) ผลลัพธ์เป็นการประมาณค่า/ทำนายที่ความแม่นยำเป็นสาระสำคัญของ feature หรือ (ข) มีคำถามเชิง algorithm ที่ถ้าตอบผิดจะรื้อ architecture ภายหลัง — ห้ามเริ่มโค้ดจนกว่ามี `docs/research/<topic>.md` ตอบครบ 5 ข้อ (1) ปัญหา+วรรณกรรมพร้อมอ้างอิง (2) benchmark ตัวเลขจริงจากงานอื่น (3) ทางเลือก 2-3 ทาง+trade-off (4) เพดานเชิงทฤษฎี (5) เกณฑ์สำเร็จ+แหล่ง ground truth — และวีอนุมัติแล้ว. งาน CRUD/UI/integration/สูตรที่มีมาตรฐานชัดไม่เข้า gate. Research doc ยาวไม่เกิน ~800 คำ/ไฟล์, freeze เป็น snapshot ณ เวลาอนุมัติ (ไม่ maintain ต่อ — ความรู้เปลี่ยนให้เปิด doc ใหม่อ้างของเก่า), ถ้า `docs/research/` มีเกิน 4 ไฟล์ให้ทักวีทบทวนว่า gate ถูกใช้ฟุ่มเฟือยหรือไม่ | กันเสีย effort implement feature เชิงประมาณ/ทำนายที่ยังไม่มีพื้นฐานเพียงพอ โดยไม่บล็อกงาน CRUD/UI ปกติด้วยกระบวนการที่หนักเกินจำเป็น | 2026-08-12 |
+| D-014 | เปิดเผยชื่อ creator ของ custom food แบบปลอดภัย ผ่าน `get_display_name(profile_id)` — SECURITY DEFINER function คืนแค่คอลัมน์ `display_name` เท่านั้น ไม่แก้ RLS ของ `profiles` เลย (ยังเป็น owner-only ตาม FR-AUTH-1 สำหรับข้อมูลร่างกาย/เป้าหมายอื่นๆ) | FR-FOOD-2 AC บังคับ (frozen) ว่าต้องแสดงชื่อ creator บน custom food แต่ profiles RLS เดิมบล็อกทุกคนยกเว้นเจ้าของ — function bypass RLS เฉพาะช่องทางนี้ ปลอดภัยกว่าเปิด RLS ตรงๆ เพราะ query ได้แค่ display_name อย่างเดียว | 2026-08-12 |
 
 ### Evidence notes (ไม่ใช่ decision ใหม่ — บันทึกผลทดสอบสนับสนุน decision ที่มีอยู่)
 
@@ -126,6 +127,7 @@ D-013 (Research Gate) — ห้ามเริ่มโค้ดจนกว่
 
 ## Changelog
 
+- v1.6 (2026-08-12): เพิ่ม D-014 (get_display_name SECURITY DEFINER RPC สำหรับ FR-FOOD-2 creator name) — แก้ ID ชนกับ D-013 (Research Gate) ที่มีอยู่แล้ว เขียนทับผิดตอนแรกเพราะไม่ได้ cross-check กับ CLAUDE.md ที่อ้าง D-013 อยู่แล้ว
 - v1.5 (2026-08-12): เพิ่ม §7 Backlog (BL-01/02/03, ยังไม่เข้า FR) + D-013 (Research Gate) — เลื่อน §Naming เป็น §8
 - v1.4 (2026-08-12): เพิ่ม D-012 (เปิด custom_foods select ให้ anon) + ปิด R-07 — วีตัดสินใจเปิด food search แบบ public ตอนวางแผน P2
 - v1.3 (2026-08-11): เพิ่ม R-07 (backlog) — วีทดสอบ P1 แล้วชี้ว่า "ใช้งานไม่ต้อง login" ที่ต้องการจริงคือ food search (FR-FOOD-1, P2) ไม่ใช่ TDEE calculator ที่ทำไปก่อนหน้านี้ — ตัดสินใจตอนวางแผน P2

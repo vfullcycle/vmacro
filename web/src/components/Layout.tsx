@@ -19,6 +19,9 @@ export default function Layout() {
       </div>
 
       <nav className="app-tabbar">
+        <NavLink to="/food/search" className={({ isActive }) => (isActive ? "active" : "")}>
+          Search
+        </NavLink>
         <NavLink to="/settings/profile" className={({ isActive }) => (isActive ? "active" : "")}>
           Profile
         </NavLink>

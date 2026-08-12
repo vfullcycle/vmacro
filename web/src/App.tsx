@@ -3,6 +3,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import { AuthProvider } from "./lib/auth-context";
 import Calculator from "./pages/Calculator";
+import FoodDetail from "./pages/FoodDetail";
+import FoodSearch from "./pages/FoodSearch";
 import HealthCheck from "./pages/HealthCheck";
 import Login from "./pages/Login";
 import SettingsProfile from "./pages/SettingsProfile";
@@ -16,6 +18,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/calculator" element={<Calculator />} />
+          <Route path="/food/search" element={<FoodSearch />} />
+          <Route path="/food/:source/:id" element={<FoodDetail />} />
           <Route path="/debug/health" element={<HealthCheck />} />
           <Route
             element={

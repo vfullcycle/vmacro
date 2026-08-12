@@ -1,0 +1,60 @@
+.nutrition-facts-label {
+  border: 2px solid var(--text-h);
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  font-family: var(--sans);
+  max-width: 24rem;
+}
+
+.nutrition-facts-label h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.nfl-serving {
+  font-size: 0.9rem;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.nfl-divider-thick {
+  height: 6px;
+  background: var(--text-h);
+  margin: 0.4rem 0;
+}
+
+.nfl-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.3rem 0;
+}
+
+.nfl-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.nfl-row-indent {
+  padding-left: 1rem;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.nfl-calories {
+  font-size: 1.4rem;
+  font-weight: 800;
+  border-bottom: none;
+}
+
+.nfl-section {
+  margin-top: 0.5rem;
+}
+
+.nfl-section-title {
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
+}

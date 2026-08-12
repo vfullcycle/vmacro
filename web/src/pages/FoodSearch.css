@@ -1,0 +1,61 @@
+.food-search-page {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+}
+
+.food-search-page input[type="search"] {
+  width: 100%;
+  padding: 0.65rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+  min-height: 44px;
+  box-sizing: border-box;
+  margin-bottom: 1rem;
+}
+
+.food-search-page .hint {
+  font-size: 0.875rem;
+  color: var(--text);
+}
+
+.food-search-page .error {
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.food-search-page section {
+  margin-top: 1.25rem;
+}
+
+.food-result-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+}
+
+.food-result-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.food-result-list a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.75rem 0.25rem;
+  text-decoration: none;
+  color: inherit;
+  min-height: 44px;
+  justify-content: center;
+}
+
+.food-result-list .food-name {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.food-result-list .food-meta {
+  font-size: 0.8rem;
+  color: var(--text);
+}

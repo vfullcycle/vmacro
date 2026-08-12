@@ -1,0 +1,55 @@
+.food-detail-page {
+  max-width: 26rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+}
+
+.food-detail-page .food-detail-source {
+  font-size: 0.8rem;
+  color: var(--text);
+  margin: -0.5rem 0 1rem;
+}
+
+.food-detail-page .serving-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  margin-bottom: 0.9rem;
+}
+
+.food-detail-page .serving-select select {
+  padding: 0.65rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+  min-height: 44px;
+}
+
+.food-detail-page .error {
+  color: #dc2626;
+}
+
+.quantity-input {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.quantity-input label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+.quantity-input input,
+.quantity-input select {
+  padding: 0.65rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+  min-height: 44px;
+  box-sizing: border-box;
+}

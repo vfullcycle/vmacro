@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import FatSecretAttribution from "../components/FatSecretAttribution";
 import NutritionFactsLabel from "../components/NutritionFactsLabel";
 import { API_BASE_URL } from "../config";
+import { useAuth } from "../lib/auth-context";
 import { parseFoodDetail, servingToScalable, type FatSecretServing } from "../lib/fatsecret";
 import { scaleNutrients, type NutrientPanel, type ScalableNutrients } from "../lib/scaling";
 import { supabase } from "../lib/supabase";
@@ -121,6 +122,7 @@ function FatSecretFoodDetail({ foodId }: { foodId: string }) {
 }
 
 interface CustomFoodRow {
+  creator_id: string;
   name: string;
   serving_label: string | null;
   serving_size_g: number;
@@ -132,7 +134,9 @@ interface CustomFoodRow {
 }
 
 function CustomFoodDetail({ foodId }: { foodId: string }) {
+  const { user } = useAuth();
   const [food, setFood] = useState<CustomFoodRow | null>(null);
+  const [creatorName, setCreatorName] = useState<string | null>(null);
   const [quantityMode, setQuantityMode] = useState<QuantityMode>("servings");
   const [quantityValue, setQuantityValue] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -141,13 +145,20 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
   useEffect(() => {
     supabase
       .from("custom_foods")
-      .select("name, serving_label, serving_size_g, kcal, protein_g, carbs_g, fat_g, nutrients")
+      .select("creator_id, name, serving_label, serving_size_g, kcal, protein_g, carbs_g, fat_g, nutrients")
       .eq("id", foodId)
       .single()
       .then(({ data, error }) => {
-        if (error) setError(error.message);
-        else setFood(data as CustomFoodRow);
+        if (error) {
+          setError(error.message);
+          setLoading(false);
+          return;
+        }
+        setFood(data as CustomFoodRow);
         setLoading(false);
+        supabase
+          .rpc("get_display_name", { profile_id: data.creator_id })
+          .then(({ data: name }) => setCreatorName(name));
       });
   }, [foodId]);
 
@@ -173,7 +184,15 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
   return (
     <main className="food-detail-page">
       <h1>{food.name}</h1>
-      <p className="food-detail-source">Custom food</p>
+      <p className="food-detail-source">
+        Custom food{creatorName ? ` — โดย ${creatorName}` : ""}
+        {user?.id === food.creator_id && (
+          <>
+            {" · "}
+            <Link to={`/food/custom/${foodId}/edit`}>แก้ไข</Link>
+          </>
+        )}
+      </p>
 
       <QuantityInput mode={quantityMode} value={quantityValue} onModeChange={setQuantityMode} onValueChange={setQuantityValue} gramsAvailable />
 

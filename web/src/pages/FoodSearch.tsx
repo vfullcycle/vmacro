@@ -75,6 +75,9 @@ export default function FoodSearch() {
       {loading && <p className="hint">กำลังค้นหา...</p>}
       {error && <p className="error">{error}</p>}
       {noResults && <p className="hint">ไม่พบผลลัพธ์</p>}
+      <Link to="/food/custom/new" className="add-food-link">
+        + เพิ่มอาหารของคุณเอง
+      </Link>
 
       {customResults.length > 0 && (
         <section>

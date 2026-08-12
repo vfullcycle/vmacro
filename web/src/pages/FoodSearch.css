@@ -59,3 +59,11 @@
   font-size: 0.8rem;
   color: var(--text);
 }
+
+.add-food-link {
+  display: inline-block;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: var(--accent);
+  text-decoration: none;
+}

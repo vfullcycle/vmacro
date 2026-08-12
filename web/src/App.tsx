@@ -3,6 +3,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import { AuthProvider } from "./lib/auth-context";
 import Calculator from "./pages/Calculator";
+import CustomFoodForm from "./pages/CustomFoodForm";
 import FoodDetail from "./pages/FoodDetail";
 import FoodSearch from "./pages/FoodSearch";
 import HealthCheck from "./pages/HealthCheck";
@@ -32,6 +33,8 @@ function App() {
             <Route path="/settings/profile" element={<SettingsProfile />} />
             <Route path="/settings/system" element={<SettingsSystem />} />
             <Route path="/weight-log" element={<WeightLog />} />
+            <Route path="/food/custom/new" element={<CustomFoodForm />} />
+            <Route path="/food/custom/:id/edit" element={<CustomFoodForm />} />
           </Route>
         </Routes>
       </HashRouter>

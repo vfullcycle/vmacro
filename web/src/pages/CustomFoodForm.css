@@ -1,0 +1,64 @@
+.custom-food-form-page {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+}
+
+.custom-food-form-page form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.custom-food-form-page label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+.custom-food-form-page input {
+  padding: 0.65rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.custom-food-form-page .form-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.custom-food-form-page .form-section-label {
+  font-size: 0.8rem;
+  color: var(--text);
+  font-weight: 600;
+  margin: 0.4rem 0 -0.4rem;
+}
+
+.custom-food-form-page button {
+  padding: 0.7rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font: inherit;
+  font-weight: 600;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.custom-food-form-page .delete-button {
+  background: none;
+  color: #dc2626;
+  border: 1px solid #dc2626;
+}
+
+.custom-food-form-page .error {
+  color: #dc2626;
+  font-size: 0.875rem;
+}

@@ -1,4 +1,4 @@
-# PROJECT_BIBLE — Vmacro v1.6
+# PROJECT_BIBLE — Vmacro v1.7
 
 > Single source of truth ของโปรเจกต์ ถ้าไฟล์อื่นขัดกับไฟล์นี้ ให้ยึดไฟล์นี้แล้วแจ้งวีเพื่อ sync
 
@@ -66,6 +66,8 @@ Apple Health (iPhone/Watch)
 | `meal_templates` (+ `meal_template_items`) | ชุดมื้อซ้ำ + favorites/recent สำหรับ FR-DIARY-3 — private ต่อ user (ไม่ shared แบบ custom_foods/dishes) |
 | `health_samples` | workout, HR, active energy ที่ ingest จาก Shortcut #2 (ผูก user, timestamp, source) |
 | `weight_logs` | ประวัติน้ำหนัก (แยกจาก profile เพื่อทำ trend) |
+| `favorites` | รายการโปรดต่อ user (custom_food/dish/fatsecret) สำหรับ FR-DIARY-3 — private ต่อ user |
+| `food_translations` | cache คำแปล FatSecret food_name → ไทย (D-015) keyed by fatsecret_food_id, public read+insert |
 
 RLS หลัก: ข้อมูลส่วนตัว (diary, health, profile, weight) เห็นเฉพาะเจ้าของ /
 `custom_foods` และ `dishes` ที่ mark shared: อ่านได้ทุก user, เขียนได้เฉพาะ creator
@@ -88,6 +90,7 @@ RLS หลัก: ข้อมูลส่วนตัว (diary, health, profil
 | D-012 | Food search (FatSecret + custom foods) เปิด public ไม่ต้อง login — เพิ่ม RLS policy ให้ `anon` role `select` บน `custom_foods` ได้ (read-only) ส่วนเขียน/แก้/ลบ custom food, dish builder, diary, favorites, weight log, profile ยังต้อง login เหมือนเดิมทั้งหมด (ผูก auth.uid()/creator_id) | ปิด R-07 backlog — วีต้องการดู macro อาหารได้ทันทีไม่ต้องสมัครก่อน ลด friction ตอนค้นครั้งแรก, เขียนข้อมูลยังปลอดภัยเพราะ policy เปิดเฉพาะ select | 2026-08-12 |
 | D-013 | **Research Gate**: feature ที่เข้าเกณฑ์ (ก) ผลลัพธ์เป็นการประมาณค่า/ทำนายที่ความแม่นยำเป็นสาระสำคัญของ feature หรือ (ข) มีคำถามเชิง algorithm ที่ถ้าตอบผิดจะรื้อ architecture ภายหลัง — ห้ามเริ่มโค้ดจนกว่ามี `docs/research/<topic>.md` ตอบครบ 5 ข้อ (1) ปัญหา+วรรณกรรมพร้อมอ้างอิง (2) benchmark ตัวเลขจริงจากงานอื่น (3) ทางเลือก 2-3 ทาง+trade-off (4) เพดานเชิงทฤษฎี (5) เกณฑ์สำเร็จ+แหล่ง ground truth — และวีอนุมัติแล้ว. งาน CRUD/UI/integration/สูตรที่มีมาตรฐานชัดไม่เข้า gate. Research doc ยาวไม่เกิน ~800 คำ/ไฟล์, freeze เป็น snapshot ณ เวลาอนุมัติ (ไม่ maintain ต่อ — ความรู้เปลี่ยนให้เปิด doc ใหม่อ้างของเก่า), ถ้า `docs/research/` มีเกิน 4 ไฟล์ให้ทักวีทบทวนว่า gate ถูกใช้ฟุ่มเฟือยหรือไม่ | กันเสีย effort implement feature เชิงประมาณ/ทำนายที่ยังไม่มีพื้นฐานเพียงพอ โดยไม่บล็อกงาน CRUD/UI ปกติด้วยกระบวนการที่หนักเกินจำเป็น | 2026-08-12 |
 | D-014 | เปิดเผยชื่อ creator ของ custom food แบบปลอดภัย ผ่าน `get_display_name(profile_id)` — SECURITY DEFINER function คืนแค่คอลัมน์ `display_name` เท่านั้น ไม่แก้ RLS ของ `profiles` เลย (ยังเป็น owner-only ตาม FR-AUTH-1 สำหรับข้อมูลร่างกาย/เป้าหมายอื่นๆ) | FR-FOOD-2 AC บังคับ (frozen) ว่าต้องแสดงชื่อ creator บน custom food แต่ profiles RLS เดิมบล็อกทุกคนยกเว้นเจ้าของ — function bypass RLS เฉพาะช่องทางนี้ ปลอดภัยกว่าเปิด RLS ตรงๆ เพราะ query ได้แค่ display_name อย่างเดียว | 2026-08-12 |
+| D-015 | Thai search/display สำหรับ FatSecret: proxy endpoint ใหม่ `/translate` เรียก Claude Haiku (`claude-haiku-4-5-20251001`) แปล food name เป็น batch เดียว — คำค้นไทยแปลเป็นอังกฤษก่อนยิง FatSecret, ผลลัพธ์ FatSecret แปลเป็นไทยสำหรับแสดงผล cache ถาวรในตาราง `food_translations` (keyed by fatsecret_food_id, public read+insert ไม่มี update/delete) กัน re-translate ซ้ำ | custom_foods DB (D-002) เป็นภาษาไทยอยู่แล้ว แต่ FatSecret เป็น US dataset ล้วน (ยืนยันไม่มี native localization ตาม evidence note ใต้ D-002) — วีต้องการให้พิมพ์/เห็นภาษาไทยได้ทั้งสองแหล่ง ทางเลือก static dictionary ไม่พอเพราะต้องแปลชื่ออาหารนับพันแบบจาก FatSecret ไม่ใช่แค่คำค้นจำกัดจำนวน — เพิ่ม secret ใหม่ `ANTHROPIC_API_KEY` บน VPS | 2026-08-12 |
 
 ### Evidence notes (ไม่ใช่ decision ใหม่ — บันทึกผลทดสอบสนับสนุน decision ที่มีอยู่)
 
@@ -127,6 +130,7 @@ D-013 (Research Gate) — ห้ามเริ่มโค้ดจนกว่
 
 ## Changelog
 
+- v1.7 (2026-08-12): เพิ่ม D-015 (Thai<->English translation ผ่าน Claude Haiku + food_translations cache) — วีขอเพิ่มหลัง dogfood df1, อัปเดต §4 เพิ่ม favorites/food_translations ที่ตกหล่นไว้
 - v1.6 (2026-08-12): เพิ่ม D-014 (get_display_name SECURITY DEFINER RPC สำหรับ FR-FOOD-2 creator name) — แก้ ID ชนกับ D-013 (Research Gate) ที่มีอยู่แล้ว เขียนทับผิดตอนแรกเพราะไม่ได้ cross-check กับ CLAUDE.md ที่อ้าง D-013 อยู่แล้ว
 - v1.5 (2026-08-12): เพิ่ม §7 Backlog (BL-01/02/03, ยังไม่เข้า FR) + D-013 (Research Gate) — เลื่อน §Naming เป็น §8
 - v1.4 (2026-08-12): เพิ่ม D-012 (เปิด custom_foods select ให้ anon) + ปิด R-07 — วีตัดสินใจเปิด food search แบบ public ตอนวางแผน P2

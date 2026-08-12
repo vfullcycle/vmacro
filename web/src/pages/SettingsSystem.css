@@ -15,6 +15,7 @@
 
 .settings-system input,
 .settings-system select {
+  width: 100%;
   padding: 0.65rem 0.6rem;
   border: 1px solid var(--border);
   border-radius: 8px;

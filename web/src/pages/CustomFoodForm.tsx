@@ -5,7 +5,7 @@ import type { NutrientPanel } from "../lib/scaling";
 import { supabase } from "../lib/supabase";
 import "./CustomFoodForm.css";
 
-interface FormState {
+interface CoreFormState {
   name: string;
   serving_label: string;
   serving_size_g: string;
@@ -13,12 +13,9 @@ interface FormState {
   protein_g: string;
   carbs_g: string;
   fat_g: string;
-  fiber_g: string;
-  sugar_g: string;
-  sodium_mg: string;
 }
 
-const EMPTY: FormState = {
+const EMPTY_CORE: CoreFormState = {
   name: "",
   serving_label: "",
   serving_size_g: "",
@@ -26,17 +23,69 @@ const EMPTY: FormState = {
   protein_g: "",
   carbs_g: "",
   fat_g: "",
-  fiber_g: "",
-  sugar_g: "",
-  sodium_mg: "",
 };
 
-function buildNutrients(form: FormState): NutrientPanel {
+type ExtraGroup = "fat" | "carb" | "other" | "vitamin" | "mineral";
+type ExtraFormState = Record<string, string>;
+
+const EXTRA_FIELDS: { key: string; label: string; group: ExtraGroup }[] = [
+  { key: "saturated_fat_g", label: "Saturated Fat (g)", group: "fat" },
+  { key: "trans_fat_g", label: "Trans Fat (g)", group: "fat" },
+  { key: "polyunsaturated_fat_g", label: "Polyunsaturated Fat (g)", group: "fat" },
+  { key: "monounsaturated_fat_g", label: "Monounsaturated Fat (g)", group: "fat" },
+  { key: "fiber_g", label: "Fiber (g)", group: "carb" },
+  { key: "sugar_g", label: "Sugar (g)", group: "carb" },
+  { key: "added_sugars_g", label: "Added Sugars (g)", group: "carb" },
+  { key: "cholesterol_mg", label: "Cholesterol (mg)", group: "other" },
+  { key: "sodium_mg", label: "Sodium (mg)", group: "other" },
+  { key: "vitamin_a_mcg", label: "Vitamin A (mcg)", group: "vitamin" },
+  { key: "vitamin_c_mg", label: "Vitamin C (mg)", group: "vitamin" },
+  { key: "vitamin_d_mcg", label: "Vitamin D (mcg)", group: "vitamin" },
+  { key: "calcium_mg", label: "Calcium (mg)", group: "mineral" },
+  { key: "iron_mg", label: "Iron (mg)", group: "mineral" },
+  { key: "potassium_mg", label: "Potassium (mg)", group: "mineral" },
+];
+
+const GROUP_LABELS: Record<ExtraGroup, string> = {
+  fat: "ไขมันแยกประเภท",
+  carb: "คาร์โบไฮเดรตแยกประเภท",
+  other: "อื่นๆ",
+  vitamin: "วิตามิน",
+  mineral: "แร่ธาตุ",
+};
+
+const GROUP_ORDER: ExtraGroup[] = ["fat", "carb", "other", "vitamin", "mineral"];
+
+function buildNutrients(extras: ExtraFormState): NutrientPanel {
   const nutrients: NutrientPanel = {};
-  if (form.fiber_g) nutrients.fiber_g = Number(form.fiber_g);
-  if (form.sugar_g) nutrients.sugar_g = Number(form.sugar_g);
-  if (form.sodium_mg) nutrients.sodium_mg = Number(form.sodium_mg);
+  const vitamins: NutrientPanel = {};
+  const minerals: NutrientPanel = {};
+  for (const field of EXTRA_FIELDS) {
+    const raw = extras[field.key];
+    if (!raw) continue;
+    const value = Number(raw);
+    if (field.group === "vitamin") vitamins[field.key] = value;
+    else if (field.group === "mineral") minerals[field.key] = value;
+    else nutrients[field.key] = value;
+  }
+  if (Object.keys(vitamins).length) nutrients.vitamins = vitamins;
+  if (Object.keys(minerals).length) nutrients.minerals = minerals;
   return nutrients;
+}
+
+function flattenNutrients(nutrients: NutrientPanel | null): ExtraFormState {
+  const result: ExtraFormState = {};
+  if (!nutrients) return result;
+  const vitamins = nutrients.vitamins as NutrientPanel | undefined;
+  const minerals = nutrients.minerals as NutrientPanel | undefined;
+  for (const field of EXTRA_FIELDS) {
+    let value: unknown;
+    if (field.group === "vitamin") value = vitamins?.[field.key];
+    else if (field.group === "mineral") value = minerals?.[field.key];
+    else value = nutrients[field.key];
+    if (typeof value === "number") result[field.key] = String(value);
+  }
+  return result;
 }
 
 export default function CustomFoodForm() {
@@ -45,7 +94,8 @@ export default function CustomFoodForm() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [form, setForm] = useState<FormState>(EMPTY);
+  const [core, setCore] = useState<CoreFormState>(EMPTY_CORE);
+  const [extras, setExtras] = useState<ExtraFormState>({});
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,8 +115,7 @@ export default function CustomFoodForm() {
           if (data.creator_id !== user?.id) {
             setNotOwner(true);
           } else {
-            const nutrients = (data.nutrients ?? {}) as NutrientPanel;
-            setForm({
+            setCore({
               name: data.name,
               serving_label: data.serving_label ?? "",
               serving_size_g: String(data.serving_size_g),
@@ -74,10 +123,8 @@ export default function CustomFoodForm() {
               protein_g: String(data.protein_g),
               carbs_g: String(data.carbs_g),
               fat_g: String(data.fat_g),
-              fiber_g: nutrients.fiber_g != null ? String(nutrients.fiber_g) : "",
-              sugar_g: nutrients.sugar_g != null ? String(nutrients.sugar_g) : "",
-              sodium_mg: nutrients.sodium_mg != null ? String(nutrients.sodium_mg) : "",
             });
+            setExtras(flattenNutrients(data.nutrients as NutrientPanel | null));
           }
         }
         setLoading(false);
@@ -91,14 +138,14 @@ export default function CustomFoodForm() {
     setError(null);
 
     const row = {
-      name: form.name,
-      serving_label: form.serving_label || null,
-      serving_size_g: Number(form.serving_size_g),
-      kcal: Number(form.kcal),
-      protein_g: Number(form.protein_g),
-      carbs_g: Number(form.carbs_g),
-      fat_g: Number(form.fat_g),
-      nutrients: buildNutrients(form),
+      name: core.name,
+      serving_label: core.serving_label || null,
+      serving_size_g: Number(core.serving_size_g),
+      kcal: Number(core.kcal),
+      protein_g: Number(core.protein_g),
+      carbs_g: Number(core.carbs_g),
+      fat_g: Number(core.fat_g),
+      nutrients: buildNutrients(extras),
     };
 
     if (isEdit && id) {
@@ -143,56 +190,61 @@ export default function CustomFoodForm() {
       <form onSubmit={handleSubmit}>
         <label>
           ชื่ออาหาร
-          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          <input value={core.name} onChange={(e) => setCore({ ...core, name: e.target.value })} required />
         </label>
 
         <label>
           ชื่อ serving (เช่น "1 จาน", "1 ทัพพี") — ไม่บังคับ
-          <input value={form.serving_label} onChange={(e) => setForm({ ...form, serving_label: e.target.value })} />
+          <input value={core.serving_label} onChange={(e) => setCore({ ...core, serving_label: e.target.value })} />
         </label>
 
         <label>
           น้ำหนัก 1 serving (กรัม)
-          <input type="number" step="0.1" value={form.serving_size_g} onChange={(e) => setForm({ ...form, serving_size_g: e.target.value })} required />
+          <input type="number" step="0.1" value={core.serving_size_g} onChange={(e) => setCore({ ...core, serving_size_g: e.target.value })} required />
         </label>
 
         <div className="form-row">
           <label>
             Kcal
-            <input type="number" step="0.1" value={form.kcal} onChange={(e) => setForm({ ...form, kcal: e.target.value })} required />
+            <input type="number" step="0.1" value={core.kcal} onChange={(e) => setCore({ ...core, kcal: e.target.value })} required />
           </label>
           <label>
             Protein (g)
-            <input type="number" step="0.1" value={form.protein_g} onChange={(e) => setForm({ ...form, protein_g: e.target.value })} required />
+            <input type="number" step="0.1" value={core.protein_g} onChange={(e) => setCore({ ...core, protein_g: e.target.value })} required />
           </label>
         </div>
 
         <div className="form-row">
           <label>
             Carbs (g)
-            <input type="number" step="0.1" value={form.carbs_g} onChange={(e) => setForm({ ...form, carbs_g: e.target.value })} required />
+            <input type="number" step="0.1" value={core.carbs_g} onChange={(e) => setCore({ ...core, carbs_g: e.target.value })} required />
           </label>
           <label>
             Fat (g)
-            <input type="number" step="0.1" value={form.fat_g} onChange={(e) => setForm({ ...form, fat_g: e.target.value })} required />
+            <input type="number" step="0.1" value={core.fat_g} onChange={(e) => setCore({ ...core, fat_g: e.target.value })} required />
           </label>
         </div>
 
-        <p className="form-section-label">ข้อมูลเสริม (ถ้ามี)</p>
-        <div className="form-row">
-          <label>
-            Fiber (g)
-            <input type="number" step="0.1" value={form.fiber_g} onChange={(e) => setForm({ ...form, fiber_g: e.target.value })} />
-          </label>
-          <label>
-            Sugar (g)
-            <input type="number" step="0.1" value={form.sugar_g} onChange={(e) => setForm({ ...form, sugar_g: e.target.value })} />
-          </label>
-        </div>
-        <label>
-          Sodium (mg)
-          <input type="number" step="1" value={form.sodium_mg} onChange={(e) => setForm({ ...form, sodium_mg: e.target.value })} />
-        </label>
+        <p className="form-hint">ข้อมูลเสริมด้านล่างไม่บังคับ — กรอกเท่าที่มีข้อมูลจริง (เช่น จากฉลากโภชนาการ)</p>
+
+        {GROUP_ORDER.map((group) => (
+          <div key={group} className="extra-group">
+            <p className="form-section-label">{GROUP_LABELS[group]}</p>
+            <div className="form-grid">
+              {EXTRA_FIELDS.filter((f) => f.group === group).map((field) => (
+                <label key={field.key}>
+                  {field.label}
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={extras[field.key] ?? ""}
+                    onChange={(e) => setExtras({ ...extras, [field.key]: e.target.value })}
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
 
         {error && <p className="error">{error}</p>}
 

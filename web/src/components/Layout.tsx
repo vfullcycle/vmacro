@@ -1,6 +1,14 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../lib/auth-context";
+import { GearIcon, SearchIcon, TrendIcon, UserIcon } from "./icons";
 import "./Layout.css";
+
+const TABS = [
+  { to: "/food/search", label: "Search", Icon: SearchIcon },
+  { to: "/settings/profile", label: "Profile", Icon: UserIcon },
+  { to: "/settings/system", label: "System", Icon: GearIcon },
+  { to: "/weight-log", label: "Weight", Icon: TrendIcon },
+];
 
 export default function Layout() {
   const { signOut, user } = useAuth();
@@ -19,18 +27,12 @@ export default function Layout() {
       </div>
 
       <nav className="app-tabbar">
-        <NavLink to="/food/search" className={({ isActive }) => (isActive ? "active" : "")}>
-          Search
-        </NavLink>
-        <NavLink to="/settings/profile" className={({ isActive }) => (isActive ? "active" : "")}>
-          Profile
-        </NavLink>
-        <NavLink to="/settings/system" className={({ isActive }) => (isActive ? "active" : "")}>
-          System
-        </NavLink>
-        <NavLink to="/weight-log" className={({ isActive }) => (isActive ? "active" : "")}>
-          Weight
-        </NavLink>
+        {TABS.map(({ to, label, Icon }) => (
+          <NavLink key={to} to={to} className={({ isActive }) => (isActive ? "active" : "")}>
+            <Icon className="tab-icon" />
+            <span>{label}</span>
+          </NavLink>
+        ))}
       </nav>
     </div>
   );

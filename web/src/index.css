@@ -51,6 +51,13 @@ body {
   flex-direction: column;
 }
 
+/* Flex items default to min-width:auto, refusing to shrink below their content's
+   intrinsic width — a <select>'s intrinsic width follows its longest option text,
+   so without this every page overflowed horizontally on narrow viewports. */
+#root > * {
+  min-width: 0;
+}
+
 h1,
 h2 {
   font-family: var(--sans);

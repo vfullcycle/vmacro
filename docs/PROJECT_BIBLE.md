@@ -1,4 +1,4 @@
-# PROJECT_BIBLE — Vmacro v1.3
+# PROJECT_BIBLE — Vmacro v1.4
 
 > Single source of truth ของโปรเจกต์ ถ้าไฟล์อื่นขัดกับไฟล์นี้ ให้ยึดไฟล์นี้แล้วแจ้งวีเพื่อ sync
 
@@ -85,6 +85,7 @@ RLS หลัก: ข้อมูลส่วนตัว (diary, health, profil
 | D-009 | VPS ต้องมี domain + TLS (Let's Encrypt) ก่อนเชื่อมกับ PWA | GitHub Pages เป็น HTTPS — เรียก http:// ตรงจะโดน browser block (mixed content) | 2026-08-11 |
 | D-010 | Monorepo เดียวชื่อ `vmacro` (owner: vfullcycle) โครง `docs/ web/ server/ shortcuts/`, CLAUDE.md อยู่ root — git: trunk-based บน `main`, Conventional Commits อ้าง FR ID, tag semver ผูก phase gate (v0.1.0=P0 ... v1.0.0=P2) | Solo dev: repo เดียวลด overhead และ Claude Code เห็นภาพรวมจากที่เดียว, tag ผูก gate ทำให้ version สื่อความคืบหน้าจริง | 2026-08-11 |
 | D-011 | Nutrient storage: ทุกตาราง food/dish/snapshot (`custom_foods`, `dishes`, `dish_ingredients`, `diary_entries`, `meal_template_items`) เก็บ kcal/protein/carbs/fat เป็น typed column หลัก + คอลัมน์ `nutrients` jsonb เก็บ panel เต็มเท่าที่ต้นทางให้มา (sat/trans/poly/mono fat, cholesterol, sodium, fiber, sugar, vitamins, minerals) — snapshot copy jsonb ไปด้วยทุกจุด. Dish snapshot คงที่หลัง save เว้นแต่ creator สั่ง "Recalculate from source" เอง (manual only, ไม่มี auto-update). ปริมาณ (FR-FOOD-1/FR-DIARY-1) กรอกได้ทั้งจำนวน serving หรือน้ำหนักจริง (g) แล้ว scale ทุก nutrient ตามสัดส่วนจาก serving ต้นทาง (rule of three) | typed column ให้ query/sort เร็วสำหรับ 4 ตัวหลักที่ใช้บ่อย (TDEE/diary summary), jsonb กันต้องแก้ schema ทุกครั้งที่ต้องการ nutrient เพิ่ม + รองรับข้อมูลไม่ครบจาก FatSecret ได้โดยไม่ต้อง NULL เกลื่อน; recalculate แบบ manual กันจานที่คนอื่นใช้ diary แล้วเปลี่ยนค่าย้อนหลังโดยไม่ตั้งใจ | 2026-08-11 |
+| D-012 | Food search (FatSecret + custom foods) เปิด public ไม่ต้อง login — เพิ่ม RLS policy ให้ `anon` role `select` บน `custom_foods` ได้ (read-only) ส่วนเขียน/แก้/ลบ custom food, dish builder, diary, favorites, weight log, profile ยังต้อง login เหมือนเดิมทั้งหมด (ผูก auth.uid()/creator_id) | ปิด R-07 backlog — วีต้องการดู macro อาหารได้ทันทีไม่ต้องสมัครก่อน ลด friction ตอนค้นครั้งแรก, เขียนข้อมูลยังปลอดภัยเพราะ policy เปิดเฉพาะ select | 2026-08-12 |
 
 ### Evidence notes (ไม่ใช่ decision ใหม่ — บันทึกผลทดสอบสนับสนุน decision ที่มีอยู่)
 
@@ -100,7 +101,7 @@ RLS หลัก: ข้อมูลส่วนตัว (diary, health, profil
 | R-04 | Serving size ข้อมูล US (oz, cup) vs การใช้จริงของวี (กรัม) | UX บันทึกช้า | Unit conversion layer + default กรัมสำหรับ custom foods | เปิด |
 | R-05 | Repo public — ความเสี่ยง secret หลุด | สูงมาก | Secret hygiene ใน CLAUDE.md + `.env` อยู่ VPS เท่านั้น + `.gitignore` ตั้งแต่ commit แรก | ควบคุมแล้ว |
 | R-06 | attribution ของ fatsecret หายจาก UI โดยไม่ตั้งใจ (refactor) | ผิดเงื่อนไข tier | ใส่เป็น permanent component + ห้ามลบใน CLAUDE.md | ควบคุมแล้ว |
-| R-07 | (backlog, ตัดสินใจตอนเริ่ม P2) วีอยากค้นหา/ดู macro อาหารได้โดยไม่ต้อง login (ตอนนี้ FR-FOOD-1 ผูก auth ทั้งหมดเหมือน feature อื่น) — ตอน P1 เข้าใจผิดว่าหมายถึง TDEE calculator เลยทำ `/calculator` guest mode ไปก่อน (ยังใช้งานได้ แต่ไม่ตรงโจทย์นี้) | Friction สูงกว่าที่วีต้องการตอนค้นอาหารครั้งแรก | ตัดสินใจตอนวางแผน P2 ว่า food search จะเปิด public (อ่านอย่างเดียว ผ่าน proxy) หรือยังคงต้อง login | เปิด |
+| R-07 | (backlog, ตัดสินใจตอนเริ่ม P2) วีอยากค้นหา/ดู macro อาหารได้โดยไม่ต้อง login (ตอนนี้ FR-FOOD-1 ผูก auth ทั้งหมดเหมือน feature อื่น) — ตอน P1 เข้าใจผิดว่าหมายถึง TDEE calculator เลยทำ `/calculator` guest mode ไปก่อน (ยังใช้งานได้ แต่ไม่ตรงโจทย์นี้) | Friction สูงกว่าที่วีต้องการตอนค้นอาหารครั้งแรก | ปิดแล้ว (2026-08-12: D-012 — เปิด public search ผ่าน RLS policy ใหม่บน `custom_foods`) | ปิดแล้ว |
 
 ## 7. Naming (ยุติแล้ว — D-010)
 
@@ -112,6 +113,7 @@ RLS หลัก: ข้อมูลส่วนตัว (diary, health, profil
 
 ## Changelog
 
+- v1.4 (2026-08-12): เพิ่ม D-012 (เปิด custom_foods select ให้ anon) + ปิด R-07 — วีตัดสินใจเปิด food search แบบ public ตอนวางแผน P2
 - v1.3 (2026-08-11): เพิ่ม R-07 (backlog) — วีทดสอบ P1 แล้วชี้ว่า "ใช้งานไม่ต้อง login" ที่ต้องการจริงคือ food search (FR-FOOD-1, P2) ไม่ใช่ TDEE calculator ที่ทำไปก่อนหน้านี้ — ตัดสินใจตอนวางแผน P2
 - v1.2 (2026-08-11): เพิ่ม D-011 (nutrient storage: typed columns + `nutrients` jsonb, manual recalculate-from-source, quantity scaling rule of three) ตามคำสั่งวีระหว่างทำ Supabase schema P0, อัปเดต §4 ให้ตรง REQUIREMENTS v1.1
 - v1.1 (2026-08-11): เพิ่ม D-010 (monorepo + git conventions), ยุติ §7 Naming, อัปเดต architecture ให้ระบุ URL จริง

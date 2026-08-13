@@ -13,10 +13,11 @@
 }
 
 .food-detail-page .verified-badge {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
   margin-left: 0.4rem;
-  color: #16a34a;
-  font-weight: 700;
-  font-size: 0.85em;
+  vertical-align: 0.05em;
 }
 
 .food-detail-page .admin-verify-button {

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import FatSecretAttribution from "../components/FatSecretAttribution";
 import NutritionFactsLabel from "../components/NutritionFactsLabel";
+import VerifiedBadge from "../components/VerifiedBadge";
 import { API_BASE_URL } from "../config";
 import { useAuth } from "../lib/auth-context";
 import { MEAL_LABELS, type Meal } from "../lib/diary";
@@ -394,11 +395,7 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
       </Link>
       <h1>
         {food.name}
-        {food.is_verified && (
-          <span className="verified-badge" title="ตรวจสอบโดยแอดมินแล้ว">
-            ✓
-          </span>
-        )}
+        {food.is_verified && <VerifiedBadge className="verified-badge" />}
       </h1>
       <p className="food-detail-source">
         Custom food{creatorName ? ` — โดย ${creatorName}` : ""}

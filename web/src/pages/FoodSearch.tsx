@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import FatSecretAttribution from "../components/FatSecretAttribution";
+import VerifiedBadge from "../components/VerifiedBadge";
 import { API_BASE_URL } from "../config";
-import { MEAL_LABELS, type Meal } from "../lib/diary";
+import { useAuth } from "../lib/auth-context";
+import { entryDisplayName, entryQuantityLabel, MEAL_LABELS, type DiaryEntryRow, type Meal } from "../lib/diary";
 import { parseSearchResults, type FatSecretSearchResult } from "../lib/fatsecret";
 import { containsThai } from "../lib/thai";
 import { translateTexts } from "../lib/translate";
@@ -26,6 +28,16 @@ interface FatSecretResultWithThai extends FatSecretSearchResult {
 
 const DEBOUNCE_MS = 300;
 const MIN_QUERY_LENGTH = 2;
+const RECENT_PER_MEAL_LIMIT = 8;
+
+const DIARY_ENTRY_COLUMNS =
+  "id, entry_date, meal, source, custom_food_id, dish_id, fatsecret_food_id, fatsecret_food_name, quantity, serving_size_g, kcal, protein_g, carbs_g, fat_g, nutrients, custom_foods(name), dishes(name)";
+
+function foodIdentityKey(entry: DiaryEntryRow): string {
+  if (entry.source === "fatsecret") return `fs:${entry.fatsecret_food_id}`;
+  if (entry.source === "custom_food") return `cf:${entry.custom_food_id}`;
+  return `dish:${entry.dish_id}`;
+}
 
 async function translateQueryToEnglish(query: string): Promise<string> {
   try {
@@ -74,6 +86,8 @@ async function attachCreatorNames(results: Omit<CustomFoodResult, "creator_name"
 }
 
 export default function FoodSearch() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const forDiary = searchParams.get("forDiary") === "1";
   const diaryDate = searchParams.get("date");
@@ -87,6 +101,66 @@ export default function FoodSearch() {
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   const searchIdRef = useRef(0);
+
+  const [recentEntries, setRecentEntries] = useState<DiaryEntryRow[]>([]);
+  const [quickAddingId, setQuickAddingId] = useState<string | null>(null);
+
+  // History for this specific meal (breakfast/lunch/dinner/snack) — lets a repeat meal
+  // be logged in ~2 taps instead of a full search (FR-DIARY-3-style shortcut).
+  useEffect(() => {
+    if (!forDiary || !diaryMeal || !user) {
+      setRecentEntries([]);
+      return;
+    }
+    supabase
+      .from("diary_entries")
+      .select(DIARY_ENTRY_COLUMNS)
+      .eq("user_id", user.id)
+      .eq("meal", diaryMeal)
+      .order("created_at", { ascending: false })
+      .limit(30)
+      .then(({ data }) => {
+        const rows = (data as unknown as DiaryEntryRow[]) ?? [];
+        const seen = new Set<string>();
+        const deduped: DiaryEntryRow[] = [];
+        for (const row of rows) {
+          const key = foodIdentityKey(row);
+          if (seen.has(key)) continue;
+          seen.add(key);
+          deduped.push(row);
+          if (deduped.length >= RECENT_PER_MEAL_LIMIT) break;
+        }
+        setRecentEntries(deduped);
+      });
+  }, [forDiary, diaryMeal, user]);
+
+  async function quickAdd(entry: DiaryEntryRow) {
+    if (!user || !diaryDate || !diaryMeal) return;
+    setQuickAddingId(entry.id);
+    const { error: insertError } = await supabase.from("diary_entries").insert({
+      user_id: user.id,
+      entry_date: diaryDate,
+      meal: diaryMeal,
+      source: entry.source,
+      custom_food_id: entry.custom_food_id,
+      dish_id: entry.dish_id,
+      fatsecret_food_id: entry.fatsecret_food_id,
+      fatsecret_food_name: entry.fatsecret_food_name,
+      quantity: entry.quantity,
+      serving_size_g: entry.serving_size_g,
+      kcal: entry.kcal,
+      protein_g: entry.protein_g,
+      carbs_g: entry.carbs_g,
+      fat_g: entry.fat_g,
+      nutrients: entry.nutrients,
+    });
+    setQuickAddingId(null);
+    if (insertError) {
+      setError(insertError.message);
+      return;
+    }
+    navigate(`/diary?date=${diaryDate}`);
+  }
 
   useEffect(() => {
     const trimmed = query.trim();
@@ -151,6 +225,25 @@ export default function FoodSearch() {
           กำลังเพิ่มเข้ามื้อ{MEAL_LABELS[diaryMeal as Meal]} วันที่ {diaryDate}
         </p>
       )}
+
+      {recentEntries.length > 0 && (
+        <section className="food-search-recent">
+          <h2>ที่เคยกินมื้อนี้</h2>
+          <ul className="food-result-list">
+            {recentEntries.map((entry) => (
+              <li key={entry.id}>
+                <button type="button" className="food-search-recent-item" onClick={() => quickAdd(entry)} disabled={quickAddingId === entry.id}>
+                  <span className="food-name">{entryDisplayName(entry)}</span>
+                  <span className="food-meta">
+                    {entryQuantityLabel(entry)} — {Math.round(entry.kcal)} kcal
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <input
         type="search"
         value={query}
@@ -175,11 +268,7 @@ export default function FoodSearch() {
                 <Link to={`/food/custom/${food.id}${diaryQuery}`}>
                   <span className="food-name">
                     {food.name}
-                    {food.is_verified && (
-                      <span className="verified-badge" title="ตรวจสอบโดยแอดมินแล้ว">
-                        ✓
-                      </span>
-                    )}
+                    {food.is_verified && <VerifiedBadge className="verified-badge" />}
                   </span>
                   <span className="food-meta">
                     {food.serving_label ?? `${food.serving_size_g}g`} — {food.kcal} kcal

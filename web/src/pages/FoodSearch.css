@@ -48,7 +48,8 @@
   border-top: 1px solid var(--border);
 }
 
-.food-result-list a {
+.food-result-list a,
+.food-result-list .food-search-recent-item {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
@@ -59,15 +60,30 @@
   justify-content: center;
 }
 
+.food-search-recent-item {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.food-search-recent-item:disabled {
+  opacity: 0.5;
+}
+
 .food-result-list .food-name {
   font-weight: 600;
   color: var(--text-h);
 }
 
 .food-result-list .verified-badge {
-  margin-left: 0.35rem;
-  color: #16a34a;
-  font-weight: 700;
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  margin-left: 0.3rem;
+  vertical-align: -0.05em;
 }
 
 .food-result-list .food-meta {

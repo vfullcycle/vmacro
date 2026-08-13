@@ -1,39 +1,77 @@
 import type { NutrientPanel, ScalableNutrients } from "../lib/scaling";
 import "./NutritionFactsLabel.css";
 
-const FAT_ROWS: { key: string; label: string }[] = [
-  { key: "saturated_fat_g", label: "ไขมันอิ่มตัว" },
-  { key: "trans_fat_g", label: "ไขมันทรานส์" },
-  { key: "polyunsaturated_fat_g", label: "ไขมันไม่อิ่มตัวหลายตำแหน่ง" },
-  { key: "monounsaturated_fat_g", label: "ไขมันไม่อิ่มตัวตำแหน่งเดียว" },
+interface NutrientDef {
+  key: string;
+  label: string;
+}
+
+const FAT_ROWS: NutrientDef[] = [
+  { key: "saturated_fat", label: "ไขมันอิ่มตัว" },
+  { key: "trans_fat", label: "ไขมันทรานส์" },
+  { key: "polyunsaturated_fat", label: "ไขมันไม่อิ่มตัวหลายตำแหน่ง" },
+  { key: "monounsaturated_fat", label: "ไขมันไม่อิ่มตัวตำแหน่งเดียว" },
 ];
 
-const CARB_ROWS: { key: string; label: string }[] = [
-  { key: "fiber_g", label: "ใยอาหาร" },
-  { key: "sugar_g", label: "น้ำตาล" },
-  { key: "added_sugars_g", label: "น้ำตาลที่เติมเพิ่ม" },
+const CARB_ROWS: NutrientDef[] = [
+  { key: "fiber", label: "ใยอาหาร" },
+  { key: "sugar", label: "น้ำตาล" },
+  { key: "added_sugars", label: "น้ำตาลที่เติมเพิ่ม" },
 ];
 
-const OTHER_ROWS: { key: string; label: string }[] = [
-  { key: "cholesterol_mg", label: "คอเลสเตอรอล" },
-  { key: "sodium_mg", label: "โซเดียม" },
+const OTHER_ROWS: NutrientDef[] = [
+  { key: "cholesterol", label: "คอเลสเตอรอล" },
+  { key: "sodium", label: "โซเดียม" },
 ];
 
-const VITAMIN_LABELS: Record<string, string> = {
-  vitamin_a_mcg: "วิตามินเอ",
-  vitamin_c_mg: "วิตามินซี",
-  vitamin_d_mcg: "วิตามินดี",
-};
+const VITAMIN_ROWS: NutrientDef[] = [
+  { key: "vitamin_a", label: "วิตามินเอ" },
+  { key: "vitamin_c", label: "วิตามินซี" },
+  { key: "vitamin_d", label: "วิตามินดี" },
+  { key: "vitamin_e", label: "วิตามินอี" },
+  { key: "vitamin_k", label: "วิตามินเค" },
+  { key: "vitamin_b1", label: "วิตามินบี1 (ไทอามีน)" },
+  { key: "vitamin_b2", label: "วิตามินบี2 (ไรโบฟลาวิน)" },
+  { key: "vitamin_b3", label: "วิตามินบี3 (ไนอาซิน)" },
+  { key: "vitamin_b6", label: "วิตามินบี6" },
+  { key: "vitamin_b12", label: "วิตามินบี12" },
+  { key: "folate", label: "โฟเลต (บี9)" },
+  { key: "biotin", label: "ไบโอติน (บี7)" },
+  { key: "pantothenic_acid", label: "กรดแพนโททีนิก (บี5)" },
+];
 
-const MINERAL_LABELS: Record<string, string> = {
-  calcium_mg: "แคลเซียม",
-  iron_mg: "ธาตุเหล็ก",
-  potassium_mg: "โพแทสเซียม",
-};
+const MINERAL_ROWS: NutrientDef[] = [
+  { key: "calcium", label: "แคลเซียม" },
+  { key: "iron", label: "ธาตุเหล็ก" },
+  { key: "potassium", label: "โพแทสเซียม" },
+  { key: "magnesium", label: "แมกนีเซียม" },
+  { key: "zinc", label: "สังกะสี" },
+  { key: "phosphorus", label: "ฟอสฟอรัส" },
+  { key: "iodine", label: "ไอโอดีน" },
+  { key: "selenium", label: "ซีลีเนียม" },
+  { key: "copper", label: "ทองแดง" },
+  { key: "manganese", label: "แมงกานีส" },
+  { key: "chloride", label: "คลอไรด์" },
+];
 
-function formatValue(key: string, value: number): string {
-  const unit = key.endsWith("_mg") ? "mg" : key.endsWith("_mcg") ? "mcg" : key.endsWith("_g") ? "g" : "";
-  return `${value}${unit}`;
+// A nutrient can be stored either as an absolute amount (_g/_mg/_mcg) or as a
+// percent of daily value (_pct) — CustomFoodForm lets the creator pick per field,
+// since many Thai nutrition labels only print one or the other.
+const VALUE_SUFFIXES = ["_g", "_mg", "_mcg", "_pct"] as const;
+
+function readNutrient(panel: NutrientPanel, baseKey: string): { value: number; suffix: (typeof VALUE_SUFFIXES)[number] } | null {
+  for (const suffix of VALUE_SUFFIXES) {
+    const v = panel[`${baseKey}${suffix}`];
+    if (typeof v === "number") return { value: v, suffix };
+  }
+  return null;
+}
+
+function formatBySuffix(suffix: string, value: number): string {
+  if (suffix === "_pct") return `${value}%`;
+  if (suffix === "_mg") return `${value}mg`;
+  if (suffix === "_mcg") return `${value}mcg`;
+  return `${value}g`;
 }
 
 function Row({ label, value, indent }: { label: string; value: string; indent?: boolean }) {
@@ -45,16 +83,26 @@ function Row({ label, value, indent }: { label: string; value: string; indent?: 
   );
 }
 
-function NestedGroup({ title, panel, labels }: { title: string; panel: NutrientPanel | undefined; labels: Record<string, string> }) {
+function NutrientRows({ rows, panel, indent }: { rows: NutrientDef[]; panel: NutrientPanel; indent?: boolean }) {
+  return (
+    <>
+      {rows.map((r) => {
+        const found = readNutrient(panel, r.key);
+        if (!found) return null;
+        return <Row key={r.key} label={r.label} value={formatBySuffix(found.suffix, found.value)} indent={indent} />;
+      })}
+    </>
+  );
+}
+
+function NestedGroup({ title, panel, rows }: { title: string; panel: NutrientPanel | undefined; rows: NutrientDef[] }) {
   if (!panel) return null;
-  const entries = Object.entries(labels).filter(([key]) => typeof panel[key] === "number");
-  if (!entries.length) return null;
+  const hasAny = rows.some((r) => readNutrient(panel, r.key));
+  if (!hasAny) return null;
   return (
     <div className="nfl-section">
       <div className="nfl-section-title">{title}</div>
-      {entries.map(([key, label]) => (
-        <Row key={key} label={label} value={formatValue(key, panel[key] as number)} />
-      ))}
+      <NutrientRows rows={rows} panel={panel} />
     </div>
   );
 }
@@ -80,25 +128,19 @@ export default function NutritionFactsLabel({
       <div className="nfl-divider-thick" />
 
       <Row label="ไขมันทั้งหมด" value={`${nutrients.fat_g}g`} />
-      {FAT_ROWS.filter((r) => typeof panel[r.key] === "number").map((r) => (
-        <Row key={r.key} label={r.label} value={formatValue(r.key, panel[r.key] as number)} indent />
-      ))}
+      <NutrientRows rows={FAT_ROWS} panel={panel} indent />
 
-      {OTHER_ROWS.filter((r) => typeof panel[r.key] === "number").map((r) => (
-        <Row key={r.key} label={r.label} value={formatValue(r.key, panel[r.key] as number)} />
-      ))}
+      <NutrientRows rows={OTHER_ROWS} panel={panel} />
 
       <Row label="คาร์โบไฮเดรตทั้งหมด" value={`${nutrients.carbs_g}g`} />
-      {CARB_ROWS.filter((r) => typeof panel[r.key] === "number").map((r) => (
-        <Row key={r.key} label={r.label} value={formatValue(r.key, panel[r.key] as number)} indent />
-      ))}
+      <NutrientRows rows={CARB_ROWS} panel={panel} indent />
 
       <div className="nfl-divider" />
       <Row label="โปรตีน" value={`${nutrients.protein_g}g`} />
       <div className="nfl-divider-thick" />
 
-      <NestedGroup title="วิตามิน" panel={panel.vitamins as NutrientPanel | undefined} labels={VITAMIN_LABELS} />
-      <NestedGroup title="แร่ธาตุ" panel={panel.minerals as NutrientPanel | undefined} labels={MINERAL_LABELS} />
+      <NestedGroup title="วิตามิน" panel={panel.vitamins as NutrientPanel | undefined} rows={VITAMIN_ROWS} />
+      <NestedGroup title="แร่ธาตุ" panel={panel.minerals as NutrientPanel | undefined} rows={MINERAL_ROWS} />
     </div>
   );
 }

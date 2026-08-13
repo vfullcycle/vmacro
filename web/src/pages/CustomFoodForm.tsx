@@ -26,24 +26,59 @@ const EMPTY_CORE: CoreFormState = {
 };
 
 type ExtraGroup = "fat" | "carb" | "other" | "vitamin" | "mineral";
-type ExtraFormState = Record<string, string>;
+type ExtraUnit = "abs" | "pct";
+type ExtraEntry = { value: string; unit: ExtraUnit };
+type ExtraFormState = Record<string, ExtraEntry>;
 
-const EXTRA_FIELDS: { key: string; label: string; group: ExtraGroup }[] = [
-  { key: "saturated_fat_g", label: "Saturated Fat (g)", group: "fat" },
-  { key: "trans_fat_g", label: "Trans Fat (g)", group: "fat" },
-  { key: "polyunsaturated_fat_g", label: "Polyunsaturated Fat (g)", group: "fat" },
-  { key: "monounsaturated_fat_g", label: "Monounsaturated Fat (g)", group: "fat" },
-  { key: "fiber_g", label: "Fiber (g)", group: "carb" },
-  { key: "sugar_g", label: "Sugar (g)", group: "carb" },
-  { key: "added_sugars_g", label: "Added Sugars (g)", group: "carb" },
-  { key: "cholesterol_mg", label: "Cholesterol (mg)", group: "other" },
-  { key: "sodium_mg", label: "Sodium (mg)", group: "other" },
-  { key: "vitamin_a_mcg", label: "Vitamin A (mcg)", group: "vitamin" },
-  { key: "vitamin_c_mg", label: "Vitamin C (mg)", group: "vitamin" },
-  { key: "vitamin_d_mcg", label: "Vitamin D (mcg)", group: "vitamin" },
-  { key: "calcium_mg", label: "Calcium (mg)", group: "mineral" },
-  { key: "iron_mg", label: "Iron (mg)", group: "mineral" },
-  { key: "potassium_mg", label: "Potassium (mg)", group: "mineral" },
+// key = base nutrient key (matches NutritionFactsLabel); unit = the field's natural
+// absolute unit. Every field can also be entered as "% ของปริมาณที่แนะนำต่อวัน" (%DV) —
+// many Thai nutrition labels print only the percentage, not the absolute amount.
+interface ExtraFieldDef {
+  key: string;
+  label: string;
+  group: ExtraGroup;
+  unit: "g" | "mg" | "mcg";
+}
+
+// FatSecret's API only ever returns saturated/trans/poly/mono fat, fiber, sugar,
+// added sugars, cholesterol, sodium, potassium, vitamin A/C/D, calcium, iron — nothing
+// else (verified against their docs, 2026-08). Everything past that (B vitamins, E, K,
+// and the extended minerals) only ever comes from a user typing it in off a real label,
+// so it lives here even though FatSecret-sourced foods will never populate it.
+const EXTRA_FIELDS: ExtraFieldDef[] = [
+  { key: "saturated_fat", label: "ไขมันอิ่มตัว", group: "fat", unit: "g" },
+  { key: "trans_fat", label: "ไขมันทรานส์", group: "fat", unit: "g" },
+  { key: "polyunsaturated_fat", label: "ไขมันไม่อิ่มตัวหลายตำแหน่ง", group: "fat", unit: "g" },
+  { key: "monounsaturated_fat", label: "ไขมันไม่อิ่มตัวตำแหน่งเดียว", group: "fat", unit: "g" },
+  { key: "fiber", label: "ใยอาหาร", group: "carb", unit: "g" },
+  { key: "sugar", label: "น้ำตาล", group: "carb", unit: "g" },
+  { key: "added_sugars", label: "น้ำตาลที่เติมเพิ่ม", group: "carb", unit: "g" },
+  { key: "cholesterol", label: "คอเลสเตอรอล", group: "other", unit: "mg" },
+  { key: "sodium", label: "โซเดียม", group: "other", unit: "mg" },
+  { key: "vitamin_a", label: "วิตามินเอ", group: "vitamin", unit: "mcg" },
+  { key: "vitamin_c", label: "วิตามินซี", group: "vitamin", unit: "mg" },
+  { key: "vitamin_d", label: "วิตามินดี", group: "vitamin", unit: "mcg" },
+  { key: "vitamin_e", label: "วิตามินอี", group: "vitamin", unit: "mg" },
+  { key: "vitamin_k", label: "วิตามินเค", group: "vitamin", unit: "mcg" },
+  { key: "vitamin_b1", label: "วิตามินบี1 (ไทอามีน)", group: "vitamin", unit: "mg" },
+  { key: "vitamin_b2", label: "วิตามินบี2 (ไรโบฟลาวิน)", group: "vitamin", unit: "mg" },
+  { key: "vitamin_b3", label: "วิตามินบี3 (ไนอาซิน)", group: "vitamin", unit: "mg" },
+  { key: "vitamin_b6", label: "วิตามินบี6", group: "vitamin", unit: "mg" },
+  { key: "vitamin_b12", label: "วิตามินบี12", group: "vitamin", unit: "mcg" },
+  { key: "folate", label: "โฟเลต (บี9)", group: "vitamin", unit: "mcg" },
+  { key: "biotin", label: "ไบโอติน (บี7)", group: "vitamin", unit: "mcg" },
+  { key: "pantothenic_acid", label: "กรดแพนโททีนิก (บี5)", group: "vitamin", unit: "mg" },
+  { key: "calcium", label: "แคลเซียม", group: "mineral", unit: "mg" },
+  { key: "iron", label: "ธาตุเหล็ก", group: "mineral", unit: "mg" },
+  { key: "potassium", label: "โพแทสเซียม", group: "mineral", unit: "mg" },
+  { key: "magnesium", label: "แมกนีเซียม", group: "mineral", unit: "mg" },
+  { key: "zinc", label: "สังกะสี", group: "mineral", unit: "mg" },
+  { key: "phosphorus", label: "ฟอสฟอรัส", group: "mineral", unit: "mg" },
+  { key: "iodine", label: "ไอโอดีน", group: "mineral", unit: "mcg" },
+  { key: "selenium", label: "ซีลีเนียม", group: "mineral", unit: "mcg" },
+  { key: "copper", label: "ทองแดง", group: "mineral", unit: "mg" },
+  { key: "manganese", label: "แมงกานีส", group: "mineral", unit: "mg" },
+  { key: "chloride", label: "คลอไรด์", group: "mineral", unit: "mg" },
 ];
 
 const GROUP_LABELS: Record<ExtraGroup, string> = {
@@ -56,34 +91,41 @@ const GROUP_LABELS: Record<ExtraGroup, string> = {
 
 const GROUP_ORDER: ExtraGroup[] = ["fat", "carb", "other", "vitamin", "mineral"];
 
+function panelFor(nutrients: NutrientPanel, group: ExtraGroup): NutrientPanel {
+  if (group === "vitamin") {
+    if (typeof nutrients.vitamins !== "object" || nutrients.vitamins === null) nutrients.vitamins = {};
+    return nutrients.vitamins as NutrientPanel;
+  }
+  if (group === "mineral") {
+    if (typeof nutrients.minerals !== "object" || nutrients.minerals === null) nutrients.minerals = {};
+    return nutrients.minerals as NutrientPanel;
+  }
+  return nutrients;
+}
+
 function buildNutrients(extras: ExtraFormState): NutrientPanel {
   const nutrients: NutrientPanel = {};
-  const vitamins: NutrientPanel = {};
-  const minerals: NutrientPanel = {};
   for (const field of EXTRA_FIELDS) {
-    const raw = extras[field.key];
-    if (!raw) continue;
-    const value = Number(raw);
-    if (field.group === "vitamin") vitamins[field.key] = value;
-    else if (field.group === "mineral") minerals[field.key] = value;
-    else nutrients[field.key] = value;
+    const entry = extras[field.key];
+    if (!entry || !entry.value) continue;
+    const value = Number(entry.value);
+    const storageKey = entry.unit === "pct" ? `${field.key}_pct` : `${field.key}_${field.unit}`;
+    panelFor(nutrients, field.group)[storageKey] = value;
   }
-  if (Object.keys(vitamins).length) nutrients.vitamins = vitamins;
-  if (Object.keys(minerals).length) nutrients.minerals = minerals;
   return nutrients;
 }
 
 function flattenNutrients(nutrients: NutrientPanel | null): ExtraFormState {
   const result: ExtraFormState = {};
   if (!nutrients) return result;
-  const vitamins = nutrients.vitamins as NutrientPanel | undefined;
-  const minerals = nutrients.minerals as NutrientPanel | undefined;
+  const vitamins = (nutrients.vitamins as NutrientPanel | undefined) ?? {};
+  const minerals = (nutrients.minerals as NutrientPanel | undefined) ?? {};
   for (const field of EXTRA_FIELDS) {
-    let value: unknown;
-    if (field.group === "vitamin") value = vitamins?.[field.key];
-    else if (field.group === "mineral") value = minerals?.[field.key];
-    else value = nutrients[field.key];
-    if (typeof value === "number") result[field.key] = String(value);
+    const panel = field.group === "vitamin" ? vitamins : field.group === "mineral" ? minerals : nutrients;
+    const absKey = `${field.key}_${field.unit}`;
+    const pctKey = `${field.key}_pct`;
+    if (typeof panel[absKey] === "number") result[field.key] = { value: String(panel[absKey]), unit: "abs" };
+    else if (typeof panel[pctKey] === "number") result[field.key] = { value: String(panel[pctKey]), unit: "pct" };
   }
   return result;
 }
@@ -225,23 +267,38 @@ export default function CustomFoodForm() {
           </label>
         </div>
 
-        <p className="form-hint">ข้อมูลเสริมด้านล่างไม่บังคับ — กรอกเท่าที่มีข้อมูลจริง (เช่น จากฉลากโภชนาการ)</p>
+        <p className="form-hint">
+          ข้อมูลเสริมด้านล่างไม่บังคับ — กรอกเท่าที่มีข้อมูลจริง (เช่น จากฉลากโภชนาการ) เลือกหน่วยได้ทั้งค่าจริง ({"มก./ไมโครกรัม"})
+          หรือ % ของปริมาณที่แนะนำต่อวัน ถ้าฉลากให้มาแค่ %
+        </p>
 
         {GROUP_ORDER.map((group) => (
           <div key={group} className="extra-group">
             <p className="form-section-label">{GROUP_LABELS[group]}</p>
             <div className="form-grid">
-              {EXTRA_FIELDS.filter((f) => f.group === group).map((field) => (
-                <label key={field.key}>
-                  {field.label}
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={extras[field.key] ?? ""}
-                    onChange={(e) => setExtras({ ...extras, [field.key]: e.target.value })}
-                  />
-                </label>
-              ))}
+              {EXTRA_FIELDS.filter((f) => f.group === group).map((field) => {
+                const entry = extras[field.key] ?? { value: "", unit: "abs" as const };
+                return (
+                  <label key={field.key} className="extra-field-row">
+                    {field.label}
+                    <span className="extra-field-input-group">
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={entry.value}
+                        onChange={(e) => setExtras({ ...extras, [field.key]: { ...entry, value: e.target.value } })}
+                      />
+                      <select
+                        value={entry.unit}
+                        onChange={(e) => setExtras({ ...extras, [field.key]: { ...entry, unit: e.target.value as ExtraUnit } })}
+                      >
+                        <option value="abs">{field.unit}</option>
+                        <option value="pct">%</option>
+                      </select>
+                    </span>
+                  </label>
+                );
+              })}
             </div>
           </div>
         ))}

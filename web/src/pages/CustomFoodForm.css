@@ -59,6 +59,26 @@
   gap: 0.75rem;
 }
 
+.custom-food-form-page .extra-field-input-group {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.custom-food-form-page .extra-field-input-group input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.custom-food-form-page .extra-field-input-group select {
+  flex: 0 0 4.2rem;
+  padding: 0.5rem 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
 .custom-food-form-page button {
   padding: 0.7rem;
   border: none;

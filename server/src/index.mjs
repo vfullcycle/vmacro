@@ -1,11 +1,20 @@
+import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { translateBatch } from "./anthropic.mjs";
+import { getAuthedUser } from "./auth.mjs";
 import { getFood, searchFoods } from "./fatsecret.mjs";
+import { checkRateLimit } from "./rateLimit.mjs";
 
 const PORT = process.env.PORT || 3000;
 const HOST = "127.0.0.1";
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "https://vfullcycle.github.io";
 const MAX_BODY_BYTES = 64 * 1024;
+const TRANSLATE_RATE_LIMIT = { max: 20, windowMs: 60_000 };
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const VERSION_FILE = path.join(__dirname, "../deploy/version.json");
 
 function withCors(res) {
   res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
@@ -58,6 +67,16 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === "GET" && url.pathname === "/version") {
+    try {
+      const raw = await readFile(VERSION_FILE, "utf8");
+      sendJson(res, 200, JSON.parse(raw));
+    } catch {
+      sendJson(res, 200, { commit: "unknown", deployed_at: null });
+    }
+    return;
+  }
+
   if (req.method === "GET" && url.pathname === "/food/search") {
     const q = url.searchParams.get("q");
     if (!q) {
@@ -91,6 +110,19 @@ const server = createServer(async (req, res) => {
   }
 
   if (req.method === "POST" && url.pathname === "/translate") {
+    // D-015 amendment: /translate spends วี's own prepaid Anthropic credit, so it must
+    // require a logged-in user (unlike /food/search + /food/get, which stay public per
+    // D-012) and be rate-limited against an accidental loop or abuse.
+    const user = await getAuthedUser(req);
+    if (!user) {
+      sendJson(res, 401, { error: "unauthorized" });
+      return;
+    }
+    if (!checkRateLimit(user.id, TRANSLATE_RATE_LIMIT)) {
+      sendJson(res, 429, { error: "rate limited" });
+      return;
+    }
+
     let body;
     try {
       body = await readJsonBody(req);

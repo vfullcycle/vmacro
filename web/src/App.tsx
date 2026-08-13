@@ -9,6 +9,7 @@ import FoodDetail from "./pages/FoodDetail";
 import FoodSearch from "./pages/FoodSearch";
 import HealthCheck from "./pages/HealthCheck";
 import Login from "./pages/Login";
+import SettingsHome from "./pages/SettingsHome";
 import SettingsProfile from "./pages/SettingsProfile";
 import SettingsSystem from "./pages/SettingsSystem";
 import WeightLog from "./pages/WeightLog";
@@ -32,6 +33,7 @@ function App() {
           >
             <Route path="/" element={<Navigate to="/diary" replace />} />
             <Route path="/diary" element={<Diary />} />
+            <Route path="/settings" element={<SettingsHome />} />
             <Route path="/settings/profile" element={<SettingsProfile />} />
             <Route path="/settings/system" element={<SettingsSystem />} />
             <Route path="/weight-log" element={<WeightLog />} />

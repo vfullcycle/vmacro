@@ -1,0 +1,56 @@
+.settings-home {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+}
+
+.settings-home-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+}
+
+.settings-home-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.settings-home-list a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.9rem 0.25rem;
+  text-decoration: none;
+  color: inherit;
+  min-height: 44px;
+}
+
+.settings-home-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.settings-home-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.settings-home-label {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.settings-home-desc {
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.settings-home-chevron {
+  font-size: 1.25rem;
+  color: var(--text);
+  flex-shrink: 0;
+}

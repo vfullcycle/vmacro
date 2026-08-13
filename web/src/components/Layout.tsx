@@ -1,14 +1,13 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../lib/auth-context";
-import { DiaryIcon, GearIcon, SearchIcon, TrendIcon, UserIcon } from "./icons";
+import { DiaryIcon, GearIcon, SearchIcon, TrendIcon } from "./icons";
 import "./Layout.css";
 
 const TABS = [
   { to: "/diary", label: "Diary", Icon: DiaryIcon },
   { to: "/food/search", label: "Search", Icon: SearchIcon },
-  { to: "/settings/profile", label: "Profile", Icon: UserIcon },
-  { to: "/settings/system", label: "System", Icon: GearIcon },
   { to: "/weight-log", label: "Weight", Icon: TrendIcon },
+  { to: "/settings", label: "Settings", Icon: GearIcon },
 ];
 
 export default function Layout() {

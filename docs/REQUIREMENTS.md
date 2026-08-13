@@ -1,4 +1,4 @@
-# REQUIREMENTS — Vmacro (FROZEN v1.1, 2026-08-11)
+# REQUIREMENTS — Vmacro (FROZEN v1.2, 2026-08-13)
 
 > แก้ไขได้เฉพาะเมื่อวีสั่ง + bump version + บันทึก changelog ท้ายไฟล์
 > ทุก FR ระบุ phase ที่ implement ตาม SCOPE.md
@@ -13,7 +13,11 @@ body fat % (optional — จำเป็นเฉพาะเมื่อเล�
 *AC: บันทึกแล้วค่า TDEE/target อัปเดตทันทีทุกหน้า, body fat ว่างได้โดยไม่ block สูตรอื่น*
 
 **FR-PROF-2** การอัปเดตน้ำหนักทุกครั้งเก็บเป็น weight log (timestamp) เพื่อทำ trend — ไม่ทับค่าเดิม
-*AC: มีกราฟ trend น้ำหนักย้อนหลังดูได้*
+*AC: มีกราฟ trend น้ำหนักย้อนหลังดูได้, แก้ไข/ลบ log entry แต่ละรายการย้อนหลังได้*
+
+**FR-PROF-3** ตั้งชื่อที่แสดงต่อสาธารณะ (nickname) ใน Settings → Profile — default = local part ของ email
+(ก่อน `@`) ตอน signup, แก้ไขเองได้ภายหลัง (D-016)
+*AC: เปลี่ยนชื่อแล้ว ชื่อที่แสดงบน custom food ที่ตัวเองสร้าง (FR-FOOD-2) อัปเดตตาม*
 
 ## FR-CALC — TDEE & Macro Engine (P1)
 
@@ -31,7 +35,8 @@ body fat % (optional — จำเป็นเฉพาะเมื่อเล�
 
 ## FR-SET — Settings (P1)
 
-**FR-SET-1** Settings แยก 2 ส่วนชัดเจน: **Profile** (ข้อมูลร่างกาย/เป้าหมาย/สูตร ตาม FR-PROF, FR-CALC)
+**FR-SET-1** Settings เข้าถึงผ่าน tab เดียวในแถบล่าง แสดงเป็น list ของหมวดย่อยแทนการแยก tab ต่อหมวด
+(เผื่อเพิ่มหมวดในอนาคตโดยไม่ต้องขยายแถบ tab) — ตอนนี้มี 2 หมวด: **Profile** (ข้อมูลร่างกาย/เป้าหมาย/สูตร ตาม FR-PROF, FR-CALC)
 และ **System** (หน่วยแสดงผล, ค่า default protein g/kg และ fat %, การจัดการ meal templates, ลิงก์ติดตั้ง Shortcuts + สถานะเชื่อมต่อ)
 
 ## FR-FOOD — Food Database & Search (P2)
@@ -56,6 +61,11 @@ body fat % (optional — จำเป็นเฉพาะเมื่อเล�
 พร้อม fatsecret attribution เมื่อข้อมูลมาจาก FatSecret API
 *AC: เปิดจาก search result, custom food, หรือ dish ก็เข้าหน้านี้ได้; nutrient ที่ไม่มีข้อมูลจากต้นทางไม่แสดง (ไม่โชว์ 0 ปลอม);
 attribution แสดงเฉพาะเมื่อ source เป็น FatSecret*
+
+**FR-FOOD-5 (P2)** Admin verification สำหรับ custom food — admin (วี) ตรวจสอบความถูกต้องของ custom food
+แล้วระบุแหล่งอ้างอิง (เช่น "Thai FCD v3") ได้ ขึ้น badge ยืนยันแสดงในผลค้นหาและหน้า detail — เฉพาะ admin เท่านั้นที่ verify ได้
+ผู้สร้างอาหารเองยืนยันตัวเองไม่ได้ (D-017)
+*AC: badge แสดงเฉพาะเมื่อ verified แล้ว; แหล่งอ้างอิงแสดงเต็มเฉพาะหน้า detail ไม่ใช่ในผลค้นหาแบบย่อ; admin ยกเลิกการ verify ได้*
 
 ## FR-DIARY — Daily Logging (P2)
 
@@ -104,6 +114,9 @@ RLS: diary/health/profile/weight เห็นเฉพาะเจ้าขอ�
 
 ## Changelog
 
+- v1.2 (2026-08-13): Formalize สิ่งที่เกิดระหว่าง dogfood P2 (คำสั่งวี) — เพิ่ม FR-PROF-3 (nickname, D-016),
+  FR-FOOD-5 (admin verification badge, D-017), แก้ FR-SET-1 ให้ตรงของจริง (tab เดียว + list หมวดย่อย แทน 2 tab แยก),
+  เพิ่ม AC แก้ไข/ลบใน FR-PROF-2 (weight log)
 - v1.1 (2026-08-11): แก้ตามคำสั่งวี (session C1, ระหว่างทำ Supabase schema ของ P0) —
   เพิ่ม FR-FOOD-4 (Nutrition Facts label page), อัปเดต FR-FOOD-2 ให้เก็บ nutrients panel เต็มไม่ใช่แค่ fiber/sugar/sodium,
   อัปเดต FR-FOOD-3 AC เพิ่ม "Recalculate from source" (manual only), อัปเดต FR-FOOD-1/FR-DIARY-1 AC ให้ระบุ logic

@@ -63,6 +63,18 @@ Feature ที่เข้า gate: ห้ามเริ่มโค้ดจ�
   - ตัวอย่าง: `git tag -a v0.1.0 -m "P0 complete: infra spike, R-01/R-02 closed"`
 - **Push:** จบ task ที่ผ่าน DoD แล้วให้ commit ทันที — อย่าสะสมงานหลาย task ใน commit เดียว
 
+## Server deploy (D-015 amendment, 2026-08-13)
+
+`server/` (VPS proxy) **ไม่ auto-deploy** ต่างจาก `web/` (GitHub Pages ผ่าน Actions) — push ขึ้น `main` อย่างเดียวไม่พอ
+เคยเกิด VPS ค้าง 10 commits มาแล้วเพราะเข้าใจผิดว่า deploy แล้ว (ดู PROJECT_BIBLE §5 D-015)
+
+- จบงานที่แก้ไฟล์ใน `server/` ทุกครั้ง ต้อง deploy จริงก่อนถือว่า DoD ผ่าน:
+  ```
+  ssh vmacro-vps 'bash /home/vmacro/vmacro/server/deploy/deploy.sh'
+  ```
+- Deploy script (`server/deploy/deploy.sh`) ทำให้ครบในคำสั่งเดียว: `git pull` → `npm install` เฉพาะตอน `package-lock.json` เปลี่ยน → เขียน `server/deploy/version.json` → restart `vmacro-proxy` → self-check `GET /version`
+- **ตรวจ drift ได้ทุกเมื่อ** โดยเทียบ `curl https://vmacro.persiq.net/version` (commit ที่รันจริงบน VPS) กับ `git log --oneline -1` (commit ล่าสุดบน `main`) — ต้องตรงกันเสมอหลัง deploy
+
 ## Tech constraints (สรุปจาก PROJECT_BIBLE — ที่นั่นคือ source of truth)
 
 - Frontend: React + TypeScript + Vite, PWA, deploy บน GitHub Pages (**repo public — ห้าม commit secret ทุกชนิด**)

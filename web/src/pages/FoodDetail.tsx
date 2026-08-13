@@ -290,6 +290,7 @@ interface CustomFoodRow {
   fat_g: number;
   nutrients: NutrientPanel | null;
   is_verified: boolean;
+  verified_source: string | null;
 }
 
 function CustomFoodDetail({ foodId }: { foodId: string }) {
@@ -307,7 +308,7 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
   useEffect(() => {
     supabase
       .from("custom_foods")
-      .select("creator_id, name, serving_label, serving_size_g, kcal, protein_g, carbs_g, fat_g, nutrients, is_verified")
+      .select("creator_id, name, serving_label, serving_size_g, kcal, protein_g, carbs_g, fat_g, nutrients, is_verified, verified_source")
       .eq("id", foodId)
       .single()
       .then(({ data, error }) => {
@@ -336,15 +337,23 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
 
   async function toggleVerified() {
     if (!food) return;
-    setVerifySaving(true);
     const nextVerified = !food.is_verified;
-    const { error: rpcError } = await supabase.rpc("set_food_verified", { food_id: foodId, verified: nextVerified });
+
+    let source: string | null = null;
+    if (nextVerified) {
+      source = window.prompt("แหล่งข้อมูลที่ใช้ตรวจสอบ (เช่น Thai FCD v3) — เว้นว่างได้", food.verified_source ?? "");
+      if (source === null) return; // cancelled
+      source = source.trim() || null;
+    }
+
+    setVerifySaving(true);
+    const { error: rpcError } = await supabase.rpc("set_food_verified", { food_id: foodId, verified: nextVerified, source });
     setVerifySaving(false);
     if (rpcError) {
       setError(rpcError.message);
       return;
     }
-    setFood({ ...food, is_verified: nextVerified });
+    setFood({ ...food, is_verified: nextVerified, verified_source: source });
   }
 
   const scaled: ScalableNutrients | null = useMemo(() => {
@@ -406,6 +415,9 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
           </>
         )}
       </p>
+      {food.is_verified && (
+        <p className="food-detail-verified-note">✓ ตรวจสอบแล้ว{food.verified_source ? ` — ข้อมูลจาก ${food.verified_source}` : ""}</p>
+      )}
       {isAdmin && (
         <button type="button" className="admin-verify-button" onClick={toggleVerified} disabled={verifySaving}>
           {verifySaving ? "..." : food.is_verified ? "ยกเลิกการตรวจสอบ" : "ยืนยันว่าข้อมูลถูกต้อง (admin)"}

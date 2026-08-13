@@ -20,6 +20,12 @@
   vertical-align: 0.05em;
 }
 
+.food-detail-page .food-detail-verified-note {
+  font-size: 0.8rem;
+  color: #16a34a;
+  margin: -0.5rem 0 0.75rem;
+}
+
 .food-detail-page .admin-verify-button {
   margin: -0.5rem 0 1rem;
   padding: 0.4rem 0.7rem;

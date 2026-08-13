@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import MealTemplatePickerModal from "../components/MealTemplatePickerModal";
 import { useAuth } from "../lib/auth-context";
 import { addDays, entryDisplayName, entryQuantityLabel, MEAL_LABELS, MEALS, todayLocalDate, type DiaryEntryRow, type Meal } from "../lib/diary";
 import { computeFullPreview } from "../lib/preview";
@@ -58,6 +59,11 @@ export default function Diary() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [editSaving, setEditSaving] = useState(false);
+
+  const [pickerMeal, setPickerMeal] = useState<Meal | null>(null);
+  const [savingTemplateMeal, setSavingTemplateMeal] = useState<Meal | null>(null);
+  const [templateName, setTemplateName] = useState("");
+  const [templateSaving, setTemplateSaving] = useState(false);
 
   async function loadEntries() {
     if (!user) return;
@@ -177,6 +183,49 @@ export default function Diary() {
     }
     cancelEdit();
     await loadEntries();
+  }
+
+  async function handleSaveTemplate(e: React.FormEvent, mealEntries: DiaryEntryRow[]) {
+    e.preventDefault();
+    if (!user || !templateName.trim()) return;
+    setTemplateSaving(true);
+    setError(null);
+
+    const { data: template, error: templateError } = await supabase
+      .from("meal_templates")
+      .insert({ user_id: user.id, name: templateName.trim() })
+      .select("id")
+      .single();
+    if (templateError) {
+      setError(templateError.message);
+      setTemplateSaving(false);
+      return;
+    }
+
+    const items = mealEntries.map((entry) => ({
+      template_id: template.id,
+      source: entry.source,
+      custom_food_id: entry.custom_food_id,
+      dish_id: entry.dish_id,
+      fatsecret_food_id: entry.fatsecret_food_id,
+      fatsecret_food_name: entry.fatsecret_food_name,
+      quick_name: entry.quick_name,
+      quantity: entry.quantity,
+      serving_size_g: entry.serving_size_g,
+      kcal: entry.kcal,
+      protein_g: entry.protein_g,
+      carbs_g: entry.carbs_g,
+      fat_g: entry.fat_g,
+      nutrients: entry.nutrients,
+    }));
+    const { error: itemsError } = await supabase.from("meal_template_items").insert(items);
+    setTemplateSaving(false);
+    if (itemsError) {
+      setError(itemsError.message);
+      return;
+    }
+    setSavingTemplateMeal(null);
+    setTemplateName("");
   }
 
   async function handleDelete(id: string) {
@@ -299,12 +348,58 @@ export default function Diary() {
                 )}
               </ul>
 
-              <Link className="diary-add-link" to={`/food/search?forDiary=1&date=${date}&meal=${meal}`}>
-                + เพิ่มอาหาร
-              </Link>
+              <div className="diary-meal-actions">
+                <Link className="diary-add-link" to={`/food/search?forDiary=1&date=${date}&meal=${meal}`}>
+                  + เพิ่มอาหาร
+                </Link>
+                <button type="button" className="diary-add-link" onClick={() => setPickerMeal(meal)}>
+                  ใช้ template
+                </button>
+              </div>
+
+              {mealEntries.length > 0 &&
+                (savingTemplateMeal === meal ? (
+                  <form onSubmit={(e) => handleSaveTemplate(e, mealEntries)} className="diary-save-template-form">
+                    <input
+                      value={templateName}
+                      onChange={(e) => setTemplateName(e.target.value)}
+                      placeholder="ชื่อ template"
+                      required
+                      autoFocus
+                    />
+                    <button type="submit" disabled={templateSaving}>
+                      {templateSaving ? "..." : "บันทึก"}
+                    </button>
+                    <button
+                      type="button"
+                      className="diary-btn-secondary"
+                      onClick={() => {
+                        setSavingTemplateMeal(null);
+                        setTemplateName("");
+                      }}
+                    >
+                      ยกเลิก
+                    </button>
+                  </form>
+                ) : (
+                  <button type="button" className="diary-save-template-link" onClick={() => setSavingTemplateMeal(meal)}>
+                    บันทึกเป็น template
+                  </button>
+                ))}
             </div>
           );
         })
+      )}
+
+      {pickerMeal && (
+        <MealTemplatePickerModal
+          diary={{ date, meal: pickerMeal }}
+          onClose={() => setPickerMeal(null)}
+          onApplied={async () => {
+            setPickerMeal(null);
+            await loadEntries();
+          }}
+        />
       )}
     </section>
   );

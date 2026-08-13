@@ -29,6 +29,8 @@ interface FatSecretResultWithThai extends FatSecretSearchResult {
 const DEBOUNCE_MS = 300;
 const MIN_QUERY_LENGTH = 2;
 const RECENT_PER_MEAL_LIMIT = 8;
+const CUSTOM_RESULTS_LIMIT = 3;
+const FATSECRET_PAGE_SIZE = 5;
 
 const DIARY_ENTRY_COLUMNS =
   "id, entry_date, meal, source, custom_food_id, dish_id, fatsecret_food_id, fatsecret_food_name, quantity, serving_size_g, kcal, protein_g, carbs_g, fat_g, nutrients, custom_foods(name), dishes(name)";
@@ -96,6 +98,7 @@ export default function FoodSearch() {
 
   const [query, setQuery] = useState("");
   const [fatsecretResults, setFatsecretResults] = useState<FatSecretResultWithThai[]>([]);
+  const [fatsecretPage, setFatsecretPage] = useState(0);
   const [customResults, setCustomResults] = useState<CustomFoodResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -179,6 +182,7 @@ export default function FoodSearch() {
       setLoading(true);
       setError(null);
       setFatsecretResults([]);
+      setFatsecretPage(0);
       setCustomResults([]);
       try {
         const fatsecretQuery = containsThai(trimmed) ? await translateQueryToEnglish(trimmed) : trimmed;
@@ -196,7 +200,10 @@ export default function FoodSearch() {
 
         const customWithNames = await attachCreatorNames(customRes.data ?? []);
         if (isStale()) return;
-        setCustomResults(customWithNames);
+        // Verified results first so trimming to a short list never silently drops the
+        // one(s) an admin has actually checked (DF2).
+        const customSorted = [...customWithNames].sort((a, b) => Number(b.is_verified) - Number(a.is_verified));
+        setCustomResults(customSorted.slice(0, CUSTOM_RESULTS_LIMIT));
 
         const parsed = parseSearchResults(fsRaw);
         const withThai = await attachThaiNames(parsed);
@@ -216,6 +223,11 @@ export default function FoodSearch() {
   }, [query]);
 
   const noResults = searched && !loading && customResults.length === 0 && fatsecretResults.length === 0;
+  const fatsecretPageCount = Math.ceil(fatsecretResults.length / FATSECRET_PAGE_SIZE);
+  const pagedFatsecretResults = fatsecretResults.slice(
+    fatsecretPage * FATSECRET_PAGE_SIZE,
+    (fatsecretPage + 1) * FATSECRET_PAGE_SIZE,
+  );
 
   return (
     <main className="food-search-page">
@@ -285,7 +297,7 @@ export default function FoodSearch() {
         <section>
           <h2>FatSecret</h2>
           <ul className="food-result-list">
-            {fatsecretResults.map((food) => (
+            {pagedFatsecretResults.map((food) => (
               <li key={food.food_id}>
                 <Link to={`/food/fatsecret/${food.food_id}${diaryQuery}`}>
                   <span className="food-name">
@@ -300,6 +312,20 @@ export default function FoodSearch() {
               </li>
             ))}
           </ul>
+
+          {fatsecretPageCount > 1 && (
+            <div className="food-search-pagination">
+              <button type="button" onClick={() => setFatsecretPage((p) => p - 1)} disabled={fatsecretPage === 0}>
+                ก่อนหน้า
+              </button>
+              <span>
+                หน้า {fatsecretPage + 1} / {fatsecretPageCount}
+              </span>
+              <button type="button" onClick={() => setFatsecretPage((p) => p + 1)} disabled={fatsecretPage >= fatsecretPageCount - 1}>
+                ถัดไป
+              </button>
+            </div>
+          )}
         </section>
       )}
 

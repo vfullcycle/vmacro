@@ -41,10 +41,16 @@ async function getAccessToken() {
   return cachedToken;
 }
 
-export async function searchFoods(searchExpression) {
+// Capped well below FatSecret's default page size (20) — every result has to be
+// AI-translated to Thai before the search page shows anything (DF7), so fewer results
+// means a shorter wait. 10 is the app's current tradeoff between choice and latency.
+const DEFAULT_MAX_RESULTS = 10;
+
+export async function searchFoods(searchExpression, maxResults = DEFAULT_MAX_RESULTS) {
   const token = await getAccessToken();
   const url = new URL(SEARCH_URL);
   url.searchParams.set("search_expression", searchExpression);
+  url.searchParams.set("max_results", String(maxResults));
   url.searchParams.set("format", "json");
 
   const res = await fetch(url, {

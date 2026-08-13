@@ -175,6 +175,9 @@ function FatSecretFoodDetail({ foodId }: { foodId: string }) {
 
   return (
     <main className="food-detail-page">
+      <Link to="/food/search" className="food-detail-back-link">
+        ← กลับไปค้นหา
+      </Link>
       <h1>{thaiName ?? foodName}</h1>
       {thaiName && <p className="food-detail-source">{foodName}</p>}
 
@@ -268,6 +271,9 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
 
   return (
     <main className="food-detail-page">
+      <Link to="/food/search" className="food-detail-back-link">
+        ← กลับไปค้นหา
+      </Link>
       <h1>{food.name}</h1>
       <p className="food-detail-source">
         Custom food{creatorName ? ` — โดย ${creatorName}` : ""}

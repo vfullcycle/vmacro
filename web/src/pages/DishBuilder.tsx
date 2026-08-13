@@ -298,7 +298,8 @@ export default function DishBuilder() {
               <span className="dish-ingredient-name">
                 {ingredientDisplayName(ing)}
                 <span className="dish-ingredient-meta">
-                  {ingredientQuantityLabel(ing)} — {Math.round(ing.kcal)} kcal
+                  {ingredientQuantityLabel(ing)} — {Math.round(ing.kcal)} kcal · โปรตีน {ing.protein_g}g · คาร์บ {ing.carbs_g}g · ไขมัน{" "}
+                  {ing.fat_g}g
                 </span>
               </span>
               <span className="dish-ingredient-actions">

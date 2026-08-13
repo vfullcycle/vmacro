@@ -476,7 +476,7 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
   if (loading) return <p>กำลังโหลด...</p>;
   if (error || !food) return <p className="error">{error ?? "ไม่พบข้อมูลอาหาร"}</p>;
 
-  const servingDesc = food.serving_label ?? `${food.serving_size_g}g`;
+  const servingDesc = food.serving_label ? `${food.serving_label} (${food.serving_size_g}g)` : `${food.serving_size_g}g`;
 
   return (
     <main className="food-detail-page">

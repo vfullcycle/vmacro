@@ -119,7 +119,7 @@ export default function SettingsProfile() {
           value={{ ...form, weight_kg: form.current_weight_kg }}
           onChange={(v) => {
             const { weight_kg, ...rest } = v;
-            setForm({ ...rest, current_weight_kg: weight_kg });
+            setForm({ ...form, ...rest, current_weight_kg: weight_kg });
           }}
           showKatchWarning={!!preview?.bmrResult.fallback_applied}
         />

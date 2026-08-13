@@ -21,9 +21,15 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/calculator" element={<Calculator />} />
-          <Route path="/food/search" element={<FoodSearch />} />
-          <Route path="/food/:source/:id" element={<FoodDetail />} />
           <Route path="/debug/health" element={<HealthCheck />} />
+
+          {/* Public per R-07/D-012 — still wrapped in Layout so the tab bar shows for
+              logged-in users too; tapping a protected tab from here just prompts login. */}
+          <Route element={<Layout />}>
+            <Route path="/food/search" element={<FoodSearch />} />
+            <Route path="/food/:source/:id" element={<FoodDetail />} />
+          </Route>
+
           <Route
             element={
               <ProtectedRoute>

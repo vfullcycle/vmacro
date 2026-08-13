@@ -17,9 +17,11 @@ export default function Layout() {
     <div className="app-shell">
       <header className="app-header">
         <span className="app-header-user">{user?.email}</span>
-        <button type="button" className="app-header-signout" onClick={() => signOut()}>
-          ออกจากระบบ
-        </button>
+        {user && (
+          <button type="button" className="app-header-signout" onClick={() => signOut()}>
+            ออกจากระบบ
+          </button>
+        )}
       </header>
 
       <div className="app-content">

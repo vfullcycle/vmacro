@@ -288,6 +288,7 @@ interface CustomFoodRow {
   carbs_g: number;
   fat_g: number;
   nutrients: NutrientPanel | null;
+  is_verified: boolean;
 }
 
 function CustomFoodDetail({ foodId }: { foodId: string }) {
@@ -295,6 +296,8 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
   const diary = useDiaryContext();
   const [food, setFood] = useState<CustomFoodRow | null>(null);
   const [creatorName, setCreatorName] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [verifySaving, setVerifySaving] = useState(false);
   const [quantityMode, setQuantityMode] = useState<QuantityMode>("servings");
   const [quantityValue, setQuantityValue] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -303,7 +306,7 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
   useEffect(() => {
     supabase
       .from("custom_foods")
-      .select("creator_id, name, serving_label, serving_size_g, kcal, protein_g, carbs_g, fat_g, nutrients")
+      .select("creator_id, name, serving_label, serving_size_g, kcal, protein_g, carbs_g, fat_g, nutrients, is_verified")
       .eq("id", foodId)
       .single()
       .then(({ data, error }) => {
@@ -319,6 +322,29 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
           .then(({ data: name }) => setCreatorName(name));
       });
   }, [foodId]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => setIsAdmin(!!data?.is_admin));
+  }, [user]);
+
+  async function toggleVerified() {
+    if (!food) return;
+    setVerifySaving(true);
+    const nextVerified = !food.is_verified;
+    const { error: rpcError } = await supabase.rpc("set_food_verified", { food_id: foodId, verified: nextVerified });
+    setVerifySaving(false);
+    if (rpcError) {
+      setError(rpcError.message);
+      return;
+    }
+    setFood({ ...food, is_verified: nextVerified });
+  }
 
   const scaled: ScalableNutrients | null = useMemo(() => {
     if (!food) return null;
@@ -366,7 +392,14 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
       <Link to="/food/search" className="food-detail-back-link">
         ← กลับไปค้นหา
       </Link>
-      <h1>{food.name}</h1>
+      <h1>
+        {food.name}
+        {food.is_verified && (
+          <span className="verified-badge" title="ตรวจสอบโดยแอดมินแล้ว">
+            ✓
+          </span>
+        )}
+      </h1>
       <p className="food-detail-source">
         Custom food{creatorName ? ` — โดย ${creatorName}` : ""}
         {user?.id === food.creator_id && (
@@ -376,6 +409,11 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
           </>
         )}
       </p>
+      {isAdmin && (
+        <button type="button" className="admin-verify-button" onClick={toggleVerified} disabled={verifySaving}>
+          {verifySaving ? "..." : food.is_verified ? "ยกเลิกการตรวจสอบ" : "ยืนยันว่าข้อมูลถูกต้อง (admin)"}
+        </button>
+      )}
 
       <QuantityInput mode={quantityMode} value={quantityValue} onModeChange={setQuantityMode} onValueChange={setQuantityValue} gramsAvailable />
 

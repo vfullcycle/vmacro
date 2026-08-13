@@ -5,6 +5,29 @@
   margin-top: 1rem;
 }
 
+.settings-profile form > label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.settings-profile form > label input {
+  width: 100%;
+  padding: 0.65rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.settings-profile .form-hint {
+  font-size: 0.8rem;
+  color: var(--text);
+  margin: -0.5rem 0 0;
+}
+
 .settings-profile button {
   padding: 0.7rem;
   border: none;

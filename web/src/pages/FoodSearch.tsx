@@ -15,6 +15,9 @@ interface CustomFoodResult {
   serving_label: string | null;
   serving_size_g: number;
   kcal: number;
+  creator_id: string;
+  is_verified: boolean;
+  creator_name?: string;
 }
 
 interface FatSecretResultWithThai extends FatSecretSearchResult {
@@ -33,6 +36,8 @@ async function translateQueryToEnglish(query: string): Promise<string> {
   }
 }
 
+// Awaited (not fired in the background) so results only ever appear already in Thai —
+// no flash of the raw English name while translation is still in flight (DF7).
 async function attachThaiNames(results: FatSecretSearchResult[]): Promise<FatSecretResultWithThai[]> {
   if (results.length === 0) return [];
 
@@ -58,6 +63,14 @@ async function attachThaiNames(results: FatSecretSearchResult[]): Promise<FatSec
   }
 
   return results.map((r) => ({ ...r, thai_name: cache.get(r.food_id) }));
+}
+
+async function attachCreatorNames(results: Omit<CustomFoodResult, "creator_name">[]): Promise<CustomFoodResult[]> {
+  if (results.length === 0) return [];
+  const ids = [...new Set(results.map((r) => r.creator_id))];
+  const { data } = await supabase.rpc("get_display_names", { profile_ids: ids });
+  const names = new Map((data as { id: string; display_name: string }[] | null ?? []).map((row) => [row.id, row.display_name]));
+  return results.map((r) => ({ ...r, creator_name: names.get(r.creator_id) }));
 }
 
 export default function FoodSearch() {
@@ -91,6 +104,8 @@ export default function FoodSearch() {
 
       setLoading(true);
       setError(null);
+      setFatsecretResults([]);
+      setCustomResults([]);
       try {
         const fatsecretQuery = containsThai(trimmed) ? await translateQueryToEnglish(trimmed) : trimmed;
         if (isStale()) return;
@@ -99,19 +114,20 @@ export default function FoodSearch() {
           fetch(`${API_BASE_URL}/food/search?q=${encodeURIComponent(fatsecretQuery)}`).then((r) => r.json()),
           supabase
             .from("custom_foods")
-            .select("id, name, serving_label, serving_size_g, kcal")
+            .select("id, name, serving_label, serving_size_g, kcal, creator_id, is_verified")
             .ilike("name", `%${trimmed}%`)
             .limit(20),
         ]);
         if (isStale()) return;
 
-        const parsed = parseSearchResults(fsRaw);
-        setCustomResults(customRes.data ?? []);
-        setFatsecretResults(parsed); // show English results immediately, don't block on translation
+        const customWithNames = await attachCreatorNames(customRes.data ?? []);
+        if (isStale()) return;
+        setCustomResults(customWithNames);
 
-        attachThaiNames(parsed).then((withThai) => {
-          if (!isStale()) setFatsecretResults(withThai);
-        });
+        const parsed = parseSearchResults(fsRaw);
+        const withThai = await attachThaiNames(parsed);
+        if (isStale()) return;
+        setFatsecretResults(withThai);
       } catch (err) {
         if (!isStale()) setError(String(err));
       } finally {
@@ -157,9 +173,17 @@ export default function FoodSearch() {
             {customResults.map((food) => (
               <li key={food.id}>
                 <Link to={`/food/custom/${food.id}${diaryQuery}`}>
-                  <span className="food-name">{food.name}</span>
+                  <span className="food-name">
+                    {food.name}
+                    {food.is_verified && (
+                      <span className="verified-badge" title="ตรวจสอบโดยแอดมินแล้ว">
+                        ✓
+                      </span>
+                    )}
+                  </span>
                   <span className="food-meta">
                     {food.serving_label ?? `${food.serving_size_g}g`} — {food.kcal} kcal
+                    {food.creator_name ? ` · โดย ${food.creator_name}` : ""}
                   </span>
                 </Link>
               </li>

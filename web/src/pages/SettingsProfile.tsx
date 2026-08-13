@@ -8,6 +8,7 @@ import "./SettingsProfile.css";
 
 interface ProfileRow extends Omit<BodyDataValue, "weight_kg"> {
   current_weight_kg: number | null;
+  display_name: string;
 }
 
 interface SettingsDefaults {
@@ -30,7 +31,7 @@ export default function SettingsProfile() {
     supabase
       .from("profiles")
       .select(
-        "sex, birth_date, height_cm, current_weight_kg, body_fat_pct, activity_level, goal, formula_choice, default_protein_g_per_kg, default_fat_pct",
+        "display_name, sex, birth_date, height_cm, current_weight_kg, body_fat_pct, activity_level, goal, formula_choice, default_protein_g_per_kg, default_fat_pct",
       )
       .eq("id", user.id)
       .single()
@@ -103,6 +104,17 @@ export default function SettingsProfile() {
     <section className="settings-profile">
       <h1>Settings — Profile</h1>
       <form onSubmit={handleSave}>
+        <label>
+          ชื่อที่ต้องการแสดง
+          <input
+            value={form.display_name}
+            onChange={(e) => setForm({ ...form, display_name: e.target.value })}
+            required
+            maxLength={40}
+          />
+        </label>
+        <p className="form-hint">ชื่อนี้จะแสดงบนอาหารที่คุณสร้างไว้ให้คนอื่นเห็น (เช่นในผลค้นหา)</p>
+
         <BodyDataFields
           value={{ ...form, weight_kg: form.current_weight_kg }}
           onChange={(v) => {

@@ -12,6 +12,24 @@
   margin-bottom: 0.75rem;
 }
 
+.food-detail-page .verified-badge {
+  margin-left: 0.4rem;
+  color: #16a34a;
+  font-weight: 700;
+  font-size: 0.85em;
+}
+
+.food-detail-page .admin-verify-button {
+  margin: -0.5rem 0 1rem;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
 .food-detail-page .food-detail-source {
   font-size: 0.8rem;
   color: var(--text);

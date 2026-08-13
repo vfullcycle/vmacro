@@ -1,5 +1,4 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { useAuth } from "../lib/auth-context";
 import { DiaryIcon, GearIcon, SearchIcon, TrendIcon } from "./icons";
 import "./Layout.css";
 
@@ -11,19 +10,8 @@ const TABS = [
 ];
 
 export default function Layout() {
-  const { signOut, user } = useAuth();
-
   return (
     <div className="app-shell">
-      <header className="app-header">
-        <span className="app-header-user">{user?.email}</span>
-        {user && (
-          <button type="button" className="app-header-signout" onClick={() => signOut()}>
-            ออกจากระบบ
-          </button>
-        )}
-      </header>
-
       <div className="app-content">
         <Outlet />
       </div>

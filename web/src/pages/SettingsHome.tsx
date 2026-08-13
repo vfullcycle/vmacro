@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { GearIcon, UserIcon } from "../components/icons";
+import { useAuth } from "../lib/auth-context";
 import "./SettingsHome.css";
 
 const SETTINGS_ITEMS = [
@@ -8,6 +9,8 @@ const SETTINGS_ITEMS = [
 ];
 
 export default function SettingsHome() {
+  const { user, signOut } = useAuth();
+
   return (
     <section className="settings-home">
       <h1>Settings</h1>
@@ -25,6 +28,15 @@ export default function SettingsHome() {
           </li>
         ))}
       </ul>
+
+      {user && (
+        <div className="settings-home-account">
+          <p className="settings-home-email">{user.email}</p>
+          <button type="button" className="settings-home-signout" onClick={() => signOut()}>
+            ออกจากระบบ
+          </button>
+        </div>
+      )}
     </section>
   );
 }

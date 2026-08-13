@@ -2,33 +2,33 @@ import type { NutrientPanel, ScalableNutrients } from "../lib/scaling";
 import "./NutritionFactsLabel.css";
 
 const FAT_ROWS: { key: string; label: string }[] = [
-  { key: "saturated_fat_g", label: "Saturated Fat" },
-  { key: "trans_fat_g", label: "Trans Fat" },
-  { key: "polyunsaturated_fat_g", label: "Polyunsaturated Fat" },
-  { key: "monounsaturated_fat_g", label: "Monounsaturated Fat" },
+  { key: "saturated_fat_g", label: "ไขมันอิ่มตัว" },
+  { key: "trans_fat_g", label: "ไขมันทรานส์" },
+  { key: "polyunsaturated_fat_g", label: "ไขมันไม่อิ่มตัวหลายตำแหน่ง" },
+  { key: "monounsaturated_fat_g", label: "ไขมันไม่อิ่มตัวตำแหน่งเดียว" },
 ];
 
 const CARB_ROWS: { key: string; label: string }[] = [
-  { key: "fiber_g", label: "Dietary Fiber" },
-  { key: "sugar_g", label: "Sugars" },
-  { key: "added_sugars_g", label: "Added Sugars" },
+  { key: "fiber_g", label: "ใยอาหาร" },
+  { key: "sugar_g", label: "น้ำตาล" },
+  { key: "added_sugars_g", label: "น้ำตาลที่เติมเพิ่ม" },
 ];
 
 const OTHER_ROWS: { key: string; label: string }[] = [
-  { key: "cholesterol_mg", label: "Cholesterol" },
-  { key: "sodium_mg", label: "Sodium" },
+  { key: "cholesterol_mg", label: "คอเลสเตอรอล" },
+  { key: "sodium_mg", label: "โซเดียม" },
 ];
 
 const VITAMIN_LABELS: Record<string, string> = {
-  vitamin_a_mcg: "Vitamin A",
-  vitamin_c_mg: "Vitamin C",
-  vitamin_d_mcg: "Vitamin D",
+  vitamin_a_mcg: "วิตามินเอ",
+  vitamin_c_mg: "วิตามินซี",
+  vitamin_d_mcg: "วิตามินดี",
 };
 
 const MINERAL_LABELS: Record<string, string> = {
-  calcium_mg: "Calcium",
-  iron_mg: "Iron",
-  potassium_mg: "Potassium",
+  calcium_mg: "แคลเซียม",
+  iron_mg: "ธาตุเหล็ก",
+  potassium_mg: "โพแทสเซียม",
 };
 
 function formatValue(key: string, value: number): string {
@@ -70,16 +70,16 @@ export default function NutritionFactsLabel({
 
   return (
     <div className="nutrition-facts-label">
-      <h2>Nutrition Facts</h2>
+      <h2>ข้อมูลโภชนาการ</h2>
       <p className="nfl-serving">{servingDescription}</p>
       <div className="nfl-divider-thick" />
       <div className="nfl-row nfl-calories">
-        <span>Calories</span>
+        <span>แคลอรี่</span>
         <span>{Math.round(nutrients.kcal)}</span>
       </div>
       <div className="nfl-divider-thick" />
 
-      <Row label="Total Fat" value={`${nutrients.fat_g}g`} />
+      <Row label="ไขมันทั้งหมด" value={`${nutrients.fat_g}g`} />
       {FAT_ROWS.filter((r) => typeof panel[r.key] === "number").map((r) => (
         <Row key={r.key} label={r.label} value={formatValue(r.key, panel[r.key] as number)} indent />
       ))}
@@ -88,17 +88,17 @@ export default function NutritionFactsLabel({
         <Row key={r.key} label={r.label} value={formatValue(r.key, panel[r.key] as number)} />
       ))}
 
-      <Row label="Total Carbohydrate" value={`${nutrients.carbs_g}g`} />
+      <Row label="คาร์โบไฮเดรตทั้งหมด" value={`${nutrients.carbs_g}g`} />
       {CARB_ROWS.filter((r) => typeof panel[r.key] === "number").map((r) => (
         <Row key={r.key} label={r.label} value={formatValue(r.key, panel[r.key] as number)} indent />
       ))}
 
       <div className="nfl-divider" />
-      <Row label="Protein" value={`${nutrients.protein_g}g`} />
+      <Row label="โปรตีน" value={`${nutrients.protein_g}g`} />
       <div className="nfl-divider-thick" />
 
-      <NestedGroup title="Vitamins" panel={panel.vitamins as NutrientPanel | undefined} labels={VITAMIN_LABELS} />
-      <NestedGroup title="Minerals" panel={panel.minerals as NutrientPanel | undefined} labels={MINERAL_LABELS} />
+      <NestedGroup title="วิตามิน" panel={panel.vitamins as NutrientPanel | undefined} labels={VITAMIN_LABELS} />
+      <NestedGroup title="แร่ธาตุ" panel={panel.minerals as NutrientPanel | undefined} labels={MINERAL_LABELS} />
     </div>
   );
 }

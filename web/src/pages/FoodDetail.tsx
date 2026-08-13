@@ -7,6 +7,7 @@ import { useAuth } from "../lib/auth-context";
 import { parseFoodDetail, servingToScalable, type FatSecretServing } from "../lib/fatsecret";
 import { scaleNutrients, type NutrientPanel, type ScalableNutrients } from "../lib/scaling";
 import { supabase } from "../lib/supabase";
+import { translateTexts } from "../lib/translate";
 import "./FoodDetail.css";
 
 type QuantityMode = "servings" | "grams";
@@ -49,6 +50,7 @@ function QuantityInput({
 
 function FatSecretFoodDetail({ foodId }: { foodId: string }) {
   const [foodName, setFoodName] = useState("");
+  const [thaiName, setThaiName] = useState<string | null>(null);
   const [servings, setServings] = useState<FatSecretServing[]>([]);
   const [servingId, setServingId] = useState<string | null>(null);
   const [quantityMode, setQuantityMode] = useState<QuantityMode>("servings");
@@ -74,6 +76,39 @@ function FatSecretFoodDetail({ foodId }: { foodId: string }) {
       .finally(() => setLoading(false));
   }, [foodId]);
 
+  // Reuse the same food_translations cache the search page writes to — falls back to a
+  // fresh AI translation (and caches it) if this food was never searched before.
+  useEffect(() => {
+    if (!foodName) return;
+    let cancelled = false;
+
+    supabase
+      .from("food_translations")
+      .select("thai_name")
+      .eq("fatsecret_food_id", foodId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        if (data?.thai_name) {
+          setThaiName(data.thai_name);
+          return;
+        }
+        translateTexts([foodName], "th")
+          .then(([translated]) => {
+            if (cancelled || !translated) return;
+            setThaiName(translated);
+            supabase.from("food_translations").insert({ fatsecret_food_id: foodId, thai_name: translated }).then(() => {});
+          })
+          .catch(() => {
+            // translation unavailable — page still works with the English name
+          });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [foodId, foodName]);
+
   const selectedServing = servings.find((s) => s.serving_id === servingId);
 
   const scaled: ScalableNutrients | null = useMemo(() => {
@@ -91,10 +126,11 @@ function FatSecretFoodDetail({ foodId }: { foodId: string }) {
 
   return (
     <main className="food-detail-page">
-      <h1>{foodName}</h1>
+      <h1>{thaiName ?? foodName}</h1>
+      {thaiName && <p className="food-detail-source">{foodName}</p>}
 
       <label className="serving-select">
-        Serving
+        หน่วยบริโภค
         <select value={servingId ?? ""} onChange={(e) => setServingId(e.target.value)}>
           {servings.map((s) => (
             <option key={s.serving_id} value={s.serving_id}>

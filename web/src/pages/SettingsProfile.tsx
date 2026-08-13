@@ -105,7 +105,10 @@ export default function SettingsProfile() {
       <form onSubmit={handleSave}>
         <BodyDataFields
           value={{ ...form, weight_kg: form.current_weight_kg }}
-          onChange={(v) => setForm({ ...v, current_weight_kg: v.weight_kg })}
+          onChange={(v) => {
+            const { weight_kg, ...rest } = v;
+            setForm({ ...rest, current_weight_kg: weight_kg });
+          }}
           showKatchWarning={!!preview?.bmrResult.fallback_applied}
         />
 

@@ -65,7 +65,7 @@ export default function Diary() {
     const { data, error } = await supabase
       .from("diary_entries")
       .select(
-        "id, entry_date, meal, source, custom_food_id, dish_id, fatsecret_food_id, fatsecret_food_name, quantity, serving_size_g, kcal, protein_g, carbs_g, fat_g, nutrients, custom_foods(name), dishes(name)",
+        "id, entry_date, meal, source, custom_food_id, dish_id, fatsecret_food_id, fatsecret_food_name, quick_name, quantity, serving_size_g, kcal, protein_g, carbs_g, fat_g, nutrients, custom_foods(name), dishes(name)",
       )
       .eq("user_id", user.id)
       .eq("entry_date", date)

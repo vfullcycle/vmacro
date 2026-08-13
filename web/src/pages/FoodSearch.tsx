@@ -47,11 +47,12 @@ const DISH_RESULTS_LIMIT = 3;
 const FATSECRET_PAGE_SIZE = 5;
 
 const DIARY_ENTRY_COLUMNS =
-  "id, entry_date, meal, source, custom_food_id, dish_id, fatsecret_food_id, fatsecret_food_name, quantity, serving_size_g, kcal, protein_g, carbs_g, fat_g, nutrients, custom_foods(name), dishes(name)";
+  "id, entry_date, meal, source, custom_food_id, dish_id, fatsecret_food_id, fatsecret_food_name, quick_name, quantity, serving_size_g, kcal, protein_g, carbs_g, fat_g, nutrients, custom_foods(name), dishes(name)";
 
 function foodIdentityKey(entry: DiaryEntryRow): string {
   if (entry.source === "fatsecret") return `fs:${entry.fatsecret_food_id}`;
   if (entry.source === "custom_food") return `cf:${entry.custom_food_id}`;
+  if (entry.source === "quick") return `q:${entry.quick_name}`;
   return `dish:${entry.dish_id}`;
 }
 
@@ -187,6 +188,7 @@ export default function FoodSearch() {
       dish_id: entry.dish_id,
       fatsecret_food_id: entry.fatsecret_food_id,
       fatsecret_food_name: entry.fatsecret_food_name,
+      quick_name: entry.quick_name,
       quantity: entry.quantity,
       serving_size_g: entry.serving_size_g,
       kcal: entry.kcal,
@@ -359,17 +361,18 @@ export default function FoodSearch() {
             + สร้างจานอาหาร
           </Link>
         )}
-        {user && (
+        {user && forDiary && diaryDate && diaryMeal && (
           <button type="button" className="add-food-link" onClick={() => setShowQuickAdd(true)}>
             + เพิ่มเร่งด่วน
           </button>
         )}
       </div>
 
-      {showQuickAdd && (
+      {showQuickAdd && diaryDate && diaryMeal && (
         <QuickAddFoodModal
+          diary={{ date: diaryDate, meal: diaryMeal }}
           onClose={() => setShowQuickAdd(false)}
-          onCreated={(foodId) => navigate(`/food/custom/${foodId}${resultQuery}`)}
+          onSaved={() => navigate(`/diary?date=${diaryDate}`)}
         />
       )}
 

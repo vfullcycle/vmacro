@@ -15,11 +15,12 @@ export interface DiaryEntryRow {
   id: string;
   entry_date: string;
   meal: Meal;
-  source: "custom_food" | "fatsecret" | "dish";
+  source: "custom_food" | "fatsecret" | "dish" | "quick";
   custom_food_id: string | null;
   dish_id: string | null;
   fatsecret_food_id: string | null;
   fatsecret_food_name: string | null;
+  quick_name: string | null;
   quantity: number;
   serving_size_g: number | null;
   kcal: number;
@@ -34,6 +35,7 @@ export interface DiaryEntryRow {
 export function entryDisplayName(entry: DiaryEntryRow): string {
   if (entry.source === "fatsecret") return entry.fatsecret_food_name ?? "อาหาร";
   if (entry.source === "custom_food") return entry.custom_foods?.name ?? "อาหาร";
+  if (entry.source === "quick") return entry.quick_name ?? "อาหาร";
   return entry.dishes?.name ?? "จาน";
 }
 

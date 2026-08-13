@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../lib/auth-context";
+import type { Meal } from "../lib/diary";
 import { supabase } from "../lib/supabase";
 import "./QuickAddFoodModal.css";
 
@@ -10,7 +11,15 @@ function autoKcalFrom(protein: string, carbs: string, fat: string): number {
   return Math.round(p * 4 + c * 4 + f * 9);
 }
 
-export default function QuickAddFoodModal({ onClose, onCreated }: { onClose: () => void; onCreated: (foodId: string) => void }) {
+export default function QuickAddFoodModal({
+  diary,
+  onClose,
+  onSaved,
+}: {
+  diary: { date: string; meal: Meal };
+  onClose: () => void;
+  onSaved: () => void;
+}) {
   const { user } = useAuth();
   const [name, setName] = useState("");
   const [protein, setProtein] = useState("");
@@ -23,32 +32,35 @@ export default function QuickAddFoodModal({ onClose, onCreated }: { onClose: () 
 
   const computedKcal = autoKcalFrom(protein, carbs, fat);
 
+  // Quick add is a one-off log entry, not a reusable food — it never touches
+  // custom_foods, so it can't be found again via search or "ที่เคยกินมื้อนี้" by name
+  // (only by re-typing it), which is the whole point: something you ate once and don't
+  // need to keep around.
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) return;
     setSaving(true);
     setError(null);
-    const { data, error: insertError } = await supabase
-      .from("custom_foods")
-      .insert({
-        creator_id: user.id,
-        name: name.trim(),
-        serving_label: null,
-        serving_size_g: null,
-        kcal: kcalAuto ? computedKcal : Number(kcal) || 0,
-        protein_g: Number(protein) || 0,
-        carbs_g: Number(carbs) || 0,
-        fat_g: Number(fat) || 0,
-        nutrients: {},
-      })
-      .select("id")
-      .single();
+    const { error: insertError } = await supabase.from("diary_entries").insert({
+      user_id: user.id,
+      entry_date: diary.date,
+      meal: diary.meal,
+      source: "quick",
+      quick_name: name.trim(),
+      quantity: 1,
+      serving_size_g: null,
+      kcal: kcalAuto ? computedKcal : Number(kcal) || 0,
+      protein_g: Number(protein) || 0,
+      carbs_g: Number(carbs) || 0,
+      fat_g: Number(fat) || 0,
+      nutrients: {},
+    });
     setSaving(false);
     if (insertError) {
       setError(insertError.message);
       return;
     }
-    onCreated(data.id);
+    onSaved();
   }
 
   return (

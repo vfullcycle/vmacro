@@ -1,4 +1,4 @@
-# REQUIREMENTS — Vmacro (FROZEN v1.3, 2026-08-13)
+# REQUIREMENTS — Vmacro (FROZEN v1.4, 2026-08-13)
 
 > แก้ไขได้เฉพาะเมื่อวีสั่ง + bump version + บันทึก changelog ท้ายไฟล์
 > ทุก FR ระบุ phase ที่ implement ตาม SCOPE.md
@@ -67,11 +67,12 @@ attribution แสดงเฉพาะเมื่อ source เป็น FatSe
 ผู้สร้างอาหารเองยืนยันตัวเองไม่ได้ (D-017)
 *AC: badge แสดงเฉพาะเมื่อ verified แล้ว; แหล่งอ้างอิงแสดงเต็มเฉพาะหน้า detail ไม่ใช่ในผลค้นหาแบบย่อ; admin ยกเลิกการ verify ได้*
 
-**FR-FOOD-6 (P2)** เพิ่มอาหารแบบเร่งด่วน (quick add) — ทางลัดสร้าง custom food จากช่องทางเพิ่มอาหารเข้ามื้อ/จาน
-โดยกรอกแค่ชื่อรายการ + kcal/protein/carb/fat รวม ไม่ต้องระบุ serving label หรือน้ำหนักต่อ serving
+**FR-FOOD-6 (P2)** เพิ่มอาหารแบบเร่งด่วน (quick add) — ทางลัดบันทึกรายการทิ้งขว้าง (one-off) เข้ามื้ออาหารตรง ๆ
+จากช่องทางเพิ่มอาหารเข้ามื้อเท่านั้น โดยกรอกแค่ชื่อรายการ + kcal/protein/carb/fat รวม **ไม่สร้าง custom food** —
+ไม่ผูก record ที่ค้นหา/ใช้ซ้ำได้ในอนาคต ต่างจาก FR-FOOD-2
 *AC: kcal กรอกเองได้ หรือให้ระบบคำนวณอัตโนมัติจาก protein×4 + carb×4 + fat×9 (สลับโหมดได้ก่อนบันทึก);
-บันทึกแล้วกลายเป็น custom food ปกติที่ค้นหา/แก้ไขเพิ่มเติมผ่านฟอร์มเต็มได้ทีหลัง — รายการนี้ไม่มีขนาด serving เป็นกรัม
-จึงระบุปริมาณได้เฉพาะแบบจำนวนนับ (ไม่มีโหมดกรัม) จนกว่าจะไปกรอกน้ำหนักเพิ่มผ่านฟอร์มเต็ม*
+กด "บันทึก" แล้วเข้ามื้ออาหารที่เลือกไว้ทันทีในคลิกเดียว (ไม่เด้งไปหน้า detail อีกที); ปุ่มนี้แสดงเฉพาะตอนเปิดจากช่องทาง
+เพิ่มอาหารเข้ามื้อ (forDiary) เท่านั้น เพราะไม่มี food record ให้ผูกกับ dish/favorites ในโหมดอื่น*
 
 ## FR-DIARY — Daily Logging (P2)
 
@@ -120,6 +121,9 @@ RLS: diary/health/profile/weight เห็นเฉพาะเจ้าขอ�
 
 ## Changelog
 
+- v1.4 (2026-08-13): แก้ FR-FOOD-6 ให้ตรงเจตนาจริง (คำสั่งวี) — quick add คือ one-off diary entry
+  ตรง ๆ ไม่ใช่การสร้าง custom food ใหม่ (v1.3 เข้าใจผิด) — เพิ่ม `diary_entries.source = 'quick'`
+  + คอลัมน์ `quick_name` แทน
 - v1.3 (2026-08-13): เพิ่ม FR-FOOD-6 (quick add custom food, คำสั่งวีระหว่าง dogfood P2) —
   `custom_foods.serving_size_g` เปลี่ยนเป็น optional เพื่อรองรับรายการที่ไม่มีน้ำหนัก serving จริง
 - v1.2 (2026-08-13): Formalize สิ่งที่เกิดระหว่าง dogfood P2 (คำสั่งวี) — เพิ่ม FR-PROF-3 (nickname, D-016),

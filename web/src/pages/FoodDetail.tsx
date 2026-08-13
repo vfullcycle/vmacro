@@ -38,7 +38,7 @@ function QuantityInput({
       <label>
         หน่วย
         <select value={mode} onChange={(e) => onModeChange(e.target.value as QuantityMode)}>
-          <option value="servings">serving</option>
+          <option value="servings">หน่วยบริโภค</option>
           <option value="grams" disabled={!gramsAvailable}>
             กรัม (g)
           </option>
@@ -52,6 +52,7 @@ function FatSecretFoodDetail({ foodId }: { foodId: string }) {
   const [foodName, setFoodName] = useState("");
   const [thaiName, setThaiName] = useState<string | null>(null);
   const [servings, setServings] = useState<FatSecretServing[]>([]);
+  const [servingTranslations, setServingTranslations] = useState<Record<string, string>>({});
   const [servingId, setServingId] = useState<string | null>(null);
   const [quantityMode, setQuantityMode] = useState<QuantityMode>("servings");
   const [quantityValue, setQuantityValue] = useState(1);
@@ -109,7 +110,55 @@ function FatSecretFoodDetail({ foodId }: { foodId: string }) {
     };
   }, [foodId, foodName]);
 
+  // Serving descriptions ("1/2 small, yield after cooking, bone removed") are cached
+  // per serving_id the same way food names are cached per food_id.
+  useEffect(() => {
+    if (servings.length === 0) return;
+    let cancelled = false;
+    const ids = servings.map((s) => s.serving_id);
+
+    supabase
+      .from("serving_translations")
+      .select("fatsecret_serving_id, thai_description")
+      .in("fatsecret_serving_id", ids)
+      .then(({ data }) => {
+        if (cancelled) return;
+        const cache: Record<string, string> = {};
+        (data ?? []).forEach((row) => {
+          cache[row.fatsecret_serving_id] = row.thai_description;
+        });
+
+        const uncached = servings.filter((s) => !cache[s.serving_id]);
+        if (uncached.length === 0) {
+          setServingTranslations(cache);
+          return;
+        }
+
+        translateTexts(
+          uncached.map((s) => s.serving_description),
+          "th",
+        )
+          .then((translated) => {
+            if (cancelled) return;
+            const newRows = uncached.map((s, i) => ({ fatsecret_serving_id: s.serving_id, thai_description: translated[i] }));
+            newRows.forEach((row) => {
+              cache[row.fatsecret_serving_id] = row.thai_description;
+            });
+            setServingTranslations({ ...cache });
+            supabase.from("serving_translations").insert(newRows).then(() => {});
+          })
+          .catch(() => {
+            setServingTranslations(cache); // show whatever was already cached; rest stays English
+          });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [servings]);
+
   const selectedServing = servings.find((s) => s.serving_id === servingId);
+  const selectedServingLabel = selectedServing ? (servingTranslations[selectedServing.serving_id] ?? selectedServing.serving_description) : "";
 
   const scaled: ScalableNutrients | null = useMemo(() => {
     if (!selectedServing) return null;
@@ -134,7 +183,7 @@ function FatSecretFoodDetail({ foodId }: { foodId: string }) {
         <select value={servingId ?? ""} onChange={(e) => setServingId(e.target.value)}>
           {servings.map((s) => (
             <option key={s.serving_id} value={s.serving_id}>
-              {s.serving_description}
+              {servingTranslations[s.serving_id] ?? s.serving_description}
             </option>
           ))}
         </select>
@@ -149,7 +198,7 @@ function FatSecretFoodDetail({ foodId }: { foodId: string }) {
       />
 
       {scaled && selectedServing && (
-        <NutritionFactsLabel nutrients={scaled} servingDescription={quantityLabel(quantityMode, quantityValue, selectedServing.serving_description)} />
+        <NutritionFactsLabel nutrients={scaled} servingDescription={quantityLabel(quantityMode, quantityValue, selectedServingLabel)} />
       )}
 
       <FatSecretAttribution />

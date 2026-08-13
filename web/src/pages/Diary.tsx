@@ -282,7 +282,8 @@ export default function Diary() {
                       <span className="diary-entry-name">
                         {entryDisplayName(entry)}
                         <span className="diary-entry-meta">
-                          {entryQuantityLabel(entry)} — {Math.round(entry.kcal)} kcal
+                          {entryQuantityLabel(entry)} — {Math.round(entry.kcal)} kcal · โปรตีน {entry.protein_g}g · คาร์บ {entry.carbs_g}g ·
+                          ไขมัน {entry.fat_g}g
                         </span>
                       </span>
                       <span className="diary-entry-actions">

@@ -5,6 +5,7 @@
 }
 
 .diary-date-nav {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -31,6 +32,20 @@
   font-weight: 600;
   color: var(--text-h);
   text-align: center;
+  background: none;
+  border: none;
+  font: inherit;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+}
+
+.diary-date-input-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .diary-today-badge {

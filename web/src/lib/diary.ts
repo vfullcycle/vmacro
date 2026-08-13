@@ -52,7 +52,11 @@ export function todayLocalDate(): string {
 }
 
 export function addDays(dateStr: string, delta: number): string {
-  const d = new Date(`${dateStr}T00:00:00`);
-  d.setDate(d.getDate() + delta);
-  return d.toISOString().slice(0, 10);
+  // Do the arithmetic entirely in UTC calendar terms — mixing local-time getDate()/setDate()
+  // with a toISOString() readout shifts the result by the local UTC offset (e.g. every call
+  // landed a day early in UTC+7, making "next day" a no-op and "previous day" skip a day).
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() + delta);
+  return dt.toISOString().slice(0, 10);
 }

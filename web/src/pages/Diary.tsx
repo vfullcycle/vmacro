@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../lib/auth-context";
 import { addDays, entryDisplayName, entryQuantityLabel, MEAL_LABELS, MEALS, todayLocalDate, type DiaryEntryRow, type Meal } from "../lib/diary";
@@ -48,6 +48,7 @@ export default function Diary() {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const date = searchParams.get("date") ?? todayLocalDate();
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   const [entries, setEntries] = useState<DiaryEntryRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -198,10 +199,27 @@ export default function Diary() {
         <button type="button" onClick={() => goToDate(addDays(date, -1))} aria-label="วันก่อนหน้า">
           ←
         </button>
-        <span className="diary-date-label">
+        <button
+          type="button"
+          className="diary-date-label"
+          onClick={() => {
+            const input = dateInputRef.current;
+            if (!input) return;
+            if (typeof input.showPicker === "function") input.showPicker();
+            else input.focus();
+          }}
+        >
           {new Date(`${date}T00:00:00`).toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" })}
           {isToday && <span className="diary-today-badge">วันนี้</span>}
-        </span>
+        </button>
+        <input
+          ref={dateInputRef}
+          type="date"
+          value={date}
+          onChange={(e) => e.target.value && goToDate(e.target.value)}
+          className="diary-date-input-hidden"
+          aria-label="เลือกวันที่"
+        />
         <button type="button" onClick={() => goToDate(addDays(date, 1))} aria-label="วันถัดไป">
           →
         </button>

@@ -40,6 +40,33 @@
   color: #dc2626;
 }
 
+.food-detail-diary-bar {
+  margin: 1.25rem 0;
+}
+
+.food-detail-diary-bar button {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font: inherit;
+  font-weight: 600;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.food-detail-diary-bar button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.food-detail-diary-bar .error {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+}
+
 .quantity-input {
   display: flex;
   gap: 0.75rem;

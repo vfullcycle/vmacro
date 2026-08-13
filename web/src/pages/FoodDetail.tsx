@@ -1,16 +1,57 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import FatSecretAttribution from "../components/FatSecretAttribution";
 import NutritionFactsLabel from "../components/NutritionFactsLabel";
 import { API_BASE_URL } from "../config";
 import { useAuth } from "../lib/auth-context";
+import { MEAL_LABELS, type Meal } from "../lib/diary";
 import { parseFoodDetail, servingToScalable, type FatSecretServing } from "../lib/fatsecret";
-import { scaleNutrients, type NutrientPanel, type ScalableNutrients } from "../lib/scaling";
+import { scaleFactorFor, scaleNutrients, type NutrientPanel, type ScalableNutrients } from "../lib/scaling";
 import { supabase } from "../lib/supabase";
 import { translateTexts } from "../lib/translate";
 import "./FoodDetail.css";
 
 type QuantityMode = "servings" | "grams";
+
+interface DiaryContext {
+  date: string;
+  meal: Meal;
+}
+
+function useDiaryContext(): DiaryContext | null {
+  const [searchParams] = useSearchParams();
+  const date = searchParams.get("date");
+  const meal = searchParams.get("meal") as Meal | null;
+  if (searchParams.get("forDiary") !== "1" || !date || !meal) return null;
+  return { date, meal };
+}
+
+function SaveToDiaryBar({ diary, disabled, onSave }: { diary: DiaryContext; disabled: boolean; onSave: () => Promise<void> }) {
+  const navigate = useNavigate();
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleClick() {
+    setSaving(true);
+    setError(null);
+    try {
+      await onSave();
+      navigate(`/diary?date=${diary.date}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="food-detail-diary-bar">
+      <button type="button" onClick={handleClick} disabled={disabled || saving}>
+        {saving ? "กำลังบันทึก..." : `บันทึกลงมื้อ${MEAL_LABELS[diary.meal]}`}
+      </button>
+      {error && <p className="error">{error}</p>}
+    </div>
+  );
+}
 
 function quantityLabel(mode: QuantityMode, value: number, description: string) {
   return mode === "grams" ? `${value} g` : `${value} × ${description}`;
@@ -49,6 +90,8 @@ function QuantityInput({
 }
 
 function FatSecretFoodDetail({ foodId }: { foodId: string }) {
+  const { user } = useAuth();
+  const diary = useDiaryContext();
   const [foodName, setFoodName] = useState("");
   const [thaiName, setThaiName] = useState<string | null>(null);
   const [servings, setServings] = useState<FatSecretServing[]>([]);
@@ -170,6 +213,30 @@ function FatSecretFoodDetail({ foodId }: { foodId: string }) {
     }
   }, [selectedServing, quantityMode, quantityValue]);
 
+  async function saveToDiary() {
+    if (!diary) return;
+    if (!user) throw new Error("ต้องเข้าสู่ระบบก่อน");
+    if (!scaled || !selectedServing) throw new Error("ยังเลือกปริมาณไม่ได้");
+    const { baseServingGrams } = servingToScalable(selectedServing);
+    const factor = scaleFactorFor({ baseServingGrams, quantityMode, quantityValue });
+    const { error: insertError } = await supabase.from("diary_entries").insert({
+      user_id: user.id,
+      entry_date: diary.date,
+      meal: diary.meal,
+      source: "fatsecret",
+      fatsecret_food_id: foodId,
+      fatsecret_food_name: thaiName ?? foodName,
+      quantity: factor,
+      serving_size_g: baseServingGrams,
+      kcal: scaled.kcal,
+      protein_g: scaled.protein_g,
+      carbs_g: scaled.carbs_g,
+      fat_g: scaled.fat_g,
+      nutrients: scaled.nutrients ?? {},
+    });
+    if (insertError) throw new Error(insertError.message);
+  }
+
   if (loading) return <p>กำลังโหลด...</p>;
   if (error) return <p className="error">{error}</p>;
 
@@ -204,6 +271,8 @@ function FatSecretFoodDetail({ foodId }: { foodId: string }) {
         <NutritionFactsLabel nutrients={scaled} servingDescription={quantityLabel(quantityMode, quantityValue, selectedServingLabel)} />
       )}
 
+      {diary && <SaveToDiaryBar diary={diary} disabled={!scaled} onSave={saveToDiary} />}
+
       <FatSecretAttribution />
     </main>
   );
@@ -223,6 +292,7 @@ interface CustomFoodRow {
 
 function CustomFoodDetail({ foodId }: { foodId: string }) {
   const { user } = useAuth();
+  const diary = useDiaryContext();
   const [food, setFood] = useState<CustomFoodRow | null>(null);
   const [creatorName, setCreatorName] = useState<string | null>(null);
   const [quantityMode, setQuantityMode] = useState<QuantityMode>("servings");
@@ -264,6 +334,28 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
     }
   }, [food, quantityMode, quantityValue]);
 
+  async function saveToDiary() {
+    if (!diary || !food) return;
+    if (!user) throw new Error("ต้องเข้าสู่ระบบก่อน");
+    if (!scaled) throw new Error("ยังเลือกปริมาณไม่ได้");
+    const factor = scaleFactorFor({ baseServingGrams: food.serving_size_g, quantityMode, quantityValue });
+    const { error: insertError } = await supabase.from("diary_entries").insert({
+      user_id: user.id,
+      entry_date: diary.date,
+      meal: diary.meal,
+      source: "custom_food",
+      custom_food_id: foodId,
+      quantity: factor,
+      serving_size_g: food.serving_size_g,
+      kcal: scaled.kcal,
+      protein_g: scaled.protein_g,
+      carbs_g: scaled.carbs_g,
+      fat_g: scaled.fat_g,
+      nutrients: scaled.nutrients ?? {},
+    });
+    if (insertError) throw new Error(insertError.message);
+  }
+
   if (loading) return <p>กำลังโหลด...</p>;
   if (error || !food) return <p className="error">{error ?? "ไม่พบข้อมูลอาหาร"}</p>;
 
@@ -288,6 +380,8 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
       <QuantityInput mode={quantityMode} value={quantityValue} onModeChange={setQuantityMode} onValueChange={setQuantityValue} gramsAvailable />
 
       {scaled && <NutritionFactsLabel nutrients={scaled} servingDescription={quantityLabel(quantityMode, quantityValue, servingDesc)} />}
+
+      {diary && <SaveToDiaryBar diary={diary} disabled={!scaled} onSave={saveToDiary} />}
     </main>
   );
 }

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import FatSecretAttribution from "../components/FatSecretAttribution";
 import { API_BASE_URL } from "../config";
+import { MEAL_LABELS, type Meal } from "../lib/diary";
 import { parseSearchResults, type FatSecretSearchResult } from "../lib/fatsecret";
 import { containsThai } from "../lib/thai";
 import { translateTexts } from "../lib/translate";
@@ -60,6 +61,12 @@ async function attachThaiNames(results: FatSecretSearchResult[]): Promise<FatSec
 }
 
 export default function FoodSearch() {
+  const [searchParams] = useSearchParams();
+  const forDiary = searchParams.get("forDiary") === "1";
+  const diaryDate = searchParams.get("date");
+  const diaryMeal = searchParams.get("meal") as Meal | null;
+  const diaryQuery = forDiary && diaryDate && diaryMeal ? `?forDiary=1&date=${diaryDate}&meal=${diaryMeal}` : "";
+
   const [query, setQuery] = useState("");
   const [fatsecretResults, setFatsecretResults] = useState<FatSecretResultWithThai[]>([]);
   const [customResults, setCustomResults] = useState<CustomFoodResult[]>([]);
@@ -123,6 +130,11 @@ export default function FoodSearch() {
   return (
     <main className="food-search-page">
       <h1>ค้นหาอาหาร</h1>
+      {diaryQuery && (
+        <p className="food-search-diary-banner">
+          กำลังเพิ่มเข้ามื้อ{MEAL_LABELS[diaryMeal as Meal]} วันที่ {diaryDate}
+        </p>
+      )}
       <input
         type="search"
         value={query}
@@ -144,7 +156,7 @@ export default function FoodSearch() {
           <ul className="food-result-list">
             {customResults.map((food) => (
               <li key={food.id}>
-                <Link to={`/food/custom/${food.id}`}>
+                <Link to={`/food/custom/${food.id}${diaryQuery}`}>
                   <span className="food-name">{food.name}</span>
                   <span className="food-meta">
                     {food.serving_label ?? `${food.serving_size_g}g`} — {food.kcal} kcal
@@ -162,7 +174,7 @@ export default function FoodSearch() {
           <ul className="food-result-list">
             {fatsecretResults.map((food) => (
               <li key={food.food_id}>
-                <Link to={`/food/fatsecret/${food.food_id}`}>
+                <Link to={`/food/fatsecret/${food.food_id}${diaryQuery}`}>
                   <span className="food-name">
                     {food.thai_name ?? food.food_name}
                     {food.brand_name ? ` (${food.brand_name})` : ""}

@@ -15,6 +15,15 @@
   margin-bottom: 1rem;
 }
 
+.food-search-page .food-search-diary-banner {
+  font-size: 0.8rem;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
 .food-search-page .hint {
   font-size: 0.875rem;
   color: var(--text);

@@ -4,6 +4,7 @@ import Layout from "./components/Layout";
 import { AuthProvider } from "./lib/auth-context";
 import Calculator from "./pages/Calculator";
 import CustomFoodForm from "./pages/CustomFoodForm";
+import Diary from "./pages/Diary";
 import FoodDetail from "./pages/FoodDetail";
 import FoodSearch from "./pages/FoodSearch";
 import HealthCheck from "./pages/HealthCheck";
@@ -29,7 +30,8 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route path="/" element={<Navigate to="/settings/profile" replace />} />
+            <Route path="/" element={<Navigate to="/diary" replace />} />
+            <Route path="/diary" element={<Diary />} />
             <Route path="/settings/profile" element={<SettingsProfile />} />
             <Route path="/settings/system" element={<SettingsSystem />} />
             <Route path="/weight-log" element={<WeightLog />} />

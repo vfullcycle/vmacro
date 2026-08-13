@@ -160,7 +160,7 @@ export default function CustomFoodForm() {
             setCore({
               name: data.name,
               serving_label: data.serving_label ?? "",
-              serving_size_g: String(data.serving_size_g),
+              serving_size_g: data.serving_size_g != null ? String(data.serving_size_g) : "",
               kcal: String(data.kcal),
               protein_g: String(data.protein_g),
               carbs_g: String(data.carbs_g),

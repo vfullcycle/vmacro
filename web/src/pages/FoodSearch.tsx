@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import FatSecretAttribution from "../components/FatSecretAttribution";
+import QuickAddFoodModal from "../components/QuickAddFoodModal";
 import VerifiedBadge from "../components/VerifiedBadge";
 import { API_BASE_URL } from "../config";
 import { useAuth } from "../lib/auth-context";
@@ -15,7 +16,7 @@ interface CustomFoodResult {
   id: string;
   name: string;
   serving_label: string | null;
-  serving_size_g: number;
+  serving_size_g: number | null;
   kcal: number;
   creator_id: string;
   is_verified: boolean;
@@ -129,6 +130,8 @@ export default function FoodSearch() {
       .single()
       .then(({ data }) => setDishName(data?.name ?? null));
   }, [forDish, dishId]);
+
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
 
   const [query, setQuery] = useState("");
   const [fatsecretResults, setFatsecretResults] = useState<FatSecretResultWithThai[]>([]);
@@ -356,7 +359,19 @@ export default function FoodSearch() {
             + สร้างจานอาหาร
           </Link>
         )}
+        {user && (
+          <button type="button" className="add-food-link" onClick={() => setShowQuickAdd(true)}>
+            + เพิ่มเร่งด่วน
+          </button>
+        )}
       </div>
+
+      {showQuickAdd && (
+        <QuickAddFoodModal
+          onClose={() => setShowQuickAdd(false)}
+          onCreated={(foodId) => navigate(`/food/custom/${foodId}${resultQuery}`)}
+        />
+      )}
 
       {customResults.length > 0 && (
         <section>
@@ -370,7 +385,7 @@ export default function FoodSearch() {
                     {food.is_verified && <VerifiedBadge className="verified-badge" />}
                   </span>
                   <span className="food-meta">
-                    {food.serving_label ?? `${food.serving_size_g}g`} — {food.kcal} kcal
+                    {food.serving_label ?? (food.serving_size_g != null ? `${food.serving_size_g}g` : "1 หน่วย")} — {food.kcal} kcal
                     {food.creator_name ? ` · โดย ${food.creator_name}` : ""}
                   </span>
                 </Link>

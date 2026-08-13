@@ -344,7 +344,7 @@ interface CustomFoodRow {
   creator_id: string;
   name: string;
   serving_label: string | null;
-  serving_size_g: number;
+  serving_size_g: number | null;
   kcal: number;
   protein_g: number;
   carbs_g: number;
@@ -476,7 +476,13 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
   if (loading) return <p>กำลังโหลด...</p>;
   if (error || !food) return <p className="error">{error ?? "ไม่พบข้อมูลอาหาร"}</p>;
 
-  const servingDesc = food.serving_label ? `${food.serving_label} (${food.serving_size_g}g)` : `${food.serving_size_g}g`;
+  const servingDesc = food.serving_label
+    ? food.serving_size_g != null
+      ? `${food.serving_label} (${food.serving_size_g}g)`
+      : food.serving_label
+    : food.serving_size_g != null
+      ? `${food.serving_size_g}g`
+      : "1 หน่วย";
 
   return (
     <main className="food-detail-page">
@@ -505,7 +511,13 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
         </button>
       )}
 
-      <QuantityInput mode={quantityMode} value={quantityValue} onModeChange={setQuantityMode} onValueChange={setQuantityValue} gramsAvailable />
+      <QuantityInput
+        mode={quantityMode}
+        value={quantityValue}
+        onModeChange={setQuantityMode}
+        onValueChange={setQuantityValue}
+        gramsAvailable={food.serving_size_g != null}
+      />
 
       {scaled && <NutritionFactsLabel nutrients={scaled} servingDescription={quantityLabel(quantityMode, quantityValue, servingDesc)} />}
 

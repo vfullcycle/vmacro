@@ -22,7 +22,11 @@ interface CustomFoodResult {
   creator_name?: string;
 }
 
-interface FatSecretResultWithThai extends FatSecretSearchResult {
+// English-search results carry the full FatSecretSearchResult shape; the anon+Thai-query
+// cache-fallback path (see the search effect below) only ever has food_id + thai_name —
+// food_name/food_description/brand_name are optional so the same list can render both.
+interface FatSecretResultWithThai extends Partial<Omit<FatSecretSearchResult, "food_id">> {
+  food_id: string;
   thai_name?: string;
 }
 
@@ -185,16 +189,44 @@ export default function FoodSearch() {
       setFatsecretPage(0);
       setCustomResults([]);
       try {
+        const customFoodsPromise = supabase
+          .from("custom_foods")
+          .select("id, name, serving_label, serving_size_g, kcal, creator_id, is_verified")
+          .ilike("name", `%${trimmed}%`)
+          .limit(20);
+
+        // Anonymous + Thai query: /translate requires login (D-015 amendment) — never send
+        // an untranslated Thai string to FatSecret's English-only search (it just silently
+        // finds nothing). Instead, search only what's already been translated by a logged-in
+        // user before (public read on food_translations, zero API cost either way). A miss
+        // here means nobody's searched this in Thai yet — show no FatSecret results rather
+        // than a broken search, per discussion with วี.
+        if (!user && containsThai(trimmed)) {
+          const [cachedRows, customRes] = await Promise.all([
+            supabase.from("food_translations").select("fatsecret_food_id, thai_name").ilike("thai_name", `%${trimmed}%`).limit(10),
+            customFoodsPromise,
+          ]);
+          if (isStale()) return;
+
+          const customWithNames = await attachCreatorNames(customRes.data ?? []);
+          if (isStale()) return;
+          const customSorted = [...customWithNames].sort((a, b) => Number(b.is_verified) - Number(a.is_verified));
+          setCustomResults(customSorted.slice(0, CUSTOM_RESULTS_LIMIT));
+
+          const cached: FatSecretResultWithThai[] = (cachedRows.data ?? []).map((row) => ({
+            food_id: row.fatsecret_food_id,
+            thai_name: row.thai_name,
+          }));
+          setFatsecretResults(cached);
+          return;
+        }
+
         const fatsecretQuery = containsThai(trimmed) ? await translateQueryToEnglish(trimmed) : trimmed;
         if (isStale()) return;
 
         const [fsRaw, customRes] = await Promise.all([
           fetch(`${API_BASE_URL}/food/search?q=${encodeURIComponent(fatsecretQuery)}`).then((r) => r.json()),
-          supabase
-            .from("custom_foods")
-            .select("id, name, serving_label, serving_size_g, kcal, creator_id, is_verified")
-            .ilike("name", `%${trimmed}%`)
-            .limit(20),
+          customFoodsPromise,
         ]);
         if (isStale()) return;
 
@@ -220,7 +252,7 @@ export default function FoodSearch() {
     }, DEBOUNCE_MS);
 
     return () => clearTimeout(timeout);
-  }, [query]);
+  }, [query, user]);
 
   const noResults = searched && !loading && customResults.length === 0 && fatsecretResults.length === 0;
   const fatsecretPageCount = Math.ceil(fatsecretResults.length / FATSECRET_PAGE_SIZE);
@@ -304,10 +336,12 @@ export default function FoodSearch() {
                     {food.thai_name ?? food.food_name}
                     {food.brand_name ? ` (${food.brand_name})` : ""}
                   </span>
-                  <span className="food-meta">
-                    {food.thai_name ? `${food.food_name} — ` : ""}
-                    {food.food_description}
-                  </span>
+                  {food.food_description && (
+                    <span className="food-meta">
+                      {food.thai_name && food.food_name ? `${food.food_name} — ` : ""}
+                      {food.food_description}
+                    </span>
+                  )}
                 </Link>
               </li>
             ))}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../lib/auth-context";
 import type { NutrientPanel } from "../lib/scaling";
 import { supabase } from "../lib/supabase";
@@ -228,9 +228,6 @@ export default function CustomFoodForm() {
 
   return (
     <main className="custom-food-form-page">
-      <Link to={isEdit && id ? `/food/custom/${id}` : "/food/search"} className="back-link">
-        ← ยกเลิก
-      </Link>
       <h1>{isEdit ? "แก้ไขอาหาร" : "เพิ่มอาหารใหม่"}</h1>
       <form onSubmit={handleSubmit}>
         <label>

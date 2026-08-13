@@ -91,3 +91,11 @@ code {
   border-radius: 4px;
   background: var(--code-bg);
 }
+
+.back-link {
+  display: inline-block;
+  font-size: 0.875rem;
+  color: var(--accent);
+  text-decoration: none;
+  margin-bottom: 0.75rem;
+}

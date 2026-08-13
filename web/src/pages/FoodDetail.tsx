@@ -303,7 +303,7 @@ function FatSecretFoodDetail({ foodId }: { foodId: string }) {
 
   return (
     <main className="food-detail-page">
-      <Link to="/food/search" className="food-detail-back-link">
+      <Link to="/food/search" className="back-link">
         ← กลับไปค้นหา
       </Link>
       <h1>{thaiName ?? foodName}</h1>
@@ -480,7 +480,7 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
 
   return (
     <main className="food-detail-page">
-      <Link to="/food/search" className="food-detail-back-link">
+      <Link to="/food/search" className="back-link">
         ← กลับไปค้นหา
       </Link>
       <h1>
@@ -602,7 +602,7 @@ function DishFoodDetail({ dishId }: { dishId: string }) {
 
   return (
     <main className="food-detail-page">
-      <Link to="/food/search" className="food-detail-back-link">
+      <Link to="/food/search" className="back-link">
         ← กลับไปค้นหา
       </Link>
       <h1>{dish.name}</h1>

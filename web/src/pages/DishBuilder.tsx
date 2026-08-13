@@ -253,7 +253,7 @@ export default function DishBuilder() {
 
   return (
     <main className="dish-builder-page">
-      <Link to="/food/search" className="food-detail-back-link">
+      <Link to="/food/search" className="back-link">
         ← กลับไปค้นหา
       </Link>
 

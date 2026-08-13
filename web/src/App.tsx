@@ -5,6 +5,7 @@ import { AuthProvider } from "./lib/auth-context";
 import Calculator from "./pages/Calculator";
 import CustomFoodForm from "./pages/CustomFoodForm";
 import Diary from "./pages/Diary";
+import DishBuilder from "./pages/DishBuilder";
 import FoodDetail from "./pages/FoodDetail";
 import FoodSearch from "./pages/FoodSearch";
 import HealthCheck from "./pages/HealthCheck";
@@ -45,6 +46,8 @@ function App() {
             <Route path="/weight-log" element={<WeightLog />} />
             <Route path="/food/custom/new" element={<CustomFoodForm />} />
             <Route path="/food/custom/:id/edit" element={<CustomFoodForm />} />
+            <Route path="/food/dish/new" element={<DishBuilder />} />
+            <Route path="/food/dish/:id/edit" element={<DishBuilder />} />
           </Route>
         </Routes>
       </HashRouter>

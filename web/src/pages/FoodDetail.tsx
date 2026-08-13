@@ -54,6 +54,44 @@ function SaveToDiaryBar({ diary, disabled, onSave }: { diary: DiaryContext; disa
   );
 }
 
+interface DishContext {
+  dishId: string;
+}
+
+function useDishContext(): DishContext | null {
+  const [searchParams] = useSearchParams();
+  const dishId = searchParams.get("dishId");
+  if (searchParams.get("forDish") !== "1" || !dishId) return null;
+  return { dishId };
+}
+
+function SaveToDishBar({ dish, disabled, onSave }: { dish: DishContext; disabled: boolean; onSave: () => Promise<void> }) {
+  const navigate = useNavigate();
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleClick() {
+    setSaving(true);
+    setError(null);
+    try {
+      await onSave();
+      navigate(`/food/dish/${dish.dishId}/edit`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="food-detail-diary-bar">
+      <button type="button" onClick={handleClick} disabled={disabled || saving}>
+        {saving ? "กำลังบันทึก..." : "เพิ่มเข้าจาน"}
+      </button>
+      {error && <p className="error">{error}</p>}
+    </div>
+  );
+}
+
 function quantityLabel(mode: QuantityMode, value: number, description: string) {
   return mode === "grams" ? `${value} g` : `${value} × ${description}`;
 }
@@ -93,6 +131,7 @@ function QuantityInput({
 function FatSecretFoodDetail({ foodId }: { foodId: string }) {
   const { user } = useAuth();
   const diary = useDiaryContext();
+  const dishCtx = useDishContext();
   const [foodName, setFoodName] = useState("");
   const [thaiName, setThaiName] = useState<string | null>(null);
   const [servings, setServings] = useState<FatSecretServing[]>([]);
@@ -238,6 +277,27 @@ function FatSecretFoodDetail({ foodId }: { foodId: string }) {
     if (insertError) throw new Error(insertError.message);
   }
 
+  async function saveToDish() {
+    if (!dishCtx) return;
+    if (!scaled || !selectedServing) throw new Error("ยังเลือกปริมาณไม่ได้");
+    const { baseServingGrams } = servingToScalable(selectedServing);
+    const factor = scaleFactorFor({ baseServingGrams, quantityMode, quantityValue });
+    const { error: insertError } = await supabase.from("dish_ingredients").insert({
+      dish_id: dishCtx.dishId,
+      source: "fatsecret",
+      fatsecret_food_id: foodId,
+      fatsecret_food_name: thaiName ?? foodName,
+      quantity: factor,
+      serving_size_g: baseServingGrams,
+      kcal: scaled.kcal,
+      protein_g: scaled.protein_g,
+      carbs_g: scaled.carbs_g,
+      fat_g: scaled.fat_g,
+      nutrients: scaled.nutrients ?? {},
+    });
+    if (insertError) throw new Error(insertError.message);
+  }
+
   if (loading) return <p>กำลังโหลด...</p>;
   if (error) return <p className="error">{error}</p>;
 
@@ -273,6 +333,7 @@ function FatSecretFoodDetail({ foodId }: { foodId: string }) {
       )}
 
       {diary && <SaveToDiaryBar diary={diary} disabled={!scaled} onSave={saveToDiary} />}
+      {dishCtx && <SaveToDishBar dish={dishCtx} disabled={!scaled} onSave={saveToDish} />}
 
       <FatSecretAttribution />
     </main>
@@ -296,6 +357,7 @@ interface CustomFoodRow {
 function CustomFoodDetail({ foodId }: { foodId: string }) {
   const { user } = useAuth();
   const diary = useDiaryContext();
+  const dishCtx = useDishContext();
   const [food, setFood] = useState<CustomFoodRow | null>(null);
   const [creatorName, setCreatorName] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -392,6 +454,25 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
     if (insertError) throw new Error(insertError.message);
   }
 
+  async function saveToDish() {
+    if (!dishCtx || !food) return;
+    if (!scaled) throw new Error("ยังเลือกปริมาณไม่ได้");
+    const factor = scaleFactorFor({ baseServingGrams: food.serving_size_g, quantityMode, quantityValue });
+    const { error: insertError } = await supabase.from("dish_ingredients").insert({
+      dish_id: dishCtx.dishId,
+      source: "custom_food",
+      custom_food_id: foodId,
+      quantity: factor,
+      serving_size_g: food.serving_size_g,
+      kcal: scaled.kcal,
+      protein_g: scaled.protein_g,
+      carbs_g: scaled.carbs_g,
+      fat_g: scaled.fat_g,
+      nutrients: scaled.nutrients ?? {},
+    });
+    if (insertError) throw new Error(insertError.message);
+  }
+
   if (loading) return <p>กำลังโหลด...</p>;
   if (error || !food) return <p className="error">{error ?? "ไม่พบข้อมูลอาหาร"}</p>;
 
@@ -429,6 +510,119 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
       {scaled && <NutritionFactsLabel nutrients={scaled} servingDescription={quantityLabel(quantityMode, quantityValue, servingDesc)} />}
 
       {diary && <SaveToDiaryBar diary={diary} disabled={!scaled} onSave={saveToDiary} />}
+      {dishCtx && <SaveToDishBar dish={dishCtx} disabled={!scaled} onSave={saveToDish} />}
+    </main>
+  );
+}
+
+interface DishFoodRow {
+  creator_id: string;
+  name: string;
+  kcal: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  nutrients: NutrientPanel | null;
+}
+
+function DishFoodDetail({ dishId }: { dishId: string }) {
+  const { user } = useAuth();
+  const diary = useDiaryContext();
+  const [dish, setDish] = useState<DishFoodRow | null>(null);
+  const [creatorName, setCreatorName] = useState<string | null>(null);
+  const [hasFatSecretIngredient, setHasFatSecretIngredient] = useState(false);
+  const [quantityValue, setQuantityValue] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase
+      .from("dishes")
+      .select("creator_id, name, kcal, protein_g, carbs_g, fat_g, nutrients")
+      .eq("id", dishId)
+      .single()
+      .then(({ data, error }) => {
+        if (error) {
+          setError(error.message);
+          setLoading(false);
+          return;
+        }
+        setDish(data as DishFoodRow);
+        setLoading(false);
+        supabase
+          .rpc("get_display_name", { profile_id: data.creator_id })
+          .then(({ data: name }) => setCreatorName(name));
+      });
+
+    supabase
+      .from("dish_ingredients")
+      .select("source")
+      .eq("dish_id", dishId)
+      .eq("source", "fatsecret")
+      .limit(1)
+      .then(({ data }) => setHasFatSecretIngredient((data?.length ?? 0) > 0));
+  }, [dishId]);
+
+  const scaled: ScalableNutrients | null = useMemo(() => {
+    if (!dish) return null;
+    try {
+      return scaleNutrients({
+        base: { kcal: dish.kcal, protein_g: dish.protein_g, carbs_g: dish.carbs_g, fat_g: dish.fat_g, nutrients: dish.nutrients },
+        baseServingGrams: null,
+        quantityMode: "servings",
+        quantityValue,
+      });
+    } catch {
+      return null;
+    }
+  }, [dish, quantityValue]);
+
+  async function saveToDiary() {
+    if (!diary || !dish) return;
+    if (!user) throw new Error("ต้องเข้าสู่ระบบก่อน");
+    if (!scaled) throw new Error("ยังเลือกปริมาณไม่ได้");
+    const { error: insertError } = await supabase.from("diary_entries").insert({
+      user_id: user.id,
+      entry_date: diary.date,
+      meal: diary.meal,
+      source: "dish",
+      dish_id: dishId,
+      quantity: quantityValue,
+      kcal: scaled.kcal,
+      protein_g: scaled.protein_g,
+      carbs_g: scaled.carbs_g,
+      fat_g: scaled.fat_g,
+      nutrients: scaled.nutrients ?? {},
+    });
+    if (insertError) throw new Error(insertError.message);
+  }
+
+  if (loading) return <p>กำลังโหลด...</p>;
+  if (error || !dish) return <p className="error">{error ?? "ไม่พบข้อมูลจาน"}</p>;
+
+  return (
+    <main className="food-detail-page">
+      <Link to="/food/search" className="food-detail-back-link">
+        ← กลับไปค้นหา
+      </Link>
+      <h1>{dish.name}</h1>
+      <p className="food-detail-source">
+        จานที่ปรุงเอง{creatorName ? ` — โดย ${creatorName}` : ""}
+        {user?.id === dish.creator_id && (
+          <>
+            {" · "}
+            <Link to={`/food/dish/${dishId}/edit`}>แก้ไข</Link>
+          </>
+        )}
+      </p>
+
+      <QuantityInput mode="servings" value={quantityValue} onModeChange={() => {}} onValueChange={setQuantityValue} gramsAvailable={false} />
+
+      {scaled && <NutritionFactsLabel nutrients={scaled} servingDescription={`${quantityValue} × ${dish.name}`} />}
+
+      {diary && <SaveToDiaryBar diary={diary} disabled={!scaled} onSave={saveToDiary} />}
+
+      {hasFatSecretIngredient && <FatSecretAttribution />}
     </main>
   );
 }
@@ -439,5 +633,6 @@ export default function FoodDetail() {
   if (!id) return <p className="error">ไม่พบ id ของอาหาร</p>;
   if (source === "fatsecret") return <FatSecretFoodDetail foodId={id} />;
   if (source === "custom") return <CustomFoodDetail foodId={id} />;
+  if (source === "dish") return <DishFoodDetail dishId={id} />;
   return <p className="error">ไม่รู้จักแหล่งข้อมูล: {source}</p>;
 }

@@ -1,0 +1,197 @@
+.dish-builder-page {
+  max-width: 26rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+}
+
+.dish-builder-page form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.dish-builder-page form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.dish-builder-page form input,
+.dish-name-input {
+  width: 100%;
+  padding: 0.65rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.dish-name-input {
+  font-size: 1.25rem;
+  font-weight: 700;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 0.4rem 0.1rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-h);
+}
+
+.dish-builder-page button {
+  padding: 0.7rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font: inherit;
+  font-weight: 600;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.dish-builder-page .error {
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.dish-totals-summary {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dish-totals-summary strong {
+  font-size: 1.4rem;
+  color: var(--text-h);
+}
+
+.dish-totals-summary span {
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.dish-builder-page h2 {
+  font-size: 1rem;
+  margin: 0 0 0.4rem;
+}
+
+.dish-ingredient-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.dish-ingredient,
+.dish-ingredient-editing {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.dish-ingredient {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.dish-ingredient-name {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.dish-ingredient-meta {
+  font-size: 0.75rem;
+  color: var(--text);
+}
+
+.dish-ingredient-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.dish-ingredient-actions button {
+  padding: 0.35rem 0.7rem;
+  min-height: 32px;
+  font-size: 0.8rem;
+  border-radius: 6px;
+}
+
+.dish-btn-secondary {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.dish-btn-danger {
+  background: transparent;
+  color: #dc2626;
+  border: 1px solid #dc2626;
+}
+
+.dish-edit-form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.dish-edit-form input {
+  width: 5rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  min-height: 36px;
+  box-sizing: border-box;
+}
+
+.dish-edit-unit {
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.dish-edit-form .dish-ingredient-actions button {
+  min-height: 36px;
+}
+
+.dish-add-link {
+  display: inline-block;
+  margin-top: 0.6rem;
+  font-size: 0.875rem;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.dish-recalculate-button {
+  display: block;
+  width: 100%;
+  margin-top: 1.25rem;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.dish-recalculate-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dish-delete-button {
+  display: block;
+  width: 100%;
+  margin-top: 1.5rem;
+  background: none;
+  color: #dc2626;
+  border: 1px solid #dc2626;
+}

@@ -22,6 +22,14 @@ interface CustomFoodResult {
   creator_name?: string;
 }
 
+interface DishResult {
+  id: string;
+  name: string;
+  kcal: number;
+  creator_id: string;
+  creator_name?: string;
+}
+
 // English-search results carry the full FatSecretSearchResult shape; the anon+Thai-query
 // cache-fallback path (see the search effect below) only ever has food_id + thai_name —
 // food_name/food_description/brand_name are optional so the same list can render both.
@@ -34,6 +42,7 @@ const DEBOUNCE_MS = 300;
 const MIN_QUERY_LENGTH = 2;
 const RECENT_PER_MEAL_LIMIT = 8;
 const CUSTOM_RESULTS_LIMIT = 3;
+const DISH_RESULTS_LIMIT = 3;
 const FATSECRET_PAGE_SIZE = 5;
 
 const DIARY_ENTRY_COLUMNS =
@@ -83,7 +92,7 @@ async function attachThaiNames(results: FatSecretSearchResult[]): Promise<FatSec
   return results.map((r) => ({ ...r, thai_name: cache.get(r.food_id) }));
 }
 
-async function attachCreatorNames(results: Omit<CustomFoodResult, "creator_name">[]): Promise<CustomFoodResult[]> {
+async function attachCreatorNames<T extends { creator_id: string }>(results: T[]): Promise<(T & { creator_name?: string })[]> {
   if (results.length === 0) return [];
   const ids = [...new Set(results.map((r) => r.creator_id))];
   const { data } = await supabase.rpc("get_display_names", { profile_ids: ids });
@@ -100,10 +109,32 @@ export default function FoodSearch() {
   const diaryMeal = searchParams.get("meal") as Meal | null;
   const diaryQuery = forDiary && diaryDate && diaryMeal ? `?forDiary=1&date=${diaryDate}&meal=${diaryMeal}` : "";
 
+  // A dish can only contain custom_food/fatsecret ingredients (no nesting), so dish
+  // search results are skipped entirely in this mode.
+  const forDish = searchParams.get("forDish") === "1";
+  const dishId = searchParams.get("dishId");
+  const dishQuery = forDish && dishId ? `?forDish=1&dishId=${dishId}` : "";
+  const resultQuery = diaryQuery || dishQuery;
+
+  const [dishName, setDishName] = useState<string | null>(null);
+  useEffect(() => {
+    if (!forDish || !dishId) {
+      setDishName(null);
+      return;
+    }
+    supabase
+      .from("dishes")
+      .select("name")
+      .eq("id", dishId)
+      .single()
+      .then(({ data }) => setDishName(data?.name ?? null));
+  }, [forDish, dishId]);
+
   const [query, setQuery] = useState("");
   const [fatsecretResults, setFatsecretResults] = useState<FatSecretResultWithThai[]>([]);
   const [fatsecretPage, setFatsecretPage] = useState(0);
   const [customResults, setCustomResults] = useState<CustomFoodResult[]>([]);
+  const [dishResults, setDishResults] = useState<DishResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
@@ -175,6 +206,7 @@ export default function FoodSearch() {
       searchIdRef.current++; // invalidate any in-flight search
       setFatsecretResults([]);
       setCustomResults([]);
+      setDishResults([]);
       setSearched(false);
       return;
     }
@@ -188,12 +220,19 @@ export default function FoodSearch() {
       setFatsecretResults([]);
       setFatsecretPage(0);
       setCustomResults([]);
+      setDishResults([]);
       try {
         const customFoodsPromise = supabase
           .from("custom_foods")
           .select("id, name, serving_label, serving_size_g, kcal, creator_id, is_verified")
           .ilike("name", `%${trimmed}%`)
           .limit(20);
+
+        // Dishes can't be nested inside another dish, so skip this query entirely when
+        // picking an ingredient for a dish under construction (forDish).
+        const dishesPromise = forDish
+          ? Promise.resolve({ data: [] as DishResult[] })
+          : supabase.from("dishes").select("id, name, kcal, creator_id").ilike("name", `%${trimmed}%`).limit(20);
 
         // Anonymous + Thai query: /translate requires login (D-015 amendment) — never send
         // an untranslated Thai string to FatSecret's English-only search (it just silently
@@ -202,16 +241,19 @@ export default function FoodSearch() {
         // here means nobody's searched this in Thai yet — show no FatSecret results rather
         // than a broken search, per discussion with วี.
         if (!user && containsThai(trimmed)) {
-          const [cachedRows, customRes] = await Promise.all([
+          const [cachedRows, customRes, dishRes] = await Promise.all([
             supabase.from("food_translations").select("fatsecret_food_id, thai_name").ilike("thai_name", `%${trimmed}%`).limit(10),
             customFoodsPromise,
+            dishesPromise,
           ]);
           if (isStale()) return;
 
           const customWithNames = await attachCreatorNames(customRes.data ?? []);
+          const dishWithNames = await attachCreatorNames(dishRes.data ?? []);
           if (isStale()) return;
           const customSorted = [...customWithNames].sort((a, b) => Number(b.is_verified) - Number(a.is_verified));
           setCustomResults(customSorted.slice(0, CUSTOM_RESULTS_LIMIT));
+          setDishResults(dishWithNames.slice(0, DISH_RESULTS_LIMIT));
 
           const cached: FatSecretResultWithThai[] = (cachedRows.data ?? []).map((row) => ({
             food_id: row.fatsecret_food_id,
@@ -224,18 +266,21 @@ export default function FoodSearch() {
         const fatsecretQuery = containsThai(trimmed) ? await translateQueryToEnglish(trimmed) : trimmed;
         if (isStale()) return;
 
-        const [fsRaw, customRes] = await Promise.all([
+        const [fsRaw, customRes, dishRes] = await Promise.all([
           fetch(`${API_BASE_URL}/food/search?q=${encodeURIComponent(fatsecretQuery)}`).then((r) => r.json()),
           customFoodsPromise,
+          dishesPromise,
         ]);
         if (isStale()) return;
 
         const customWithNames = await attachCreatorNames(customRes.data ?? []);
+        const dishWithNames = await attachCreatorNames(dishRes.data ?? []);
         if (isStale()) return;
         // Verified results first so trimming to a short list never silently drops the
         // one(s) an admin has actually checked (DF2).
         const customSorted = [...customWithNames].sort((a, b) => Number(b.is_verified) - Number(a.is_verified));
         setCustomResults(customSorted.slice(0, CUSTOM_RESULTS_LIMIT));
+        setDishResults(dishWithNames.slice(0, DISH_RESULTS_LIMIT));
 
         const parsed = parseSearchResults(fsRaw);
         const withThai = await attachThaiNames(parsed);
@@ -252,9 +297,9 @@ export default function FoodSearch() {
     }, DEBOUNCE_MS);
 
     return () => clearTimeout(timeout);
-  }, [query, user]);
+  }, [query, user, forDish]);
 
-  const noResults = searched && !loading && customResults.length === 0 && fatsecretResults.length === 0;
+  const noResults = searched && !loading && customResults.length === 0 && dishResults.length === 0 && fatsecretResults.length === 0;
   const fatsecretPageCount = Math.ceil(fatsecretResults.length / FATSECRET_PAGE_SIZE);
   const pagedFatsecretResults = fatsecretResults.slice(
     fatsecretPage * FATSECRET_PAGE_SIZE,
@@ -268,6 +313,9 @@ export default function FoodSearch() {
         <p className="food-search-diary-banner">
           กำลังเพิ่มเข้ามื้อ{MEAL_LABELS[diaryMeal as Meal]} วันที่ {diaryDate}
         </p>
+      )}
+      {forDish && (
+        <p className="food-search-diary-banner">กำลังเพิ่มวัตถุดิบเข้าจาน{dishName ? ` "${dishName}"` : ""}</p>
       )}
 
       {recentEntries.length > 0 && (
@@ -302,6 +350,11 @@ export default function FoodSearch() {
       <Link to="/food/custom/new" className="add-food-link">
         + เพิ่มอาหารของคุณเอง
       </Link>
+      {!forDish && (
+        <Link to="/food/dish/new" className="add-food-link">
+          + สร้างจานอาหาร
+        </Link>
+      )}
 
       {customResults.length > 0 && (
         <section>
@@ -309,7 +362,7 @@ export default function FoodSearch() {
           <ul className="food-result-list">
             {customResults.map((food) => (
               <li key={food.id}>
-                <Link to={`/food/custom/${food.id}${diaryQuery}`}>
+                <Link to={`/food/custom/${food.id}${resultQuery}`}>
                   <span className="food-name">
                     {food.name}
                     {food.is_verified && <VerifiedBadge className="verified-badge" />}
@@ -325,13 +378,32 @@ export default function FoodSearch() {
         </section>
       )}
 
+      {dishResults.length > 0 && (
+        <section>
+          <h2>จานอาหาร</h2>
+          <ul className="food-result-list">
+            {dishResults.map((dish) => (
+              <li key={dish.id}>
+                <Link to={`/food/dish/${dish.id}${resultQuery}`}>
+                  <span className="food-name">{dish.name}</span>
+                  <span className="food-meta">
+                    {dish.kcal} kcal
+                    {dish.creator_name ? ` · โดย ${dish.creator_name}` : ""}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {fatsecretResults.length > 0 && (
         <section>
           <h2>FatSecret</h2>
           <ul className="food-result-list">
             {pagedFatsecretResults.map((food) => (
               <li key={food.food_id}>
-                <Link to={`/food/fatsecret/${food.food_id}${diaryQuery}`}>
+                <Link to={`/food/fatsecret/${food.food_id}${resultQuery}`}>
                   <span className="food-name">
                     {food.thai_name ?? food.food_name}
                     {food.brand_name ? ` (${food.brand_name})` : ""}

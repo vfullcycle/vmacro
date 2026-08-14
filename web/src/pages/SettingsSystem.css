@@ -57,3 +57,60 @@
   color: #16a34a;
   font-size: 0.875rem;
 }
+
+.settings-system .health-sync {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  text-align: left;
+}
+
+.settings-system .health-sync h2 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+}
+
+.settings-system .health-sync .status {
+  font-size: 0.9rem;
+  margin: 0.75rem 0;
+}
+
+.settings-system .token-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 0.75rem 0;
+}
+
+.settings-system .token-box code {
+  word-break: break-all;
+  font-size: 0.85rem;
+  font-family: var(--mono);
+  background: var(--code-bg);
+  padding: 0.4rem;
+  border-radius: 6px;
+}
+
+.settings-system .warn {
+  color: #b45309;
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.settings-system .health-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.settings-system .health-actions button {
+  flex: 1 1 auto;
+  min-width: 8rem;
+}
+
+.settings-system .health-actions button.danger {
+  background: #dc2626;
+}

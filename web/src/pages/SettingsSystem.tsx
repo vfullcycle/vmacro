@@ -11,6 +11,10 @@ interface SystemForm {
   default_fat_pct: number | null;
 }
 
+interface HealthTokenRow {
+  created_at: string;
+}
+
 export default function SettingsSystem() {
   const { user } = useAuth();
   const [form, setForm] = useState<SystemForm | null>(null);
@@ -18,6 +22,12 @@ export default function SettingsSystem() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+
+  const [healthToken, setHealthToken] = useState<HealthTokenRow | null | undefined>(undefined);
+  const [healthError, setHealthError] = useState<string | null>(null);
+  const [healthBusy, setHealthBusy] = useState(false);
+  const [newToken, setNewToken] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -32,6 +42,56 @@ export default function SettingsSystem() {
         setLoading(false);
       });
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    loadHealthTokenStatus();
+  }, [user]);
+
+  async function loadHealthTokenStatus() {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("health_tokens")
+      .select("created_at")
+      .eq("user_id", user.id)
+      .is("revoked_at", null)
+      .maybeSingle();
+    if (error) setHealthError(error.message);
+    else setHealthToken(data as HealthTokenRow | null);
+  }
+
+  async function handleGenerateToken() {
+    setHealthBusy(true);
+    setHealthError(null);
+    setCopied(false);
+    const { data, error } = await supabase.rpc("generate_health_token");
+    setHealthBusy(false);
+    if (error) {
+      setHealthError(error.message);
+      return;
+    }
+    setNewToken(data as string);
+    await loadHealthTokenStatus();
+  }
+
+  async function handleRevokeToken() {
+    setHealthBusy(true);
+    setHealthError(null);
+    const { error } = await supabase.rpc("revoke_health_token");
+    setHealthBusy(false);
+    if (error) {
+      setHealthError(error.message);
+      return;
+    }
+    setNewToken(null);
+    await loadHealthTokenStatus();
+  }
+
+  async function handleCopyToken() {
+    if (!newToken) return;
+    await navigator.clipboard.writeText(newToken);
+    setCopied(true);
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -100,6 +160,53 @@ export default function SettingsSystem() {
           {saving ? "กำลังบันทึก..." : "บันทึก"}
         </button>
       </form>
+
+      <div className="health-sync">
+        <h2>Apple Health</h2>
+        <p className="note">
+          เขียนยอด macro รายวันเข้า Apple Health อัตโนมัติผ่าน Shortcut #1 (FR-HLTH-1) — ดู{" "}
+          <a
+            href="https://github.com/vfullcycle/vmacro/blob/main/docs/shortcuts/shortcut-1-write.md"
+            target="_blank"
+            rel="noreferrer"
+          >
+            คู่มือติดตั้ง
+          </a>{" "}
+          สำหรับขั้นตอนเต็ม
+        </p>
+
+        <p className="status">
+          สถานะ:{" "}
+          {healthToken === undefined
+            ? "กำลังโหลด..."
+            : healthToken
+              ? `เชื่อมต่อแล้ว (สร้างเมื่อ ${new Date(healthToken.created_at).toLocaleString("th-TH")})`
+              : "ยังไม่เชื่อมต่อ"}
+        </p>
+
+        {newToken && (
+          <div className="token-box">
+            <p className="warn">คัดลอกตอนนี้ — จะไม่แสดงซ้ำอีก</p>
+            <code>{newToken}</code>
+            <button type="button" onClick={handleCopyToken}>
+              {copied ? "คัดลอกแล้ว" : "คัดลอก"}
+            </button>
+          </div>
+        )}
+
+        {healthError && <p className="error">{healthError}</p>}
+
+        <div className="health-actions">
+          <button type="button" onClick={handleGenerateToken} disabled={healthBusy}>
+            {healthToken ? "สร้าง Token ใหม่" : "สร้าง Token"}
+          </button>
+          {healthToken && (
+            <button type="button" className="danger" onClick={handleRevokeToken} disabled={healthBusy}>
+              ยกเลิกการเชื่อมต่อ
+            </button>
+          )}
+        </div>
+      </div>
     </section>
   );
 }

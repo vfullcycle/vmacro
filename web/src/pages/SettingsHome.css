@@ -17,7 +17,6 @@
 .settings-home-list a {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 0.75rem;
   padding: 0.9rem 0.25rem;
   text-decoration: none;
@@ -33,6 +32,7 @@
 }
 
 .settings-home-text {
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;

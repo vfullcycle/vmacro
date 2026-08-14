@@ -1,0 +1,78 @@
+.admin-food-import-page {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+}
+
+.admin-food-import-page .form-hint {
+  font-size: 0.85rem;
+  color: var(--text);
+  margin: 0.5rem 0 1rem;
+}
+
+.admin-food-import-page textarea {
+  width: 100%;
+  padding: 0.65rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: ui-monospace, monospace;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.admin-food-import-page button {
+  margin-top: 0.75rem;
+  padding: 0.7rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font: inherit;
+  font-weight: 600;
+  min-height: 44px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.admin-food-import-page button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.admin-food-import-page .error {
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.admin-food-import-page .import-preview,
+.admin-food-import-page .import-result {
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+
+.admin-food-import-page .form-section-label {
+  font-size: 0.8rem;
+  color: var(--text);
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.admin-food-import-page ul {
+  list-style: none;
+  margin: 0.5rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.admin-food-import-page li.valid {
+  color: #16a34a;
+}
+
+.admin-food-import-page li.invalid {
+  color: #dc2626;
+}

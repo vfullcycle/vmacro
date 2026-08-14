@@ -51,6 +51,14 @@ export function DiaryIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function WrenchIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M14.7 6.3a4 4 0 0 0-5.6 5.6l-6 6a2 2 0 1 0 2.8 2.8l6-6a4 4 0 0 0 5.6-5.6l-2.8 2.8-2-2z" />
+    </Icon>
+  );
+}
+
 export function ListIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <Icon {...props}>

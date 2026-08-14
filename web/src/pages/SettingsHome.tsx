@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { GearIcon, ListIcon, UserIcon } from "../components/icons";
+import { GearIcon, ListIcon, UserIcon, WrenchIcon } from "../components/icons";
 import { useAuth } from "../lib/auth-context";
+import { useIsAdmin } from "../lib/use-is-admin";
 import "./SettingsHome.css";
 
 const SETTINGS_ITEMS = [
@@ -9,14 +10,23 @@ const SETTINGS_ITEMS = [
   { to: "/settings/meal-templates", label: "มื้ออาหารของฉัน", desc: "จัดการชุดอาหารที่บันทึกไว้", Icon: ListIcon },
 ];
 
+const ADMIN_SETTINGS_ITEM = {
+  to: "/settings/admin/food-import",
+  label: "Import อาหาร (Admin)",
+  desc: "เพิ่ม custom food จาก JSON หลายรายการพร้อมกัน",
+  Icon: WrenchIcon,
+};
+
 export default function SettingsHome() {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useIsAdmin();
+  const items = isAdmin ? [...SETTINGS_ITEMS, ADMIN_SETTINGS_ITEM] : SETTINGS_ITEMS;
 
   return (
     <section className="settings-home">
       <h1>Settings</h1>
       <ul className="settings-home-list">
-        {SETTINGS_ITEMS.map(({ to, label, desc, Icon }) => (
+        {items.map(({ to, label, desc, Icon }) => (
           <li key={to}>
             <Link to={to}>
               <Icon className="settings-home-icon" />

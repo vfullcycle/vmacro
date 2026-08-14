@@ -2,6 +2,7 @@ import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import { AuthProvider } from "./lib/auth-context";
+import AdminFoodImport from "./pages/AdminFoodImport";
 import Calculator from "./pages/Calculator";
 import CustomFoodForm from "./pages/CustomFoodForm";
 import Diary from "./pages/Diary";
@@ -45,6 +46,7 @@ function App() {
             <Route path="/settings/profile" element={<SettingsProfile />} />
             <Route path="/settings/system" element={<SettingsSystem />} />
             <Route path="/settings/meal-templates" element={<SettingsMealTemplates />} />
+            <Route path="/settings/admin/food-import" element={<AdminFoodImport />} />
             <Route path="/weight-log" element={<WeightLog />} />
             <Route path="/food/custom/new" element={<CustomFoodForm />} />
             <Route path="/food/custom/:id/edit" element={<CustomFoodForm />} />

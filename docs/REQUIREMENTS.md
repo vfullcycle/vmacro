@@ -89,9 +89,15 @@ scale nutrient ตามสัดส่วนจาก serving ต้นทา�
 
 ## FR-HLTH — Apple Health Integration (P3–P4)
 
-**FR-HLTH-1 (P3)** เขียนยอดวันลง Apple Health อย่างน้อย: dietary energy, fat, carbohydrates, protein
-ผ่าน Shortcut #1 ที่ดึงข้อมูลจาก VPS endpoint (auth ต่อ user)
-*AC: run Shortcut แล้วค่าใน Health app ตรงกับหน้าสรุปวันของ Vmacro*
+**FR-HLTH-1 (P3)** เขียนยอดวันลง Apple Health อย่างน้อย: dietary energy, fat (total/saturated/mono/poly),
+carbohydrates, protein, cholesterol, sodium, fiber, sugar, potassium, calcium, iron, vitamin C, vitamin D
+ผ่าน Shortcut #1 ที่ดึงข้อมูลจาก VPS endpoint (auth ต่อ user ด้วย per-user API token ตาม D-020) — เขียนแบบ
+best-effort เท่าที่มีข้อมูลจริงต่อวัน field ไหนไม่มี entry ไหนของวันนั้นให้ข้อมูลเลยให้ข้าม ไม่เขียนเป็น 0
+(ไม่ใช่เขียนทุก field เสมอ). ไม่เขียน trans fat เพราะ Apple HealthKit ไม่มี nutrition identifier รองรับ
+ไม่เขียน magnesium/zinc/vitamin B6/B12/folate/phosphorus/water เพราะไม่มีแหล่งข้อมูลจริงในระบบเลย (FatSecret
+ไม่คืนค่าพวกนี้, custom food ที่ user กรอกเองแทบไม่มีคนกรอก, quick-add ไม่มีช่องให้กรอกเลย)
+*AC: run Shortcut แล้วค่าใน Health app ตรงกับหน้าสรุปวันของ Vmacro (core 4 ต้องตรงเป๊ะ, field อื่นเป็น
+best-effort ตามข้อมูลที่มีจริง)*
 
 **FR-HLTH-2 (P3)** Shortcuts ทั้งสองแจกผ่าน iCloud share link พร้อมคู่มือติดตั้ง — user ติดตั้ง + grant สิทธิ์
 ครั้งเดียวต่อเครื่อง ไม่ต้องแก้ไขข้างใน shortcut เอง (config ดึงจาก server)
@@ -121,6 +127,10 @@ RLS: diary/health/profile/weight เห็นเฉพาะเจ้าขอ�
 
 ## Changelog
 
+- v1.5 (2026-08-14): ขยาย FR-HLTH-1 (คำสั่งวี) — เพิ่ม extended nutrients แบบ best-effort (cholesterol,
+  sodium, fiber, sugar, potassium, calcium, iron, vitamin C/D, saturated/mono/poly fat) นอกเหนือจาก core 4
+  เดิม, ระบุชัดว่าไม่เขียน trans fat (ข้อจำกัด Apple HealthKit) และไม่เขียน magnesium/zinc/B6/B12/folate/
+  phosphorus/water (ไม่มีแหล่งข้อมูลจริงในระบบ) — ดู D-020/D-021 ใน PROJECT_BIBLE
 - v1.4 (2026-08-13): แก้ FR-FOOD-6 ให้ตรงเจตนาจริง (คำสั่งวี) — quick add คือ one-off diary entry
   ตรง ๆ ไม่ใช่การสร้าง custom food ใหม่ (v1.3 เข้าใจผิด) — เพิ่ม `diary_entries.source = 'quick'`
   + คอลัมน์ `quick_name` แทน

@@ -11,6 +11,7 @@ import FoodSearch from "./pages/FoodSearch";
 import HealthCheck from "./pages/HealthCheck";
 import Login from "./pages/Login";
 import SettingsHome from "./pages/SettingsHome";
+import SettingsMealTemplates from "./pages/SettingsMealTemplates";
 import SettingsProfile from "./pages/SettingsProfile";
 import SettingsSystem from "./pages/SettingsSystem";
 import WeightLog from "./pages/WeightLog";
@@ -43,6 +44,7 @@ function App() {
             <Route path="/settings" element={<SettingsHome />} />
             <Route path="/settings/profile" element={<SettingsProfile />} />
             <Route path="/settings/system" element={<SettingsSystem />} />
+            <Route path="/settings/meal-templates" element={<SettingsMealTemplates />} />
             <Route path="/weight-log" element={<WeightLog />} />
             <Route path="/food/custom/new" element={<CustomFoodForm />} />
             <Route path="/food/custom/:id/edit" element={<CustomFoodForm />} />

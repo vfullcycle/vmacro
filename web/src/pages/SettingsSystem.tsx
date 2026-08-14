@@ -11,89 +11,6 @@ interface SystemForm {
   default_fat_pct: number | null;
 }
 
-interface TemplateSummary {
-  id: string;
-  name: string;
-  itemCount: number;
-  kcal: number;
-}
-
-interface RawTemplateRow {
-  id: string;
-  name: string;
-  meal_template_items: { kcal: number }[] | null;
-}
-
-function MealTemplateManager({ userId }: { userId: string }) {
-  const [templates, setTemplates] = useState<TemplateSummary[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  function loadTemplates() {
-    supabase
-      .from("meal_templates")
-      .select("id, name, meal_template_items(kcal)")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .then(({ data, error: fetchError }) => {
-        if (fetchError) {
-          setError(fetchError.message);
-          return;
-        }
-        const rows = (data as unknown as RawTemplateRow[]) ?? [];
-        setTemplates(
-          rows.map((t) => ({
-            id: t.id,
-            name: t.name,
-            itemCount: t.meal_template_items?.length ?? 0,
-            kcal: Math.round((t.meal_template_items ?? []).reduce((sum, i) => sum + i.kcal, 0)),
-          })),
-        );
-      });
-  }
-
-  useEffect(loadTemplates, [userId]);
-
-  async function handleDelete(id: string) {
-    if (!window.confirm("ลบ template นี้เลยไหม?")) return;
-    setDeletingId(id);
-    setError(null);
-    const { error: deleteError } = await supabase.from("meal_templates").delete().eq("id", id);
-    setDeletingId(null);
-    if (deleteError) {
-      setError(deleteError.message);
-      return;
-    }
-    loadTemplates();
-  }
-
-  return (
-    <section className="settings-system-templates">
-      <h2>Meal templates</h2>
-      {error && <p className="error">{error}</p>}
-      {templates === null && <p className="note">กำลังโหลด...</p>}
-      {templates && templates.length === 0 && <p className="note">ยังไม่มี template — บันทึกได้จากหน้า Diary</p>}
-      {templates && templates.length > 0 && (
-        <ul className="settings-template-list">
-          {templates.map((t) => (
-            <li key={t.id}>
-              <span className="settings-template-name">
-                {t.name}
-                <span className="settings-template-meta">
-                  {t.itemCount} รายการ · {t.kcal} kcal
-                </span>
-              </span>
-              <button type="button" className="settings-template-delete" onClick={() => handleDelete(t.id)} disabled={deletingId === t.id}>
-                ลบ
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
-
 export default function SettingsSystem() {
   const { user } = useAuth();
   const [form, setForm] = useState<SystemForm | null>(null);
@@ -183,8 +100,6 @@ export default function SettingsSystem() {
           {saving ? "กำลังบันทึก..." : "บันทึก"}
         </button>
       </form>
-
-      {user && <MealTemplateManager userId={user.id} />}
     </section>
   );
 }

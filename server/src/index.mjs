@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { translateBatch } from "./anthropic.mjs";
 import { getAuthedUser } from "./auth.mjs";
 import { getFood, searchFoods } from "./fatsecret.mjs";
+import { getDailyTotalsForToken } from "./healthToken.mjs";
 import { checkRateLimit } from "./rateLimit.mjs";
 
 const PORT = process.env.PORT || 3000;
@@ -12,6 +13,8 @@ const HOST = "127.0.0.1";
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "https://vfullcycle.github.io";
 const MAX_BODY_BYTES = 64 * 1024;
 const TRANSLATE_RATE_LIMIT = { max: 20, windowMs: 60_000 };
+const HEALTH_SUMMARY_RATE_LIMIT = { max: 30, windowMs: 60_000 };
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const VERSION_FILE = path.join(__dirname, "../deploy/version.json");
@@ -105,6 +108,42 @@ const server = createServer(async (req, res) => {
     } catch (err) {
       console.error(err);
       sendJson(res, 502, { error: "upstream FatSecret request failed" });
+    }
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/health/daily-summary") {
+    // FR-HLTH-1: called by an unattended Apple Shortcut, so auth is a long-lived
+    // per-user token (D-020) instead of a short-lived Supabase JWT — see
+    // healthToken.mjs for why token verification and the totals query are one
+    // Postgres RPC call rather than two separate steps.
+    const authHeader = req.headers["authorization"];
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    if (!token) {
+      sendJson(res, 401, { error: "unauthorized" });
+      return;
+    }
+    if (!checkRateLimit(token, HEALTH_SUMMARY_RATE_LIMIT)) {
+      sendJson(res, 429, { error: "rate limited" });
+      return;
+    }
+
+    const date = url.searchParams.get("date");
+    if (!date || !DATE_RE.test(date)) {
+      sendJson(res, 400, { error: "missing or invalid query param: date (expected YYYY-MM-DD)" });
+      return;
+    }
+
+    try {
+      const totals = await getDailyTotalsForToken(token, date);
+      if (!totals) {
+        sendJson(res, 401, { error: "unauthorized" });
+        return;
+      }
+      sendJson(res, 200, totals);
+    } catch (err) {
+      console.error(err);
+      sendJson(res, 502, { error: "daily summary request failed" });
     }
     return;
   }

@@ -6,7 +6,7 @@ import "./SettingsHome.css";
 const SETTINGS_ITEMS = [
   { to: "/settings/profile", label: "โปรไฟล์", desc: "ข้อมูลร่างกาย เป้าหมาย สูตรคำนวณ", Icon: UserIcon },
   { to: "/settings/system", label: "ระบบ", desc: "หน่วย ค่า default", Icon: GearIcon },
-  { to: "/settings/meal-templates", label: "Meal templates", desc: "จัดการชุดอาหารที่บันทึกไว้", Icon: ListIcon },
+  { to: "/settings/meal-templates", label: "มื้ออาหารของฉัน", desc: "จัดการชุดอาหารที่บันทึกไว้", Icon: ListIcon },
 ];
 
 export default function SettingsHome() {

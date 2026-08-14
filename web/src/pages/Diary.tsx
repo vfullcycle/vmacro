@@ -353,7 +353,7 @@ export default function Diary() {
                   + เพิ่มอาหาร
                 </Link>
                 <button type="button" className="diary-add-link" onClick={() => setPickerMeal(meal)}>
-                  ใช้ template
+                  มื้ออาหารของฉัน
                 </button>
               </div>
 
@@ -363,7 +363,7 @@ export default function Diary() {
                     <input
                       value={templateName}
                       onChange={(e) => setTemplateName(e.target.value)}
-                      placeholder="ชื่อ template"
+                      placeholder="ชื่อมื้ออาหาร"
                       required
                       autoFocus
                     />
@@ -383,7 +383,7 @@ export default function Diary() {
                   </form>
                 ) : (
                   <button type="button" className="diary-save-template-link" onClick={() => setSavingTemplateMeal(meal)}>
-                    บันทึกเป็น template
+                    บันทึกเป็นมื้ออาหารของฉัน
                   </button>
                 ))}
             </div>

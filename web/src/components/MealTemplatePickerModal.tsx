@@ -93,13 +93,13 @@ export default function MealTemplatePickerModal({
   return (
     <div className="template-picker-backdrop" onClick={onClose}>
       <div className="template-picker-sheet" onClick={(e) => e.stopPropagation()}>
-        <h2>ใช้ template</h2>
+        <h2>มื้ออาหารของฉัน</h2>
 
         {error && <p className="error">{error}</p>}
 
         {templates === null && <p className="hint">กำลังโหลด...</p>}
         {templates && templates.length === 0 && (
-          <p className="hint">ยังไม่มี template — บันทึกจากมื้อที่มีรายการอยู่ก่อนได้เลย</p>
+          <p className="hint">ยังไม่มีมื้ออาหารที่บันทึกไว้ — บันทึกจากมื้อที่มีรายการอยู่ก่อนได้เลย</p>
         )}
 
         {templates && templates.length > 0 && (

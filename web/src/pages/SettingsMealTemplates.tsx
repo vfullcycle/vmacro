@@ -51,7 +51,7 @@ export default function SettingsMealTemplates() {
   }, [user]);
 
   async function handleDelete(id: string) {
-    if (!user || !window.confirm("ลบ template นี้เลยไหม?")) return;
+    if (!user || !window.confirm("ลบมื้ออาหารนี้เลยไหม?")) return;
     setDeletingId(id);
     setError(null);
     const { error: deleteError } = await supabase.from("meal_templates").delete().eq("id", id);
@@ -65,12 +65,12 @@ export default function SettingsMealTemplates() {
 
   return (
     <section className="settings-meal-templates">
-      <h1>Settings — Meal templates</h1>
+      <h1>Settings — มื้ออาหารของฉัน</h1>
       <p className="note">ชุดอาหารที่บันทึกไว้จากหน้า Diary — เอาไว้เพิ่มเข้ามื้ออาหารได้ในคลิกเดียว</p>
 
       {error && <p className="error">{error}</p>}
       {templates === null && <p className="note">กำลังโหลด...</p>}
-      {templates && templates.length === 0 && <p className="note">ยังไม่มี template — บันทึกได้จากหน้า Diary</p>}
+      {templates && templates.length === 0 && <p className="note">ยังไม่มีมื้ออาหารที่บันทึกไว้ — บันทึกได้จากหน้า Diary</p>}
       {templates && templates.length > 0 && (
         <ul className="settings-template-list">
           {templates.map((t) => (

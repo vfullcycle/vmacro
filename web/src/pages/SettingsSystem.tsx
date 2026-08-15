@@ -9,6 +9,7 @@ interface SystemForm {
   unit_system: UnitSystem;
   default_protein_g_per_kg: number | null;
   default_fat_pct: number | null;
+  health_shortcut_name: string;
 }
 
 interface HealthTokenRow {
@@ -33,7 +34,7 @@ export default function SettingsSystem() {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("unit_system, default_protein_g_per_kg, default_fat_pct")
+      .select("unit_system, default_protein_g_per_kg, default_fat_pct, health_shortcut_name")
       .eq("id", user.id)
       .single()
       .then(({ data, error }) => {
@@ -153,6 +154,63 @@ export default function SettingsSystem() {
           />
         </label>
 
+        <div className="health-sync">
+          <h2>Apple Health</h2>
+          <p className="note">
+            เขียนยอด macro รายวันเข้า Apple Health อัตโนมัติผ่าน Shortcut #1 (FR-HLTH-1) — ดู{" "}
+            <a
+              href="https://github.com/vfullcycle/vmacro/blob/main/docs/shortcuts/shortcut-1-write.md"
+              target="_blank"
+              rel="noreferrer"
+            >
+              คู่มือติดตั้ง
+            </a>{" "}
+            สำหรับขั้นตอนเต็ม
+          </p>
+
+          <label>
+            ชื่อ Shortcut #1 (ต้องตรงกับชื่อจริงในแอป Shortcuts เป๊ะๆ)
+            <input
+              type="text"
+              value={form.health_shortcut_name}
+              onChange={(e) => setForm({ ...form, health_shortcut_name: e.target.value })}
+              placeholder="Vmacro: Sync to Health"
+            />
+          </label>
+
+          <p className="status">
+            สถานะ:{" "}
+            {healthToken === undefined
+              ? "กำลังโหลด..."
+              : healthToken
+                ? `เชื่อมต่อแล้ว (สร้างเมื่อ ${new Date(healthToken.created_at).toLocaleString("th-TH")})`
+                : "ยังไม่เชื่อมต่อ"}
+          </p>
+
+          {newToken && (
+            <div className="token-box">
+              <p className="warn">คัดลอกตอนนี้ — จะไม่แสดงซ้ำอีก</p>
+              <code>{newToken}</code>
+              <button type="button" onClick={handleCopyToken}>
+                {copied ? "คัดลอกแล้ว" : "คัดลอก"}
+              </button>
+            </div>
+          )}
+
+          {healthError && <p className="error">{healthError}</p>}
+
+          <div className="health-actions">
+            <button type="button" onClick={handleGenerateToken} disabled={healthBusy}>
+              {healthToken ? "สร้าง Token ใหม่" : "สร้าง Token"}
+            </button>
+            {healthToken && (
+              <button type="button" className="danger" onClick={handleRevokeToken} disabled={healthBusy}>
+                ยกเลิกการเชื่อมต่อ
+              </button>
+            )}
+          </div>
+        </div>
+
         {error && <p className="error">{error}</p>}
         {saved && <p className="ok">บันทึกแล้ว</p>}
 
@@ -160,53 +218,6 @@ export default function SettingsSystem() {
           {saving ? "กำลังบันทึก..." : "บันทึก"}
         </button>
       </form>
-
-      <div className="health-sync">
-        <h2>Apple Health</h2>
-        <p className="note">
-          เขียนยอด macro รายวันเข้า Apple Health อัตโนมัติผ่าน Shortcut #1 (FR-HLTH-1) — ดู{" "}
-          <a
-            href="https://github.com/vfullcycle/vmacro/blob/main/docs/shortcuts/shortcut-1-write.md"
-            target="_blank"
-            rel="noreferrer"
-          >
-            คู่มือติดตั้ง
-          </a>{" "}
-          สำหรับขั้นตอนเต็ม
-        </p>
-
-        <p className="status">
-          สถานะ:{" "}
-          {healthToken === undefined
-            ? "กำลังโหลด..."
-            : healthToken
-              ? `เชื่อมต่อแล้ว (สร้างเมื่อ ${new Date(healthToken.created_at).toLocaleString("th-TH")})`
-              : "ยังไม่เชื่อมต่อ"}
-        </p>
-
-        {newToken && (
-          <div className="token-box">
-            <p className="warn">คัดลอกตอนนี้ — จะไม่แสดงซ้ำอีก</p>
-            <code>{newToken}</code>
-            <button type="button" onClick={handleCopyToken}>
-              {copied ? "คัดลอกแล้ว" : "คัดลอก"}
-            </button>
-          </div>
-        )}
-
-        {healthError && <p className="error">{healthError}</p>}
-
-        <div className="health-actions">
-          <button type="button" onClick={handleGenerateToken} disabled={healthBusy}>
-            {healthToken ? "สร้าง Token ใหม่" : "สร้าง Token"}
-          </button>
-          {healthToken && (
-            <button type="button" className="danger" onClick={handleRevokeToken} disabled={healthBusy}>
-              ยกเลิกการเชื่อมต่อ
-            </button>
-          )}
-        </div>
-      </div>
     </section>
   );
 }

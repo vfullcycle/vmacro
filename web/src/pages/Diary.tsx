@@ -19,6 +19,7 @@ interface ProfileForTarget {
   formula_choice: "mifflin" | "katch_mcardle" | "harris_benedict";
   default_protein_g_per_kg: number | null;
   default_fat_pct: number | null;
+  health_shortcut_name: string | null;
 }
 
 interface Target {
@@ -28,10 +29,11 @@ interface Target {
   fat_g: number;
 }
 
-// Must match the exact name Wee (and anyone else following the install guide)
-// gives Shortcut #1 in the iOS Shortcuts app — this is how the deep link finds
-// it (FR-HLTH-1, "sync now" button instead of waiting for a scheduled run).
-const HEALTH_SYNC_SHORTCUT_NAME = "Vmacro: Sync to Health";
+// Fallback only — the real name each user gave Shortcut #1 in their own iOS
+// Shortcuts app lives in profiles.health_shortcut_name (Settings → System),
+// since it's whatever they typed when building it, not something this app
+// controls (FR-HLTH-1, "sync now" button instead of waiting for a scheduled run).
+const DEFAULT_HEALTH_SYNC_SHORTCUT_NAME = "Vmacro: Sync to Health";
 const IS_IOS = typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
 
 function ProgressBar({ label, value, target }: { label: string; value: number; target: number }) {
@@ -61,6 +63,7 @@ export default function Diary() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [target, setTarget] = useState<Target | null>(null);
+  const [shortcutName, setShortcutName] = useState(DEFAULT_HEALTH_SYNC_SHORTCUT_NAME);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
@@ -97,12 +100,13 @@ export default function Diary() {
     supabase
       .from("profiles")
       .select(
-        "sex, birth_date, height_cm, current_weight_kg, body_fat_pct, activity_level, goal, formula_choice, default_protein_g_per_kg, default_fat_pct",
+        "sex, birth_date, height_cm, current_weight_kg, body_fat_pct, activity_level, goal, formula_choice, default_protein_g_per_kg, default_fat_pct, health_shortcut_name",
       )
       .eq("id", user.id)
       .single()
       .then(({ data }) => {
         const p = data as ProfileForTarget | null;
+        if (p?.health_shortcut_name) setShortcutName(p.health_shortcut_name);
         if (!p || !p.sex || !p.birth_date || !p.height_cm || !p.current_weight_kg || !p.activity_level || !p.goal) {
           setTarget(null);
           return;
@@ -296,7 +300,7 @@ export default function Diary() {
       {isToday && IS_IOS && (
         <a
           className="diary-add-link diary-health-sync-link"
-          href={`shortcuts://run-shortcut?name=${encodeURIComponent(HEALTH_SYNC_SHORTCUT_NAME)}`}
+          href={`shortcuts://run-shortcut?name=${encodeURIComponent(shortcutName)}`}
         >
           ซิงก์ยอดวันนี้เข้า Apple Health
         </a>

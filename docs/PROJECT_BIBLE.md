@@ -108,7 +108,7 @@ RLS หลัก: ข้อมูลส่วนตัว (diary, health, profil
 |---|---|---|---|---|
 | R-01 | FatSecret IP whitelist อาจมีเงื่อนไขเพิ่มนอกจาก IP เดี่ยว | P0 block | ทดสอบ OAuth2 token request จาก VPS เป็นงานแรกของ P0 | ปิดแล้ว (2026-08-11: `server/scripts/test-fatsecret-oauth.sh` รันบน VPS — ขอ token + `foods.search` สำเร็จ) |
 | R-02 | ยังไม่มี domain ชี้ VPS + TLS | PWA เรียก API ไม่ได้ | จัด domain (subdomain ที่มีอยู่ก็ได้) + certbot ใน P0 | ปิดแล้ว (2026-08-11: `https://vmacro.persiq.net/health` ตอบ 200 จากภายนอก, TLS ผ่าน certbot, `vmacro-proxy` + apache2 enable ผ่าน systemd รอดข้าม reboot จริง — ระหว่างทางพบว่า apache2 เดิมตั้ง disabled มาก่อน ได้ enable แก้ให้ด้วย) |
-| R-03 | Shortcuts ไม่มี background sync แท้จริง | Health data ไม่ real-time | ยอมรับ manual run / time-based automation — ระบุใน SCOPE เป็น constraint | ยอมรับแล้ว |
+| R-03 | Shortcuts ไม่มี background sync แท้จริง | Health data ไม่ real-time | ยอมรับ manual run / time-based automation — ระบุใน SCOPE เป็น constraint | ยอมรับแล้ว **(2026-08-15: วีขอ real-time ระหว่าง dogfood — ยืนยันอีกครั้งว่าทำไม่ได้จริงในกรอบ PWA+Shortcuts เพราะ HealthKit ไม่มี API ให้ web เขียนตรง ต้องผ่าน Shortcuts เท่านั้น และ Shortcuts เองไม่มี trigger แบบ "data เปลี่ยนแล้วรันทันที" — native app ที่จะทำ real-time ได้จริงก็อยู่ Out of Scope v1 อยู่แล้ว. ทางออกที่เลือกแทน: เพิ่มปุ่ม "ซิงก์เข้า Apple Health" ในหน้า Diary (deep link `shortcuts://run-shortcut`) ให้กดได้ทันทีหลังบันทึกแทนต้องรอ automation ตามเวลา — ยังเป็น manual trigger ไม่ใช่ real-time จริง แค่ลด friction ของการกดเอง, ดู `docs/shortcuts/shortcut-1-write.md`)** |
 | R-04 | Serving size ข้อมูล US (oz, cup) vs การใช้จริงของวี (กรัม) | UX บันทึกช้า | Unit conversion layer + default กรัมสำหรับ custom foods | เปิด |
 | R-05 | Repo public — ความเสี่ยง secret หลุด | สูงมาก | Secret hygiene ใน CLAUDE.md + `.env` อยู่ VPS เท่านั้น + `.gitignore` ตั้งแต่ commit แรก | ควบคุมแล้ว |
 | R-06 | attribution ของ fatsecret หายจาก UI โดยไม่ตั้งใจ (refactor) | ผิดเงื่อนไข tier | ใส่เป็น permanent component + ห้ามลบใน CLAUDE.md | ควบคุมแล้ว |
@@ -138,6 +138,9 @@ D-013 (Research Gate) — ห้ามเริ่มโค้ดจนกว่
 
 ## Changelog
 
+- v1.11 (2026-08-15): เพิ่มหมายเหตุใน R-03 — วีขอ real-time Health sync ระหว่าง dogfood, ยืนยันข้อจำกัดแพลตฟอร์ม
+  เดิมอีกครั้ง (ทำไม่ได้จริงโดยไม่มี native app ซึ่ง Out of Scope v1) เลือกทำปุ่ม "ซิงก์เข้า Apple Health"
+  ในหน้า Diary แทน (deep link เปิด Shortcut ทันที ลด friction แต่ยังเป็น manual trigger)
 - v1.10 (2026-08-14): เพิ่ม D-020 (health token auth สำหรับ Apple Shortcut ผ่าน `verify_health_token()`/
   `get_daily_totals()` SECURITY DEFINER RPC), D-021 (exception ของ Phase Gate Rule — ทำ FR-HLTH-1/2 ก่อน
   FR-DIARY-3, supersede ล็อก "ไม่รับ FR ใหม่จนถึง v1.0.0" ใน v1.9 เฉพาะกรณีนี้) — วีอนุมัติระหว่าง dogfood จริง

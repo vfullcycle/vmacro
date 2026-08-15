@@ -28,6 +28,12 @@ interface Target {
   fat_g: number;
 }
 
+// Must match the exact name Wee (and anyone else following the install guide)
+// gives Shortcut #1 in the iOS Shortcuts app — this is how the deep link finds
+// it (FR-HLTH-1, "sync now" button instead of waiting for a scheduled run).
+const HEALTH_SYNC_SHORTCUT_NAME = "Vmacro: Sync to Health";
+const IS_IOS = typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
+
 function ProgressBar({ label, value, target }: { label: string; value: number; target: number }) {
   const pct = target > 0 ? Math.min(100, Math.round((value / target) * 100)) : 0;
   return (
@@ -285,6 +291,15 @@ export default function Diary() {
         <p className="diary-summary-missing">
           ยังตั้งค่า Settings → Profile ไม่ครบ — <Link to="/settings/profile">ตั้งค่าเพื่อดู target</Link>
         </p>
+      )}
+
+      {isToday && IS_IOS && (
+        <a
+          className="diary-add-link diary-health-sync-link"
+          href={`shortcuts://run-shortcut?name=${encodeURIComponent(HEALTH_SYNC_SHORTCUT_NAME)}`}
+        >
+          ซิงก์ยอดวันนี้เข้า Apple Health
+        </a>
       )}
 
       {error && <p className="error">{error}</p>}

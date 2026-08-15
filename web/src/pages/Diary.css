@@ -70,6 +70,10 @@
   margin-bottom: 1.5rem;
 }
 
+.diary-health-sync-link {
+  margin-bottom: 1.5rem;
+}
+
 .diary-progress-label {
   display: flex;
   justify-content: space-between;

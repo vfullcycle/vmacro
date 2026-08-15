@@ -37,36 +37,42 @@
 
 ## สร้าง action ทีละขั้น (สำหรับคนต่อ Shortcut เอง — ส่วนที่ 1 ข้อ 2)
 
+> **เรื่องคอลัมน์ "Action (TH)"**: เช็คกับหน้า official guide ภาษาไทยของ Apple แล้ว ยืนยันได้ตรงๆ แค่ 2 คำ
+> คือ `Get Contents of URL` = **รับเนื้อหาของ URL** และ `If` = **ถ้า** — ที่เหลือ (โดยเฉพาะกลุ่ม Health ที่
+> เฉพาะทาง) หาหน้า official ไม่เจอ เลยใส่คำแปลที่น่าจะใกล้เคียงที่สุดให้แทน **ไม่รับประกันว่าตรงกับคำในแอปเป๊ะ
+> 100%** ถ้าเจอในเครื่องจริงแล้วคำไม่ตรง ให้ยึดคอลัมน์ Action (EN) เป็นหลัก แล้วใช้ช่องค้นหา (พิมพ์ชื่อไทยที่เดา
+> ไว้ หรือสลับ Shortcuts เป็นภาษาอังกฤษชั่วคราวตอนต่อ action ก็ได้) — บอกคำจริงที่เจอมาได้ เดี๋ยวแก้เอกสารให้ตรง
+
 ### กลุ่ม A — เตรียมตัวแปร (4 action)
 
-| # | Action | ตั้งค่า |
-|---|---|---|
-| A1 | `Text` | พิมพ์ token ของคุณลงไป (เอาจริงจาก Settings → System ตอนตั้งค่า) → แตะผลลัพธ์ค้างแล้วเลือก **Rename Variable** → ตั้งชื่อ `Token` |
-| A2 | `Format Date` | Input: `Current Date` (แตะเลือกจาก magic variable ด้านล่างคีย์บอร์ด) → Date Format: `Custom` → Custom Format พิมพ์ `yyyy-MM-dd` → Rename Variable → `Today` |
-| A3 | `Adjust Date` | Input: `Current Date` → Adjusting: `Get Start of` → Get Start of: `Day` → Rename Variable → `Start Of Today` |
-| A4 | `Adjust Date` | Input: `Current Date` → Adjusting: `Get End of` → Get End of: `Day` → Rename Variable → `End Of Today` |
+| # | Action (EN) | Action (TH) | ตั้งค่า |
+|---|---|---|---|
+| A1 | `Text` | ข้อความ | พิมพ์ token ของคุณลงไป (เอาจริงจาก Settings → System ตอนตั้งค่า) → แตะผลลัพธ์ค้างแล้วเลือก **Rename Variable** → ตั้งชื่อ `Token` |
+| A2 | `Format Date` | จัดรูปแบบวันที่ *(ไม่ยืนยัน)* | Input: `Current Date` (แตะเลือกจาก magic variable ด้านล่างคีย์บอร์ด) → Date Format: `Custom` → Custom Format พิมพ์ `yyyy-MM-dd` → Rename Variable → `Today` |
+| A3 | `Adjust Date` | ปรับวันที่ *(ไม่ยืนยัน)* | Input: `Current Date` → Adjusting: `Get Start of` → Get Start of: `Day` → Rename Variable → `Start Of Today` |
+| A4 | `Adjust Date` | ปรับวันที่ *(ไม่ยืนยัน)* | Input: `Current Date` → Adjusting: `Get End of` → Get End of: `Day` → Rename Variable → `End Of Today` |
 
 (A3/A4 ใช้ตอนกรอง "sample ของวันนี้" ตอนลบของเก่าในกลุ่ม C — ทำไว้ล่วงหน้าตรงนี้เพื่อไม่ต้องสร้างซ้ำทีหลัง)
 
 ### กลุ่ม B — ดึงข้อมูลจาก Vmacro (3 action)
 
-| # | Action | ตั้งค่า |
-|---|---|---|
-| B1 | `Get Contents of URL` | URL: พิมพ์ `https://vmacro.persiq.net/health/daily-summary?date=` แล้วแตะแป้นพิมพ์ใส่ตัวแปร `Today` ต่อท้าย (ไม่มีเว้นวรรค) → Method: `GET` → Headers: เพิ่ม 1 แถว key = `Authorization`, value = พิมพ์ `Bearer ` (มีวรรคท้าย) แล้วใส่ตัวแปร `Token` ต่อ → Rename Variable ผลลัพธ์ → `Response` |
-| B2 | `Get Dictionary from Input` | Input: `Response` → Rename Variable → `Data` |
-| B3 | `Get Value for Key` | Key: `extended` → Dictionary: `Data` → Rename Variable → `Extended` |
+| # | Action (EN) | Action (TH) | ตั้งค่า |
+|---|---|---|---|
+| B1 | `Get Contents of URL` | **รับเนื้อหาของ URL** ✓ ยืนยันแล้ว | URL: พิมพ์ `https://vmacro.persiq.net/health/daily-summary?date=` แล้วแตะแป้นพิมพ์ใส่ตัวแปร `Today` ต่อท้าย (ไม่มีเว้นวรรค) → Method: `GET` → Headers: เพิ่ม 1 แถว key = `Authorization`, value = พิมพ์ `Bearer ` (มีวรรคท้าย) แล้วใส่ตัวแปร `Token` ต่อ → Rename Variable ผลลัพธ์ → `Response` |
+| B2 | `Get Dictionary from Input` | รับค่าพจนานุกรม *(ค่อนข้างมั่นใจ)* | Input: `Response` → Rename Variable → `Data` |
+| B3 | `Get Value for Key` | รับค่าของคีย์ *(ไม่ยืนยัน)* | Key: `extended` → Dictionary: `Data` → Rename Variable → `Extended` |
 
 ### กลุ่ม C — Core 4 (kcal/protein/carb/fat): ลบของเก่าก่อนแล้วเขียนใหม่ (16 action)
 
 ตัวอย่างเต็มสำหรับ **kcal** ก่อน (ทำ 4 action นี้), แล้วทำ pattern เดียวกันอีก 3 รอบตามตารางด้านล่าง
 โดยเปลี่ยนแค่ Key / ชื่อตัวแปร / Sample Type ตามแถวของแต่ละตัว:
 
-| # | Action | ตั้งค่า (ตัวอย่าง kcal) |
-|---|---|---|
-| C.kcal.1 | `Get Value for Key` | Key: `kcal` → Dictionary: `Data` → Rename → `KcalValue` |
-| C.kcal.2 | `Find Health Samples` | Sample Type: `Dietary Energy` → เพิ่ม filter: `Created Date` `is after` `Start Of Today`, และ `Created Date` `is before` `End Of Today` → Rename → `OldKcal` |
-| C.kcal.3 | `Delete Health Sample` | Sample: `OldKcal` (ใส่ลิสต์ทั้งก้อนได้เลย ไม่ต้อง loop — ถ้าเวอร์ชันคุณรับได้แค่ทีละตัว ให้ครอบ C.kcal.3 ด้วย `Repeat with Each` โดยใช้ `OldKcal` เป็น input) |
-| C.kcal.4 | `Log Nutrition Sample` | Sample Type: `Dietary Energy` (บางเวอร์ชันเรียก `Calories`) → Amount: `KcalValue` → Date: ปล่อย default (ตอนนี้) |
+| # | Action (EN) | Action (TH) | ตั้งค่า (ตัวอย่าง kcal) |
+|---|---|---|---|
+| C.kcal.1 | `Get Value for Key` | รับค่าของคีย์ *(ไม่ยืนยัน)* | Key: `kcal` → Dictionary: `Data` → Rename → `KcalValue` |
+| C.kcal.2 | `Find Health Samples` | ค้นหาตัวอย่างสุขภาพ *(ไม่ยืนยัน)* | Sample Type: `Dietary Energy` → เพิ่ม filter: `Created Date` `is after` `Start Of Today`, และ `Created Date` `is before` `End Of Today` → Rename → `OldKcal` |
+| C.kcal.3 | `Delete Health Sample` | ลบตัวอย่างสุขภาพ *(ไม่ยืนยัน)* | Sample: `OldKcal` (ใส่ลิสต์ทั้งก้อนได้เลย ไม่ต้อง loop — ถ้าเวอร์ชันคุณรับได้แค่ทีละตัว ให้ครอบ C.kcal.3 ด้วย `Repeat with Each` โดยใช้ `OldKcal` เป็น input) |
+| C.kcal.4 | `Log Nutrition Sample` | บันทึกตัวอย่างโภชนาการ *(ไม่ยืนยัน)* | Sample Type: `Dietary Energy` (บางเวอร์ชันเรียก `Calories`) → Amount: `KcalValue` → Date: ปล่อย default (ตอนนี้) |
 
 ทำซ้ำ pattern 4 action เดียวกัน (Get Value for Key → Find Health Samples → Delete Health Sample →
 Log Nutrition Sample) อีก 3 รอบ ตามตารางนี้:
@@ -82,12 +88,12 @@ Log Nutrition Sample) อีก 3 รอบ ตามตารางนี้:
 Field กลุ่มนี้เป็น best-effort อยู่แล้ว (ดูหัวข้อด้านล่าง) จึงไม่ทำ delete-then-rewrite ให้ — แค่เช็คว่าไม่ใช่
 `null` ก่อน log ตรงๆ ตัวอย่างเต็มสำหรับ **sodium_mg**:
 
-| # | Action | ตั้งค่า (ตัวอย่าง sodium) |
-|---|---|---|
-| D.sodium.1 | `Get Value for Key` | Key: `sodium_mg` → Dictionary: `Extended` → Rename → `SodiumValue` |
-| D.sodium.2 | `If` | Input: `SodiumValue` → Condition: `has any value` |
-| D.sodium.3 | (ในบล็อก If) `Log Nutrition Sample` | Sample Type: `Sodium` → Amount: `SodiumValue` |
-| — | `Otherwise` / `End If` | ปล่อยว่าง ไม่ต้องใส่อะไรในช่อง Otherwise — จบบล็อก If |
+| # | Action (EN) | Action (TH) | ตั้งค่า (ตัวอย่าง sodium) |
+|---|---|---|---|
+| D.sodium.1 | `Get Value for Key` | รับค่าของคีย์ *(ไม่ยืนยัน)* | Key: `sodium_mg` → Dictionary: `Extended` → Rename → `SodiumValue` |
+| D.sodium.2 | `If` | **ถ้า** ✓ ยืนยันแล้ว | Input: `SodiumValue` → Condition: `has any value` |
+| D.sodium.3 | (ในบล็อก If) `Log Nutrition Sample` | บันทึกตัวอย่างโภชนาการ *(ไม่ยืนยัน)* | Sample Type: `Sodium` → Amount: `SodiumValue` |
+| — | `Otherwise` / `End If` | มิฉะนั้น / สิ้นสุดถ้า *(ไม่ยืนยัน)* | ปล่อยว่าง ไม่ต้องใส่อะไรในช่อง Otherwise — จบบล็อก If |
 
 ทำซ้ำ pattern 3 action (Get Value for Key → If has any value → Log Nutrition Sample ในบล็อก If) อีก
 11 รอบ ตามตารางนี้:

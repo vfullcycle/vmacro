@@ -13,7 +13,7 @@
    เป๊ะๆ** (ตัวพิมพ์ใหญ่เล็ก/เว้นวรรคต้องตรงทุกตัวอักษร) — หรือถ้าอยากตั้งชื่ออื่น ให้ไปเปลี่ยนที่ Vmacro →
    Settings → System → ช่อง "ชื่อ Shortcut #1" ให้ตรงกับที่ตั้งไว้ที่นี่ (ปุ่ม "ซิงก์เข้า Apple Health" ใน
    หน้า Diary จะเปิด Shortcut ด้วยชื่อที่ตั้งไว้ในนั้น)
-2. ใส่ action ทั้งหมดตามหัวข้อ **"สร้าง action ทีละขั้น"** ด้านล่าง (มีทั้งหมด ~59 action — ยาวแต่ทำตาม
+2. ใส่ action ทั้งหมดตามหัวข้อ **"สร้าง action ทีละขั้น"** ด้านล่าง (มีทั้งหมด ~69 action — ยาวแต่ทำตาม
    pattern ซ้ำๆ ได้ ไม่ต้องคิดเอง)
 3. ไปที่ Vmacro → **Settings → System** → เลื่อนลงมาส่วน "Apple Health" → กด **"สร้าง Token"** → กด
    **"คัดลอก"** (token จะแสดงครั้งเดียว คัดลอกให้ทันก่อนออกจากหน้านี้) แล้ววางในช่อง Text แรกสุดของ shortcut
@@ -43,16 +43,16 @@
 > 100%** ถ้าเจอในเครื่องจริงแล้วคำไม่ตรง ให้ยึดคอลัมน์ Action (EN) เป็นหลัก แล้วใช้ช่องค้นหา (พิมพ์ชื่อไทยที่เดา
 > ไว้ หรือสลับ Shortcuts เป็นภาษาอังกฤษชั่วคราวตอนต่อ action ก็ได้) — บอกคำจริงที่เจอมาได้ เดี๋ยวแก้เอกสารให้ตรง
 
-### กลุ่ม A — เตรียมตัวแปร (4 action)
+### กลุ่ม A — เตรียมตัวแปร (2 action)
 
 | # | Action (EN) | Action (TH) | ตั้งค่า |
 |---|---|---|---|
-| A1 | `Text` | ข้อความ | พิมพ์ token ของคุณลงไป (เอาจริงจาก Settings → System ตอนตั้งค่า) → แตะผลลัพธ์ค้างแล้วเลือก **Rename Variable** → ตั้งชื่อ `Token` |
+| A1 | `Text` | ข้อความ | พิมพ์ token ของคุณลงไป (เอาจริงจาก Settings → System ตอนตั้งค่า) → แตะผลลัพธ์ค้างแล้วเลือก **Rename Variable** → ตั้งชื่อ `Token` (ถ้าหา Rename Variable ไม่เจอ ใช้ action `Set Variable` แยกต่างหากแทนได้ผลเหมือนกัน) |
 | A2 | `Format Date` | จัดรูปแบบวันที่ *(ไม่ยืนยัน)* | Input: `Current Date` (แตะเลือกจาก magic variable ด้านล่างคีย์บอร์ด) → Date Format: `Custom` → Custom Format พิมพ์ `yyyy-MM-dd` → Rename Variable → `Today` |
-| A3 | `Adjust Date` | ปรับวันที่ *(ไม่ยืนยัน)* | Input: `Current Date` → Adjusting: `Get Start of` → Get Start of: `Day` → Rename Variable → `Start Of Today` |
-| A4 | `Adjust Date` | ปรับวันที่ *(ไม่ยืนยัน)* | Input: `Current Date` → Adjusting: `Get End of` → Get End of: `Day` → Rename Variable → `End Of Today` |
 
-(A3/A4 ใช้ตอนกรอง "sample ของวันนี้" ตอนลบของเก่าในกลุ่ม C — ทำไว้ล่วงหน้าตรงนี้เพื่อไม่ต้องสร้างซ้ำทีหลัง)
+> **(แก้ 2026-08-16)** เอกสารฉบับก่อนมี A3/A4 (`Adjust Date` หา Start Of Today/End Of Today) ไว้ใช้กรอง
+> "sample ของวันนี้" ในกลุ่ม C — **ตัดออกแล้ว ไม่จำเป็น** เพราะ `Find Health Samples` มี operator
+> `is today` ให้ใช้ตรงๆ อยู่แล้ว (ยืนยันจากเครื่องจริง) ไม่ต้องคำนวณวันที่เองเลย ดูกลุ่ม C ด้านล่าง
 
 ### กลุ่ม B — ดึงข้อมูลจาก Vmacro (3 action)
 
@@ -60,28 +60,38 @@
 |---|---|---|---|
 | B1 | `Get Contents of URL` | **รับเนื้อหาของ URL** ✓ ยืนยันแล้ว | URL: พิมพ์ `https://vmacro.persiq.net/health/daily-summary?date=` แล้วแตะแป้นพิมพ์ใส่ตัวแปร `Today` ต่อท้าย (ไม่มีเว้นวรรค) → Method: `GET` → Headers: เพิ่ม 1 แถว key = `Authorization`, value = พิมพ์ `Bearer ` (มีวรรคท้าย) แล้วใส่ตัวแปร `Token` ต่อ → Rename Variable ผลลัพธ์ → `Response` |
 | B2 | `Get Dictionary from Input` | รับค่าพจนานุกรม *(ค่อนข้างมั่นใจ)* | Input: `Response` → Rename Variable → `Data` |
-| B3 | `Get Value for Key` | รับค่าของคีย์ *(ไม่ยืนยัน)* | Key: `extended` → Dictionary: `Data` → Rename Variable → `Extended` |
+| B3 | `Get Dictionary Value` *(แก้ 2026-08-16: ชื่อจริงต่างจาก `Get Value for Key` ที่เคยเขียนไว้)* | รับค่าพจนานุกรม *(ไม่ยืนยัน)* | Get: `Value` → for: `extended` → in: `Data` → Rename Variable → `Extended` |
 
-### กลุ่ม C — Core 4 (kcal/protein/carb/fat): ลบของเก่าก่อนแล้วเขียนใหม่ (16 action)
+### กลุ่ม C — Core 4 (kcal/protein/carb/fat): delta calculation (28 action)
 
-ตัวอย่างเต็มสำหรับ **kcal** ก่อน (ทำ 4 action นี้), แล้วทำ pattern เดียวกันอีก 3 รอบตามตารางด้านล่าง
+> **(แก้ 2026-08-16)** เอกสารฉบับก่อนออกแบบเป็น "ลบของเก่าก่อนเขียนใหม่" แต่ยืนยันจากเครื่องจริงแล้วว่า
+> Shortcuts **ไม่มี action ลบ Health sample เลย** (Apple ไม่เปิด API นี้ให้ Shortcuts) — เปลี่ยนมาใช้
+> **delta calculation** แทน (ดู D-022 ใน PROJECT_BIBLE): หาผลรวมของ sample ที่มีอยู่แล้วของวันนี้ แล้วเขียนแค่
+> ส่วนต่าง (ยอดใหม่ − ยอดที่มีอยู่แล้ว) แทนการเขียนยอดเต็มทุกครั้ง — ได้ผลลัพธ์ idempotent เหมือนกัน
+> (core 4 ไม่เบิ้ลไม่ว่ารันกี่รอบ) โดยไม่ต้องพึ่ง delete เลย
+
+ตัวอย่างเต็มสำหรับ **kcal** ก่อน (ทำ 7 action นี้), แล้วทำ pattern เดียวกันอีก 3 รอบตามตารางด้านล่าง
 โดยเปลี่ยนแค่ Key / ชื่อตัวแปร / Sample Type ตามแถวของแต่ละตัว:
 
 | # | Action (EN) | Action (TH) | ตั้งค่า (ตัวอย่าง kcal) |
 |---|---|---|---|
-| C.kcal.1 | `Get Value for Key` | รับค่าของคีย์ *(ไม่ยืนยัน)* | Key: `kcal` → Dictionary: `Data` → Rename → `KcalValue` |
-| C.kcal.2 | `Find Health Samples` | ค้นหาตัวอย่างสุขภาพ *(ไม่ยืนยัน)* | Sample Type: `Dietary Energy` → เพิ่ม filter: `Created Date` `is after` `Start Of Today`, และ `Created Date` `is before` `End Of Today` → Rename → `OldKcal` |
-| C.kcal.3 | `Delete Health Sample` | ลบตัวอย่างสุขภาพ *(ไม่ยืนยัน)* | Sample: `OldKcal` (ใส่ลิสต์ทั้งก้อนได้เลย ไม่ต้อง loop — ถ้าเวอร์ชันคุณรับได้แค่ทีละตัว ให้ครอบ C.kcal.3 ด้วย `Repeat with Each` โดยใช้ `OldKcal` เป็น input) |
-| C.kcal.4 | `Log Nutrition Sample` | บันทึกตัวอย่างโภชนาการ *(ไม่ยืนยัน)* | Sample Type: `Dietary Energy` (บางเวอร์ชันเรียก `Calories`) → Amount: `KcalValue` → Date: ปล่อย default (ตอนนี้) |
+| C.kcal.1 | `Get Dictionary Value` | รับค่าพจนานุกรม *(ไม่ยืนยัน)* | Get: `Value` → for: `kcal` → in: `Data` → Rename → `KcalValue` |
+| C.kcal.2 | `Find Health Samples` | ค้นหาตัวอย่างสุขภาพ *(ไม่ยืนยัน)* | Sample Type: `Dietary Energy` (บางเวอร์ชันเรียก `Dietary Calories`) → filter: `Start Date` `is today` → Rename → `OldKcal` |
+| C.kcal.3 | `Get Details of Health Sample` | รับรายละเอียดตัวอย่างสุขภาพ *(ไม่ยืนยันชื่อ — หาจากช่องค้นหาโดยพิมพ์ "Health Sample" แล้วดูตัวเลือก)* | Detail: `Quantity` (หรือ `Value`) → Health Sample: `OldKcal` (ใส่ลิสต์ทั้งก้อน จะได้ลิสต์ตัวเลขกลับมา) → Rename → `OldKcalAmounts` |
+| C.kcal.4 | `Calculate Statistics` | คำนวณสถิติ *(ไม่ยืนยันชื่อ)* | Operation: `Sum` → List: `OldKcalAmounts` → Rename → `OldKcalTotal` |
+| C.kcal.5 | `Calculate` | คำนวณ *(ไม่ยืนยัน)* | `KcalValue` `−` `OldKcalTotal` → Rename → `KcalDelta` |
+| C.kcal.6 | `If` | **ถ้า** ✓ ยืนยันแล้ว | Input: `KcalDelta` → Condition: `is greater than` `0` |
+| C.kcal.7 | (ในบล็อก If) `Log Nutrition Sample` | บันทึกตัวอย่างโภชนาการ *(ไม่ยืนยัน)* | Sample Type: `Dietary Energy` (บางเวอร์ชันเรียก `Calories`) → Amount: `KcalDelta` → Date: ปล่อย default (ตอนนี้) → ปิดท้ายด้วย `End If` |
 
-ทำซ้ำ pattern 4 action เดียวกัน (Get Value for Key → Find Health Samples → Delete Health Sample →
-Log Nutrition Sample) อีก 3 รอบ ตามตารางนี้:
+ทำซ้ำ pattern 7 action เดียวกัน (Get Dictionary Value → Find Health Samples → Get Details of Health
+Sample → Calculate Statistics (Sum) → Calculate (ลบ) → If มากกว่า 0 → Log Nutrition Sample) อีก 3 รอบ
+ตามตารางนี้:
 
-| Key ใน `Data` | ชื่อตัวแปร (เช่น `xxxValue`/`OldXxx`) | Sample Type ใน Log/Find |
+| Key ใน `Data` | ชื่อตัวแปรชุด (เช่น `xxxValue`/`OldXxx`/`xxxDelta`) | Sample Type ใน Log/Find |
 |---|---|---|
-| `protein_g` | `ProteinValue` / `OldProtein` | `Protein` |
-| `carbs_g` | `CarbsValue` / `OldCarbs` | `Carbohydrates` |
-| `fat_g` | `FatValue` / `OldFat` | `Total Fat` |
+| `protein_g` | `ProteinValue` / `OldProtein` / `ProteinDelta` | `Protein` |
+| `carbs_g` | `CarbsValue` / `OldCarbs` / `CarbsDelta` | `Carbohydrates` |
+| `fat_g` | `FatValue` / `OldFat` / `FatDelta` | `Total Fat` |
 
 ### กลุ่ม D — Extended nutrients (12 ตัว): เขียนตรงๆ ถ้ามีข้อมูล ไม่ลบของเก่า (36 action)
 
@@ -90,12 +100,12 @@ Field กลุ่มนี้เป็น best-effort อยู่แล้ว 
 
 | # | Action (EN) | Action (TH) | ตั้งค่า (ตัวอย่าง sodium) |
 |---|---|---|---|
-| D.sodium.1 | `Get Value for Key` | รับค่าของคีย์ *(ไม่ยืนยัน)* | Key: `sodium_mg` → Dictionary: `Extended` → Rename → `SodiumValue` |
+| D.sodium.1 | `Get Dictionary Value` | รับค่าพจนานุกรม *(ไม่ยืนยัน)* | Get: `Value` → for: `sodium_mg` → in: `Extended` → Rename → `SodiumValue` |
 | D.sodium.2 | `If` | **ถ้า** ✓ ยืนยันแล้ว | Input: `SodiumValue` → Condition: `has any value` |
 | D.sodium.3 | (ในบล็อก If) `Log Nutrition Sample` | บันทึกตัวอย่างโภชนาการ *(ไม่ยืนยัน)* | Sample Type: `Sodium` → Amount: `SodiumValue` |
 | — | `Otherwise` / `End If` | มิฉะนั้น / สิ้นสุดถ้า *(ไม่ยืนยัน)* | ปล่อยว่าง ไม่ต้องใส่อะไรในช่อง Otherwise — จบบล็อก If |
 
-ทำซ้ำ pattern 3 action (Get Value for Key → If has any value → Log Nutrition Sample ในบล็อก If) อีก
+ทำซ้ำ pattern 3 action (Get Dictionary Value → If has any value → Log Nutrition Sample ในบล็อก If) อีก
 11 รอบ ตามตารางนี้:
 
 | Key ใน `Extended` | ชื่อตัวแปร | Sample Type |
@@ -119,20 +129,22 @@ Field กลุ่มนี้เป็น best-effort อยู่แล้ว 
 
 | กลุ่ม | จำนวน action |
 |---|---|
-| A — เตรียมตัวแปร | 4 |
+| A — เตรียมตัวแปร | 2 |
 | B — ดึงข้อมูล | 3 |
-| C — Core 4 (ลบ+เขียนใหม่) | 4 × 4 = 16 |
+| C — Core 4 (delta calculation) | 4 × 7 = 28 |
 | D — Extended 12 (เขียนตรง) | 12 × 3 = 36 |
-| **รวม** | **59** |
+| **รวม** | **69** |
 
-## ทำไม Core 4 ต้องลบของเก่าก่อน แต่ Extended ไม่ต้อง
+## ทำไม Core 4 ต้องคำนวณ delta แต่ Extended ไม่ต้อง
 
 `Log Nutrition Sample` สร้าง entry ใหม่ทุกครั้งที่รัน ไม่ overwrite ของเดิม — ถ้ากดปุ่ม "ซิงก์เข้า Apple
-Health" ในหน้า Diary หลายรอบต่อวัน (เช่น หลังทุกมื้อ) แล้วไม่ลบของเก่าก่อน ยอดใน Health จะเบิ้ล กลุ่ม C
-(kcal/protein/carb/fat) จึงลบ sample เก่าของวันนั้นก่อนเขียนใหม่ทุกครั้ง เพื่อให้ยอดตรงเสมอไม่ว่าจะรันกี่รอบ
-ส่วนกลุ่ม D เป็น field best-effort อยู่แล้ว (ดูด้านล่าง) ไม่ทำ delete-then-rewrite ให้เพื่อไม่ให้ shortcut
-ยาวเกินไป (จะกลายเป็น ~80 action) — ถ้ากดปุ่ม sync หลายรอบต่อวัน extended nutrients อาจเบิ้ลได้บ้าง แต่ core
-4 ที่เป็น AC หลักจะตรงเสมอ
+Health" ในหน้า Diary หลายรอบต่อวัน (เช่น หลังทุกมื้อ) แล้วเขียนยอดเต็มซ้ำทุกครั้ง ยอดใน Health จะเบิ้ล เดิม
+ตั้งใจแก้ด้วยการลบ sample เก่าก่อนเขียนใหม่ แต่ Shortcuts ไม่มี action ลบ Health sample จริง (ดู D-022 ใน
+PROJECT_BIBLE) — กลุ่ม C (kcal/protein/carb/fat) จึงหาผลรวมของ sample ที่มีอยู่แล้วของวันนั้นก่อน แล้วเขียนแค่
+**ส่วนต่าง** (ยอดใหม่ − ยอดที่มีอยู่แล้ว) แทน ได้ผลเหมือนกันคือยอดตรงเสมอไม่ว่าจะรันกี่รอบ โดยไม่ต้องลบอะไรเลย
+ส่วนกลุ่ม D เป็น field best-effort อยู่แล้ว (ดูด้านล่าง) ไม่ทำ delta ให้เพื่อไม่ให้ shortcut ยาวเกินไป
+(จะกลายเป็น ~100 action) — ถ้ากดปุ่ม sync หลายรอบต่อวัน extended nutrients อาจเบิ้ลได้บ้าง แต่ core 4 ที่เป็น
+AC หลักจะตรงเสมอ
 
 **ไม่มี field สำหรับ magnesium/zinc/vitamin B6/B12/folate/phosphorus/water** ใน response —
 ไม่มีแหล่งข้อมูลจริงในระบบ Vmacro เลยสักที่ (FatSecret ไม่คืนค่าพวกนี้, custom food ที่กรอกเองแทบไม่มีคน
@@ -145,7 +157,7 @@ Health" ในหน้า Diary หลายรอบต่อวัน (เช
 Settings → System → "ชื่อ Shortcut #1" เป็นตัวหา เพราะฉะนั้นชื่อในแอป Shortcuts จริงกับชื่อในหน้า Settings
 **ต้องตรงกันเป๊ะเสมอ** — เปลี่ยนชื่อฝั่งไหนต้องไปแก้อีกฝั่งด้วย
 
-กด sync กี่รอบต่อวันก็ได้แล้ว (core 4 ไม่เบิ้ลเพราะลบของเก่าก่อนเขียนใหม่ทุกครั้งตามที่อธิบายด้านบน) —
+กด sync กี่รอบต่อวันก็ได้แล้ว (core 4 ไม่เบิ้ลเพราะคำนวณ delta ก่อนเขียนทุกครั้งตามที่อธิบายด้านบน) —
 extended nutrients อาจเบิ้ลได้ถ้ารันหลายรอบ ถือเป็นความคลาดเคลื่อนที่ยอมรับได้ของ field best-effort กลุ่มนี้
 
 ## Automation (ทำให้รันอัตโนมัติทุกวัน — ทางเลือก แทนหรือเสริมปุ่มด้านบน)
@@ -169,5 +181,6 @@ extended nutrients อาจเบิ้ลได้ถ้ารันหลา�
 | ได้ 401 / Shortcut แจ้ง error ตอนดึงข้อมูล | Token ถูก revoke หรือกรอกผิดในตัวแปร `Token` (action A1) | กลับไป Settings → System → สร้าง Token ใหม่ วางใน action A1 ใหม่ |
 | กดปุ่ม sync ในหน้า Diary แล้วไม่มีอะไรเกิดขึ้น / เปิด Shortcuts ไม่เจอ shortcut | ชื่อ shortcut จริงกับชื่อในช่อง "ชื่อ Shortcut #1" ของ Settings ไม่ตรงกัน | เช็คตัวสะกด/เว้นวรรคให้ตรงทั้งสองฝั่ง |
 | ยอดในแอป Health เป็น 0 หรือไม่ขึ้นเลย | วันนั้นยังไม่ได้บันทึกอะไรใน diary | เปิด Vmacro บันทึกมื้ออาหารก่อน แล้วรัน Shortcut ใหม่ |
-| Extended nutrient บาง field หายไปบางวัน | ไม่มีข้อมูลจากแหล่งไหนเลยสำหรับวันนั้น | ปกติ ไม่ใช่ error — ดู "ทำไม Core 4 ต้องลบของเก่าก่อน" ด้านบน |
-| `Delete Health Sample` แจ้ง error ตอนรับ list | บางเวอร์ชัน iOS action นี้รับได้แค่ทีละตัว | ครอบ action Delete ด้วย `Repeat with Each` โดยใช้ผลลัพธ์จาก `Find Health Samples` เป็น input ของ Repeat |
+| Extended nutrient บาง field หายไปบางวัน | ไม่มีข้อมูลจากแหล่งไหนเลยสำหรับวันนั้น | ปกติ ไม่ใช่ error — ดู "ทำไม Core 4 ต้องคำนวณ delta" ด้านบน |
+| หา action `Delete Health Sample` ไม่เจอเลย | ปกติ — action นี้ไม่มีจริงใน Shortcuts (Apple ไม่เปิด API ลบ HealthKit sample) | ไม่ต้องหาอีกต่อไป กลุ่ม C ใช้ delta calculation แทนอยู่แล้ว (ดูด้านบน + D-022) |
+| หา action `Get Details of Health Sample` หรือ `Calculate Statistics` ไม่เจอชื่อตรงเป๊ะ | ชื่ออาจต่างกันตาม iOS version (ยังไม่ยืนยัน 100%) | ค้นด้วยคำกว้างๆ เช่น "Health Sample" หรือ "Statistics"/"Calculate" ดูตัวเลือกที่ใกล้เคียงที่สุด แล้วแจ้งชื่อจริงที่เจอ เดี๋ยวแก้เอกสารให้ตรง |

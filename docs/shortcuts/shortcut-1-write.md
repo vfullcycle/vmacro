@@ -6,6 +6,12 @@
 > **หมายเหตุก่อนเริ่ม**: ชื่อ/หน้าตาเมนูของ action ในแอป Shortcuts อาจต่างกันเล็กน้อยตาม iOS version
 > แต่โครงสร้างและลำดับด้านล่างถูกต้องแน่นอน — วิธีหา action ที่เร็วและชัวร์ที่สุดคือกด **+** (Add Action)
 > แล้ว**พิมพ์ชื่อ action ค้นหาตรงๆ** ในช่องค้นหาด้านบน แทนการไล่ดูตาม category
+>
+> ⚠️ **ข้อผิดพลาดที่จะเจอแน่ๆ ถ้าเครื่องตั้ง region เป็นไทย** (ยืนยันจากการ build จริง 2026-08-17): action
+> `Format Date` (A2) ถ้าปล่อย Locale ไว้เป็น `Default` จะได้ปี**พุทธศักราช** (เช่น "2569" แทน "2026") เพราะ
+> iOS ผูกปฏิทินพุทธไว้กับ locale ไทยโดยอัตโนมัติ ทำให้ URL ที่ยิงไป Vmacro กลายเป็นวันที่ผิดปีไปเลย (เช่น
+> `?date=2569-08-17` ซึ่งไม่มี diary entry อยู่แน่นอน) ได้ค่า 0/null กลับมาหมดทุก field ดูวิธีแก้ที่ action A2
+> ด้านล่าง — **ต้องแก้ก่อน sync จะทำงานถูกได้เลย ไม่ใช่แค่ทางเลือก**
 
 ## ส่วนที่ 1 — สร้างครั้งแรก (ทำครั้งเดียวโดยวี)
 
@@ -48,7 +54,7 @@
 | # | Action (EN) | Action (TH) | ตั้งค่า |
 |---|---|---|---|
 | A1 | `Text` | ข้อความ | พิมพ์ token ของคุณลงไป (เอาจริงจาก Settings → System ตอนตั้งค่า) → แตะผลลัพธ์ค้างแล้วเลือก **Rename Variable** → ตั้งชื่อ `Token` (ถ้าหา Rename Variable ไม่เจอ ใช้ action `Set Variable` แยกต่างหากแทนได้ผลเหมือนกัน) |
-| A2 | `Format Date` | จัดรูปแบบวันที่ *(ไม่ยืนยัน)* | Input: `Current Date` (แตะเลือกจาก magic variable ด้านล่างคีย์บอร์ด) → Date Format: `Custom` → Custom Format พิมพ์ `yyyy-MM-dd` → Rename Variable → `Today` |
+| A2 | `Format Date` | จัดรูปแบบวันที่ *(ไม่ยืนยัน)* | Input: `Current Date` (แตะเลือกจาก magic variable ด้านล่างคีย์บอร์ด) → Date Format: `Custom` → Custom Format พิมพ์ `yyyy-MM-dd` → **Locale: เปลี่ยนจาก `Default` เป็น `English (US)`** (สำคัญมาก — ปล่อย Default บนเครื่อง region ไทยจะได้ปี พ.ศ. แทน ค.ศ. ดูคำเตือนด้านบน) → Rename Variable → `Today` |
 
 > **(แก้ 2026-08-16)** เอกสารฉบับก่อนมี A3/A4 (`Adjust Date` หา Start Of Today/End Of Today) ไว้ใช้กรอง
 > "sample ของวันนี้" ในกลุ่ม C — **ตัดออกแล้ว ไม่จำเป็น** เพราะ `Find Health Samples` มี operator
@@ -70,28 +76,31 @@
 > ส่วนต่าง (ยอดใหม่ − ยอดที่มีอยู่แล้ว) แทนการเขียนยอดเต็มทุกครั้ง — ได้ผลลัพธ์ idempotent เหมือนกัน
 > (core 4 ไม่เบิ้ลไม่ว่ารันกี่รอบ) โดยไม่ต้องพึ่ง delete เลย
 
+**(อัปเดต 2026-08-17 — ยืนยันครบจากเครื่องจริง ทั้งชื่อ action และรันผ่านจริงแล้วสำหรับ kcal)**
 ตัวอย่างเต็มสำหรับ **kcal** ก่อน (ทำ 7 action นี้), แล้วทำ pattern เดียวกันอีก 3 รอบตามตารางด้านล่าง
 โดยเปลี่ยนแค่ Key / ชื่อตัวแปร / Sample Type ตามแถวของแต่ละตัว:
 
 | # | Action (EN) | Action (TH) | ตั้งค่า (ตัวอย่าง kcal) |
 |---|---|---|---|
-| C.kcal.1 | `Get Dictionary Value` | รับค่าพจนานุกรม *(ไม่ยืนยัน)* | Get: `Value` → for: `kcal` → in: `Data` → Rename → `KcalValue` |
-| C.kcal.2 | `Find Health Samples` | ค้นหาตัวอย่างสุขภาพ *(ไม่ยืนยัน)* | Sample Type: `Dietary Energy` (บางเวอร์ชันเรียก `Dietary Calories`) → filter: `Start Date` `is today` → Rename → `OldKcal` |
-| C.kcal.3 | `Get Details of Health Sample` | รับรายละเอียดตัวอย่างสุขภาพ *(ไม่ยืนยันชื่อ — หาจากช่องค้นหาโดยพิมพ์ "Health Sample" แล้วดูตัวเลือก)* | Detail: `Quantity` (หรือ `Value`) → Health Sample: `OldKcal` (ใส่ลิสต์ทั้งก้อน จะได้ลิสต์ตัวเลขกลับมา) → Rename → `OldKcalAmounts` |
-| C.kcal.4 | `Calculate Statistics` | คำนวณสถิติ *(ไม่ยืนยันชื่อ)* | Operation: `Sum` → List: `OldKcalAmounts` → Rename → `OldKcalTotal` |
-| C.kcal.5 | `Calculate` | คำนวณ *(ไม่ยืนยัน)* | `KcalValue` `−` `OldKcalTotal` → Rename → `KcalDelta` |
+| C.kcal.1 | `Get Dictionary Value` (โชว์เป็น "Get Value for kcal in Data") | รับค่าพจนานุกรม ✓ ยืนยันแล้ว | Get: `Value` → for: `kcal` → in: `Data` → Rename → `KcalValue` |
+| C.kcal.2 | `Find Health Samples` | ค้นหาตัวอย่างสุขภาพ ✓ ยืนยันแล้ว | Sample Type: **`Dietary Calories`** (ชื่อที่ picker นี้ใช้จริง — ไม่ใช่ Dietary Energy) → filter: `Start Date` `is today` → Unit: `kcal` → Rename → `OldKcal` |
+| C.kcal.3 | `Get Value from` *(ไม่ใช่ "Get Details of Health Sample" ที่เดาไว้ก่อนหน้า)* | รับค่าจาก... ✓ ยืนยันแล้ว | Input: `OldKcal` (ใส่ลิสต์ทั้งก้อน ไม่ต้องมี Detail dropdown แยก) → ได้ลิสต์ตัวเลขกลับมา → Rename → `OldKcalAmounts` |
+| C.kcal.4 | `Calculate Statistics` (โชว์เป็น "Calculate the Sum of...") | คำนวณสถิติ ✓ ยืนยันแล้ว | Operation: `Sum` → List: `OldKcalAmounts` → Rename/Set Variable → `OldKcalTotal` |
+| C.kcal.5 | `Calculate` | คำนวณ ✓ ยืนยันแล้ว | `KcalValue` `−` `OldKcalTotal` → Rename → `KcalDelta` |
 | C.kcal.6 | `If` | **ถ้า** ✓ ยืนยันแล้ว | Input: `KcalDelta` → Condition: `is greater than` `0` |
-| C.kcal.7 | (ในบล็อก If) `Log Nutrition Sample` | บันทึกตัวอย่างโภชนาการ *(ไม่ยืนยัน)* | Sample Type: `Dietary Energy` (บางเวอร์ชันเรียก `Calories`) → Amount: `KcalDelta` → Date: ปล่อย default (ตอนนี้) → ปิดท้ายด้วย `End If` |
+| C.kcal.7 | (ในบล็อก If) `Log Health Sample` *(ไม่ใช่ "Log Nutrition Sample" ที่เดาไว้ก่อนหน้า — ไม่มี action ชื่อนี้อยู่จริง)* | บันทึกตัวอย่างสุขภาพ ✓ ยืนยันแล้ว | Type: **`Dietary Energy`** (คนละชื่อกับ `Find Health Samples` ข้อ 2 นะ — Apple ใช้ชื่อไม่ตรงกันระหว่าง 2 action นี้ ยืนยันแล้วว่าตั้งใจแบบนี้จริง) → Value: `KcalDelta` `kcal` → Date: ปล่อย optional → ปิดท้ายด้วย `End If` |
 
-ทำซ้ำ pattern 7 action เดียวกัน (Get Dictionary Value → Find Health Samples → Get Details of Health
-Sample → Calculate Statistics (Sum) → Calculate (ลบ) → If มากกว่า 0 → Log Nutrition Sample) อีก 3 รอบ
-ตามตารางนี้:
+ทำซ้ำ pattern 7 action เดียวกัน (Get Dictionary Value → Find Health Samples → Get Value from →
+Calculate Statistics (Sum) → Calculate (ลบ) → If มากกว่า 0 → Log Health Sample) อีก 3 รอบ ตามตารางนี้ —
+**⚠️ อย่าเดาว่า Sample Type ของ protein/carbs/fat เหมือนกันระหว่าง Find กับ Log แบบ kcal** เปิด picker
+ของแต่ละ action จริงแล้วดูว่ามีชื่ออะไรให้เลือกบ้าง (เจอ pattern "ชื่อไม่ตรงกันระหว่าง 2 action" ซ้ำมาแล้วรอบ
+kcal มีโอกาสสูงว่าจะเจออีก):
 
-| Key ใน `Data` | ชื่อตัวแปรชุด (เช่น `xxxValue`/`OldXxx`/`xxxDelta`) | Sample Type ใน Log/Find |
+| Key ใน `Data` | ชื่อตัวแปรชุด (เช่น `xxxValue`/`OldXxx`/`xxxDelta`) | Sample Type — เดาไว้เป็นจุดเริ่ม (เช็คจริงในเครื่องอีกที) |
 |---|---|---|
-| `protein_g` | `ProteinValue` / `OldProtein` / `ProteinDelta` | `Protein` |
-| `carbs_g` | `CarbsValue` / `OldCarbs` / `CarbsDelta` | `Carbohydrates` |
-| `fat_g` | `FatValue` / `OldFat` / `FatDelta` | `Total Fat` |
+| `protein_g` | `ProteinValue` / `OldProtein` / `ProteinDelta` | `Protein` (ทั้ง Find และ Log — ยังไม่ยืนยัน) |
+| `carbs_g` | `CarbsValue` / `OldCarbs` / `CarbsDelta` | `Carbohydrates` (ทั้ง Find และ Log — ยังไม่ยืนยัน) |
+| `fat_g` | `FatValue` / `OldFat` / `FatDelta` | `Total Fat` (ทั้ง Find และ Log — ยังไม่ยืนยัน) |
 
 ### กลุ่ม D — Extended nutrients (12 ตัว): เขียนตรงๆ ถ้ามีข้อมูล ไม่ลบของเก่า (36 action)
 
@@ -100,12 +109,12 @@ Field กลุ่มนี้เป็น best-effort อยู่แล้ว 
 
 | # | Action (EN) | Action (TH) | ตั้งค่า (ตัวอย่าง sodium) |
 |---|---|---|---|
-| D.sodium.1 | `Get Dictionary Value` | รับค่าพจนานุกรม *(ไม่ยืนยัน)* | Get: `Value` → for: `sodium_mg` → in: `Extended` → Rename → `SodiumValue` |
+| D.sodium.1 | `Get Dictionary Value` | รับค่าพจนานุกรม ✓ ยืนยันแล้ว | Get: `Value` → for: `sodium_mg` → in: `Extended` → Rename → `SodiumValue` |
 | D.sodium.2 | `If` | **ถ้า** ✓ ยืนยันแล้ว | Input: `SodiumValue` → Condition: `has any value` |
-| D.sodium.3 | (ในบล็อก If) `Log Nutrition Sample` | บันทึกตัวอย่างโภชนาการ *(ไม่ยืนยัน)* | Sample Type: `Sodium` → Amount: `SodiumValue` |
+| D.sodium.3 | (ในบล็อก If) `Log Health Sample` | บันทึกตัวอย่างสุขภาพ ✓ ยืนยันชื่อ action แล้ว *(แต่ Type "Sodium" เองยังไม่ได้ลองจริง — เปิด picker เช็คชื่อก่อนใช้)* | Type: `Sodium` → Value: `SodiumValue` |
 | — | `Otherwise` / `End If` | มิฉะนั้น / สิ้นสุดถ้า *(ไม่ยืนยัน)* | ปล่อยว่าง ไม่ต้องใส่อะไรในช่อง Otherwise — จบบล็อก If |
 
-ทำซ้ำ pattern 3 action (Get Dictionary Value → If has any value → Log Nutrition Sample ในบล็อก If) อีก
+ทำซ้ำ pattern 3 action (Get Dictionary Value → If has any value → Log Health Sample ในบล็อก If) อีก
 11 รอบ ตามตารางนี้:
 
 | Key ใน `Extended` | ชื่อตัวแปร | Sample Type |
@@ -122,7 +131,7 @@ Field กลุ่มนี้เป็น best-effort อยู่แล้ว 
 | `vitamin_c_mg` | `VitaminCValue` | `Vitamin C` |
 | `vitamin_d_mcg` | `VitaminDValue` | `Vitamin D` |
 
-**อย่าหา "Trans Fat" ใน `Log Nutrition Sample`** — ไม่มีจริง Apple ไม่มี HealthKit identifier
+**อย่าหา "Trans Fat" ใน `Log Health Sample`** — ไม่มีจริง Apple ไม่มี HealthKit identifier
 สำหรับ trans fat เลย ไม่ใช่ตกหล่น ข้ามไปได้เลย (ไม่มีในตารางด้านบนตั้งใจ)
 
 ### สรุปจำนวน action ทั้งหมด
@@ -137,7 +146,7 @@ Field กลุ่มนี้เป็น best-effort อยู่แล้ว 
 
 ## ทำไม Core 4 ต้องคำนวณ delta แต่ Extended ไม่ต้อง
 
-`Log Nutrition Sample` สร้าง entry ใหม่ทุกครั้งที่รัน ไม่ overwrite ของเดิม — ถ้ากดปุ่ม "ซิงก์เข้า Apple
+`Log Health Sample` สร้าง entry ใหม่ทุกครั้งที่รัน ไม่ overwrite ของเดิม — ถ้ากดปุ่ม "ซิงก์เข้า Apple
 Health" ในหน้า Diary หลายรอบต่อวัน (เช่น หลังทุกมื้อ) แล้วเขียนยอดเต็มซ้ำทุกครั้ง ยอดใน Health จะเบิ้ล เดิม
 ตั้งใจแก้ด้วยการลบ sample เก่าก่อนเขียนใหม่ แต่ Shortcuts ไม่มี action ลบ Health sample จริง (ดู D-022 ใน
 PROJECT_BIBLE) — กลุ่ม C (kcal/protein/carb/fat) จึงหาผลรวมของ sample ที่มีอยู่แล้วของวันนั้นก่อน แล้วเขียนแค่
@@ -180,7 +189,9 @@ extended nutrients อาจเบิ้ลได้ถ้ารันหลา�
 |---|---|---|
 | ได้ 401 / Shortcut แจ้ง error ตอนดึงข้อมูล | Token ถูก revoke หรือกรอกผิดในตัวแปร `Token` (action A1) | กลับไป Settings → System → สร้าง Token ใหม่ วางใน action A1 ใหม่ |
 | กดปุ่ม sync ในหน้า Diary แล้วไม่มีอะไรเกิดขึ้น / เปิด Shortcuts ไม่เจอ shortcut | ชื่อ shortcut จริงกับชื่อในช่อง "ชื่อ Shortcut #1" ของ Settings ไม่ตรงกัน | เช็คตัวสะกด/เว้นวรรคให้ตรงทั้งสองฝั่ง |
-| ยอดในแอป Health เป็น 0 หรือไม่ขึ้นเลย | วันนั้นยังไม่ได้บันทึกอะไรใน diary | เปิด Vmacro บันทึกมื้ออาหารก่อน แล้วรัน Shortcut ใหม่ |
+| ยอดในแอป Health เป็น 0 หรือไม่ขึ้นเลย ทั้งที่บันทึกอาหารใน Vmacro แล้ว | **เช็คก่อนอันดับแรก: `Format Date` (A2) Locale เป็น `Default` อยู่หรือเปล่า** — เครื่อง region ไทยจะได้ปี พ.ศ. (เช่น 2569) ทำให้ `date=` ผิดปีไปเลย ได้ค่าว่างกลับมาทั้ง response (ยืนยันเจอจริง 2026-08-17) | เปลี่ยน Locale เป็น `English (US)` ที่ action A2 แล้วลองใหม่ — verify ด้วยการแทรก `Show Result`/`Quick Look` หลัง `Get Contents of URL` ดู field `"date"` ใน JSON ว่าเป็น ค.ศ. ที่ถูกต้องไหม |
+| ยอดในแอป Health เป็น 0 (เช็ค Locale แล้วถูกต้อง) | วันนั้นยังไม่ได้บันทึกอะไรใน diary หรือ Health มี sample เดิมเท่ากับยอดปัจจุบันอยู่แล้ว (delta เลยเป็น 0 ตามปกติ ไม่ใช่ bug) | เปิด Vmacro บันทึกมื้ออาหารก่อน แล้วรัน Shortcut ใหม่ — หรือเช็ค Health app ว่ามี entry เดิมของวันนี้อยู่แล้วเท่ากับยอด Vmacro หรือเปล่า |
 | Extended nutrient บาง field หายไปบางวัน | ไม่มีข้อมูลจากแหล่งไหนเลยสำหรับวันนั้น | ปกติ ไม่ใช่ error — ดู "ทำไม Core 4 ต้องคำนวณ delta" ด้านบน |
 | หา action `Delete Health Sample` ไม่เจอเลย | ปกติ — action นี้ไม่มีจริงใน Shortcuts (Apple ไม่เปิด API ลบ HealthKit sample) | ไม่ต้องหาอีกต่อไป กลุ่ม C ใช้ delta calculation แทนอยู่แล้ว (ดูด้านบน + D-022) |
-| หา action `Get Details of Health Sample` หรือ `Calculate Statistics` ไม่เจอชื่อตรงเป๊ะ | ชื่ออาจต่างกันตาม iOS version (ยังไม่ยืนยัน 100%) | ค้นด้วยคำกว้างๆ เช่น "Health Sample" หรือ "Statistics"/"Calculate" ดูตัวเลือกที่ใกล้เคียงที่สุด แล้วแจ้งชื่อจริงที่เจอ เดี๋ยวแก้เอกสารให้ตรง |
+| หา action `Log Nutrition Sample` ไม่เจอเลย | ปกติ — ไม่มี action ชื่อนี้อยู่จริง ชื่อจริงคือ **`Log Health Sample`** (ยืนยันแล้ว 2026-08-17) | ค้นหาคำว่า "Log Health Sample" แทน — เลือก Type ที่ต้องการในนั้น |
+| Sample Type ใน `Find Health Samples` กับ `Log Health Sample` เขียนคนละชื่อ (เช่น kcal ใช้ `Dietary Calories` ใน Find แต่ `Dietary Energy` ใน Log) | ปกติ — Apple ตั้งชื่อไม่ตรงกันระหว่าง 2 action นี้จริง (ยืนยันแล้วสำหรับ kcal) | ใช้ชื่อที่ picker ของแต่ละ action มีให้เลือกจริงไปเลย ไม่ต้องพยายามให้ตรงกัน — ทำแบบเดียวกันตอนต่อ protein/carbs/fat/extended nutrients |

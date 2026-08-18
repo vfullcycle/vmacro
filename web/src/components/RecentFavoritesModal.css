@@ -1,0 +1,23 @@
+.recent-favorites-tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.recent-favorites-tabs button {
+  flex: 1 1 auto;
+  padding: 0.6rem;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.recent-favorites-tabs button.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import MealTemplatePickerModal from "../components/MealTemplatePickerModal";
+import RecentFavoritesModal from "../components/RecentFavoritesModal";
 import { useAuth } from "../lib/auth-context";
 import { addDays, entryDisplayName, entryQuantityLabel, MEAL_LABELS, MEALS, todayLocalDate, type DiaryEntryRow, type Meal } from "../lib/diary";
 import { computeFullPreview } from "../lib/preview";
@@ -70,6 +71,7 @@ export default function Diary() {
   const [editSaving, setEditSaving] = useState(false);
 
   const [pickerMeal, setPickerMeal] = useState<Meal | null>(null);
+  const [recentFavMeal, setRecentFavMeal] = useState<Meal | null>(null);
   const [savingTemplateMeal, setSavingTemplateMeal] = useState<Meal | null>(null);
   const [templateName, setTemplateName] = useState("");
   const [templateSaving, setTemplateSaving] = useState(false);
@@ -374,6 +376,9 @@ export default function Diary() {
                 <button type="button" className="diary-add-link" onClick={() => setPickerMeal(meal)}>
                   มื้ออาหารของฉัน
                 </button>
+                <button type="button" className="diary-add-link" onClick={() => setRecentFavMeal(meal)}>
+                  โปรด/ล่าสุด
+                </button>
               </div>
 
               {mealEntries.length > 0 &&
@@ -416,6 +421,17 @@ export default function Diary() {
           onClose={() => setPickerMeal(null)}
           onApplied={async () => {
             setPickerMeal(null);
+            await loadEntries();
+          }}
+        />
+      )}
+
+      {recentFavMeal && (
+        <RecentFavoritesModal
+          diary={{ date, meal: recentFavMeal }}
+          onClose={() => setRecentFavMeal(null)}
+          onApplied={async () => {
+            setRecentFavMeal(null);
             await loadEntries();
           }}
         />

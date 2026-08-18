@@ -201,12 +201,13 @@
 
 .diary-meal-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.6rem;
   margin-top: 0.6rem;
 }
 
 .diary-add-link {
-  flex: 1 1 auto;
+  flex: 1 1 8rem;
   display: flex;
   align-items: center;
   justify-content: center;

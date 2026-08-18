@@ -40,10 +40,10 @@ vmacro/
 
 ## สถานะปัจจุบัน
 
-- **Docs version:** v1.5 (2026-08-18)
-- **Phase ปัจจุบัน:** P2 (Food & Diary) — กำลังทำอยู่ FR-FOOD-1..6/FR-DIARY-1/2 เสร็จแล้ว, **FR-DIARY-3 ค้างไว้**
-  (เลื่อนหลัง FR-HLTH-1/2 ตาม D-021) — ยังไม่ตี tag `v1.0.0` จนกว่า FR-DIARY-3 จะเสร็จ + dogfood ผ่านตาม
-  Phase Gate Rule
+- **Docs version:** v1.6 (2026-08-18)
+- **Phase ปัจจุบัน:** P2 (Food & Diary) — **FR ทุกตัวเขียนโค้ดเสร็จแล้ว** (FR-FOOD-1..6, FR-DIARY-1..3) รวม
+  FR-DIARY-3 (copy จากวันก่อนหน้า ทั้งวัน/รายมื้อ, รายการโปรด, รายการล่าสุด) ที่เพิ่งเสร็จ — **ยังไม่ตี tag
+  `v1.0.0`** เพราะ Phase Gate Rule ต้องการวีใช้งานจริง 2-3 วันก่อน (dogfooding) ยังไม่ครบตามนั้น
 - **P3 (Apple Health WRITE) เริ่มก่อนคิวแล้ว:** FR-HLTH-1/2 — exception ที่วีอนุมัติ (D-021, 2026-08-14)
   **core 4 (kcal/protein/carb/fat) เสร็จ + ยืนยันทำงานจริงบนเครื่องแล้ว (2026-08-18)** ผ่าน Shortcut #1 +
   ปุ่ม "ซิงก์เข้า Apple Health" ในหน้า Diary — extended nutrients (12 field เพิ่ม) เป็น backlog ยาว (BL-07)
@@ -68,6 +68,8 @@ Vision → Boundary → Requirement → Decision → Freeze → Working Rules
 
 ## Changelog
 
+- v1.6 (2026-08-18): FR-DIARY-3 เสร็จ (copy จากวันก่อนหน้า, รายการโปรด, รายการล่าสุด) — P2 ครบทุก FR แล้ว
+  รอ dogfood 2-3 วันตาม Phase Gate Rule ก่อนตี tag `v1.0.0`
 - v1.5 (2026-08-18): FR-HLTH-1 core 4 ยืนยันทำงานจริง + extended nutrients (BL-07) เป็น backlog ยาว
 - v1.4 (2026-08-14): แก้สถานะที่ stale (เคยเขียนว่า "P1 จบแล้ว" ทั้งที่ P2 ทำอยู่จริง) — อัปเดตเป็น P2
   in-progress + FR-DIARY-3 ค้าง + FR-HLTH-1/2 เริ่มก่อนคิวตาม D-021, ปิด backlog R-07

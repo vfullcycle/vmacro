@@ -83,24 +83,23 @@
 | # | Action (EN) | Action (TH) | ตั้งค่า (ตัวอย่าง kcal) |
 |---|---|---|---|
 | C.kcal.1 | `Get Dictionary Value` (โชว์เป็น "Get Value for kcal in Data") | รับค่าพจนานุกรม ✓ ยืนยันแล้ว | Get: `Value` → for: `kcal` → in: `Data` → Rename → `KcalValue` |
-| C.kcal.2 | `Find Health Samples` | ค้นหาตัวอย่างสุขภาพ ✓ ยืนยันแล้ว | Sample Type: **`Dietary Calories`** (ชื่อที่ picker นี้ใช้จริง — ไม่ใช่ Dietary Energy) → filter: `Start Date` `is today` → Unit: `kcal` → Rename → `OldKcal` |
+| C.kcal.2 | `Find Health Samples` | ค้นหาตัวอย่างสุขภาพ ✓ ยืนยันแล้ว | Sample Type: **`Dietary Energy`** → filter: `Start Date` `is today` → Unit: `kcal` → Rename → `OldKcal` |
 | C.kcal.3 | `Get Value from` *(ไม่ใช่ "Get Details of Health Sample" ที่เดาไว้ก่อนหน้า)* | รับค่าจาก... ✓ ยืนยันแล้ว | Input: `OldKcal` (ใส่ลิสต์ทั้งก้อน ไม่ต้องมี Detail dropdown แยก) → ได้ลิสต์ตัวเลขกลับมา → Rename → `OldKcalAmounts` |
 | C.kcal.4 | `Calculate Statistics` (โชว์เป็น "Calculate the Sum of...") | คำนวณสถิติ ✓ ยืนยันแล้ว | Operation: `Sum` → List: `OldKcalAmounts` → Rename/Set Variable → `OldKcalTotal` |
 | C.kcal.5 | `Calculate` | คำนวณ ✓ ยืนยันแล้ว | `KcalValue` `−` `OldKcalTotal` → Rename → `KcalDelta` |
 | C.kcal.6 | `If` | **ถ้า** ✓ ยืนยันแล้ว | Input: `KcalDelta` → Condition: `is greater than` `0` |
-| C.kcal.7 | (ในบล็อก If) `Log Health Sample` *(ไม่ใช่ "Log Nutrition Sample" ที่เดาไว้ก่อนหน้า — ไม่มี action ชื่อนี้อยู่จริง)* | บันทึกตัวอย่างสุขภาพ ✓ ยืนยันแล้ว | Type: **`Dietary Energy`** (คนละชื่อกับ `Find Health Samples` ข้อ 2 นะ — Apple ใช้ชื่อไม่ตรงกันระหว่าง 2 action นี้ ยืนยันแล้วว่าตั้งใจแบบนี้จริง) → Value: `KcalDelta` `kcal` → Date: ปล่อย optional → ปิดท้ายด้วย `End If` |
+| C.kcal.7 | (ในบล็อก If) `Log Health Sample` *(ไม่ใช่ "Log Nutrition Sample" ที่เดาไว้ก่อนหน้า — ไม่มี action ชื่อนี้อยู่จริง)* | บันทึกตัวอย่างสุขภาพ ✓ ยืนยันแล้ว | Type: **`Dietary Energy`** (ชื่อเดียวกับ `Find Health Samples` ข้อ 2 — ยืนยันแล้วว่าทั้ง 4 core type ใช้ชื่อตรงกันทั้ง Find และ Log) → Value: `KcalDelta` `kcal` → Date: ปล่อย optional → ปิดท้ายด้วย `End If` |
 
 ทำซ้ำ pattern 7 action เดียวกัน (Get Dictionary Value → Find Health Samples → Get Value from →
 Calculate Statistics (Sum) → Calculate (ลบ) → If มากกว่า 0 → Log Health Sample) อีก 3 รอบ ตามตารางนี้ —
-**⚠️ อย่าเดาว่า Sample Type ของ protein/carbs/fat เหมือนกันระหว่าง Find กับ Log แบบ kcal** เปิด picker
-ของแต่ละ action จริงแล้วดูว่ามีชื่ออะไรให้เลือกบ้าง (เจอ pattern "ชื่อไม่ตรงกันระหว่าง 2 action" ซ้ำมาแล้วรอบ
-kcal มีโอกาสสูงว่าจะเจออีก):
+**(อัปเดต 2026-08-18 — ยืนยันครบทั้ง 4 ตัวจากเครื่องจริงแล้ว core 4 sync เข้า Health ได้ถูกต้อง)** Sample Type
+ใช้ชื่อเดียวกันทั้ง `Find Health Samples` และ `Log Health Sample` สำหรับทุกตัวในกลุ่มนี้:
 
-| Key ใน `Data` | ชื่อตัวแปรชุด (เช่น `xxxValue`/`OldXxx`/`xxxDelta`) | Sample Type — เดาไว้เป็นจุดเริ่ม (เช็คจริงในเครื่องอีกที) |
+| Key ใน `Data` | ชื่อตัวแปรชุด (เช่น `xxxValue`/`OldXxx`/`xxxDelta`) | Sample Type (ใช้เหมือนกันทั้ง Find และ Log) |
 |---|---|---|
-| `protein_g` | `ProteinValue` / `OldProtein` / `ProteinDelta` | `Protein` (ทั้ง Find และ Log — ยังไม่ยืนยัน) |
-| `carbs_g` | `CarbsValue` / `OldCarbs` / `CarbsDelta` | `Carbohydrates` (ทั้ง Find และ Log — ยังไม่ยืนยัน) |
-| `fat_g` | `FatValue` / `OldFat` / `FatDelta` | `Total Fat` (ทั้ง Find และ Log — ยังไม่ยืนยัน) |
+| `protein_g` | `ProteinValue` / `OldProtein` / `ProteinDelta` | `Protein` ✓ ยืนยันแล้ว |
+| `carbs_g` | `CarbsValue` / `OldCarbs` / `CarbsDelta` | `Carbohydrates` ✓ ยืนยันแล้ว |
+| `fat_g` | `FatValue` / `OldFat` / `FatDelta` | `Total Fat` ✓ ยืนยันแล้ว |
 
 ### กลุ่ม D — Extended nutrients (12 ตัว): เขียนตรงๆ ถ้ามีข้อมูล ไม่ลบของเก่า (36 action)
 
@@ -194,4 +193,4 @@ extended nutrients อาจเบิ้ลได้ถ้ารันหลา�
 | Extended nutrient บาง field หายไปบางวัน | ไม่มีข้อมูลจากแหล่งไหนเลยสำหรับวันนั้น | ปกติ ไม่ใช่ error — ดู "ทำไม Core 4 ต้องคำนวณ delta" ด้านบน |
 | หา action `Delete Health Sample` ไม่เจอเลย | ปกติ — action นี้ไม่มีจริงใน Shortcuts (Apple ไม่เปิด API ลบ HealthKit sample) | ไม่ต้องหาอีกต่อไป กลุ่ม C ใช้ delta calculation แทนอยู่แล้ว (ดูด้านบน + D-022) |
 | หา action `Log Nutrition Sample` ไม่เจอเลย | ปกติ — ไม่มี action ชื่อนี้อยู่จริง ชื่อจริงคือ **`Log Health Sample`** (ยืนยันแล้ว 2026-08-17) | ค้นหาคำว่า "Log Health Sample" แทน — เลือก Type ที่ต้องการในนั้น |
-| Sample Type ใน `Find Health Samples` กับ `Log Health Sample` เขียนคนละชื่อ (เช่น kcal ใช้ `Dietary Calories` ใน Find แต่ `Dietary Energy` ใน Log) | ปกติ — Apple ตั้งชื่อไม่ตรงกันระหว่าง 2 action นี้จริง (ยืนยันแล้วสำหรับ kcal) | ใช้ชื่อที่ picker ของแต่ละ action มีให้เลือกจริงไปเลย ไม่ต้องพยายามให้ตรงกัน — ทำแบบเดียวกันตอนต่อ protein/carbs/fat/extended nutrients |
+| ไม่แน่ใจว่า Sample Type ของ extended nutrients (กลุ่ม D) จะตรงกันระหว่าง Find/Log ไหม — *(เฉพาะกลุ่ม D เท่านั้น กลุ่ม C core 4 ยืนยันแล้วว่าตรงกันทั้ง 4 ตัว)* | กลุ่ม D ไม่มี `Find Health Samples` เลย (log ตรงๆ ไม่ต้องหา Type เก่า) จึงไม่เจอปัญหานี้ | ไม่ต้องกังวล — ใช้ชื่อที่ picker ของ `Log Health Sample` มีให้เลือกตรงๆ ได้เลย |

@@ -40,12 +40,14 @@ vmacro/
 
 ## สถานะปัจจุบัน
 
-- **Docs version:** v1.4 (2026-08-14)
+- **Docs version:** v1.5 (2026-08-18)
 - **Phase ปัจจุบัน:** P2 (Food & Diary) — กำลังทำอยู่ FR-FOOD-1..6/FR-DIARY-1/2 เสร็จแล้ว, **FR-DIARY-3 ค้างไว้**
   (เลื่อนหลัง FR-HLTH-1/2 ตาม D-021) — ยังไม่ตี tag `v1.0.0` จนกว่า FR-DIARY-3 จะเสร็จ + dogfood ผ่านตาม
   Phase Gate Rule
-- **P3 (Apple Health WRITE) เริ่มก่อนคิวแล้ว:** FR-HLTH-1/2 กำลังทำอยู่ตอนนี้ ก่อน FR-DIARY-3 — exception
-  ที่วีอนุมัติ (D-021, 2026-08-14) เพราะกำลัง dogfood จริงบน iPhone อยากได้ Health sync เร็วกว่าคิวเดิม
+- **P3 (Apple Health WRITE) เริ่มก่อนคิวแล้ว:** FR-HLTH-1/2 — exception ที่วีอนุมัติ (D-021, 2026-08-14)
+  **core 4 (kcal/protein/carb/fat) เสร็จ + ยืนยันทำงานจริงบนเครื่องแล้ว (2026-08-18)** ผ่าน Shortcut #1 +
+  ปุ่ม "ซิงก์เข้า Apple Health" ในหน้า Diary — extended nutrients (12 field เพิ่ม) เป็น backlog ยาว (BL-07)
+  รอ core ทุกอย่างจบก่อนค่อยกลับมาทำ
 - **P0:** จบแล้ว, tag `v0.1.0` — R-01/R-02 ปิด, ดูรายละเอียดใน PROJECT_BIBLE §Risks
 - **P1:** จบแล้ว, tag `v0.2.0` — TDEE/macro engine (unit test 18 เคส), Supabase auth + routing,
   Settings/Profile (FR-PROF-1), Settings/System (FR-SET-1), weight log + กราฟ (FR-PROF-2), guest calculator
@@ -66,6 +68,7 @@ Vision → Boundary → Requirement → Decision → Freeze → Working Rules
 
 ## Changelog
 
+- v1.5 (2026-08-18): FR-HLTH-1 core 4 ยืนยันทำงานจริง + extended nutrients (BL-07) เป็น backlog ยาว
 - v1.4 (2026-08-14): แก้สถานะที่ stale (เคยเขียนว่า "P1 จบแล้ว" ทั้งที่ P2 ทำอยู่จริง) — อัปเดตเป็น P2
   in-progress + FR-DIARY-3 ค้าง + FR-HLTH-1/2 เริ่มก่อนคิวตาม D-021, ปิด backlog R-07
 - v1.3 (2026-08-11): P1 จบ — tag `v0.2.0`, อัปเดตสถานะ + backlog R-07

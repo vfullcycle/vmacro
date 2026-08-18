@@ -1,4 +1,4 @@
-# PROJECT_BIBLE — Vmacro v1.12
+# PROJECT_BIBLE — Vmacro v1.13
 
 > Single source of truth ของโปรเจกต์ ถ้าไฟล์อื่นขัดกับไฟล์นี้ ให้ยึดไฟล์นี้แล้วแจ้งวีเพื่อ sync
 
@@ -129,6 +129,7 @@ D-013 (Research Gate) — ห้ามเริ่มโค้ดจนกว่
 | BL-04 | Post-P5 | | Barcode scan ผ่าน Open Food Facts (OFF, open data ODbL) — เรียกตรงจาก client ไม่ผ่าน proxy (ไม่มี secret + กระจาย rate limit เป็นราย user แทนรวมที่ IP VPS), rate ต่ำ (อ่าน 15/นาที, ค้น 10/นาที) เฉพาะ barcode lookup + submit search ห้าม search-as-you-type เด็ดขาด, cache ผลลง Supabase เสมอ, custom User-Agent "Vmacro/x.x (email)" + กรอกฟอร์มแจ้งการใช้งานกับ OFF ก่อนใช้จริง, ข้อมูล crowdsource เข้า admin verification ได้ (D-017) — พิจารณาพร้อม NOVA group (ultra-processed level) เป็นตัวแปรวิเคราะห์ P4/P5 |
 | BL-05 | P3 (หัวคิว) | | Day-type energy target — ดู D-019 สำหรับ design เต็ม ระบุเป็น FR ใหม่ตอนวางแผน P3 |
 | BL-06 | Post-P5 (หรือเร็วกว่านั้นถ้า R-03 กลายเป็น pain point จริงจัง) | | Native iOS app แทนที่ PWA ทั้งระบบ (Swift/SwiftUI) เพื่อเข้าถึง HealthKit เต็มรูปแบบ (read/write/delete จริง, background sync ใกล้ real-time กว่า Shortcuts) — ประเมินขอบเขตแล้ว (2026-08-16, ระหว่างทำ FR-HLTH-1/2): business logic core (`lib/tdee.ts`/`scaling.ts`/`dish.ts` ~970 บรรทัด + test 18 เคส) และ backend (raw JSON REST + Supabase) port/reuse ได้ง่าย แต่ UI ~4,000 บรรทัด (14 หน้าที่ dogfood ผ่านแล้วใน P0-P2) ต้องเขียนใหม่ทั้งหมด ไม่มีทาง reuse จาก React — ตัดสินใจไม่ทำตอนนี้เพราะต้นทุนสูงเกินไปเทียบกับปัญหาที่แก้ได้ด้วย delta approach (D-022) อยู่แล้ว |
+| BL-07 | รอ core ทุกอย่างจบก่อน (ยาว, ไม่รีบ) | | Shortcut #1 ส่วน extended nutrients (กลุ่ม D ใน `docs/shortcuts/shortcut-1-write.md` — sodium/sugar/fiber/potassium/calcium/iron/vitamin C,D/sat-mono-poly fat/cholesterol, 12 field, 36 action) — core 4 (kcal/protein/carb/fat) เสร็จ+ยืนยันทำงานจริงแล้ว (2026-08-18) แต่ extended nutrients ยังไม่ได้เริ่ม วีตั้งใจแยกเป็น **shortcut ที่สอง** ("extension") ที่ main shortcut เรียกผ่าน action `Run Shortcut` ส่ง `Data` dictionary ต่อให้ ไม่ยิง API ซ้ำ — มีจุดต้องตัดสินใจตอนเริ่มจริง: จะแจก extension คู่กับ main shortcut ให้เพื่อนเสมอ (กัน `Run Shortcut` error ถ้าไม่มี) หรือ extension เป็นของวีใช้เองอย่างเดียว — **วีขอให้ remind เรื่องนี้อีกครั้งหลัง core ทุกอย่าง (รวม FR-DIARY-3) เคลียร์จบแล้ว** |
 
 ## 8. Naming (ยุติแล้ว — D-010)
 
@@ -140,6 +141,9 @@ D-013 (Research Gate) — ห้ามเริ่มโค้ดจนกว่
 
 ## Changelog
 
+- v1.13 (2026-08-18): FR-HLTH-1 core 4 (kcal/protein/carb/fat) ยืนยันทำงานจริงบนเครื่อง — sync เข้า Apple
+  Health ถูกต้องผ่านปุ่ม "ซิงก์เข้า Apple Health" แล้ว เพิ่ม BL-07 (extended nutrients เป็น shortcut ที่สอง
+  แยกต่างหาก เรียกผ่าน `Run Shortcut` — deferred ยาว รอ core ทุกอย่างรวม FR-DIARY-3 จบก่อน)
 - v1.12 (2026-08-16): เพิ่ม D-022 (เปลี่ยนกลไกกัน sample เบิ้ลของ Core 4 ใน Shortcut #1 จาก delete-then-rewrite
   เป็น delta calculation — `Delete Health Sample` ไม่มีจริงใน Shortcuts action library, พบระหว่าง build จริง) +
   BL-06 (native app แทนที่ PWA ทั้งระบบ — ประเมินขอบเขตแล้วไม่คุ้มตอนนี้ เก็บเป็น backlog) — วีตัดสินใจระหว่าง

@@ -252,6 +252,43 @@ export default function Diary() {
     await loadEntries();
   }
 
+  async function copyFromYesterday(mealFilter?: Meal) {
+    if (!user) return;
+    const yesterday = addDays(date, -1);
+    const confirmMsg = mealFilter
+      ? `คัดลอกมื้อ${MEAL_LABELS[mealFilter]}จากวันที่ ${yesterday} มาที่วันนี้?`
+      : `คัดลอกทั้งวันจากวันที่ ${yesterday} มาที่วันนี้?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setError(null);
+    let query = supabase
+      .from("diary_entries")
+      .select(
+        "meal, source, custom_food_id, dish_id, fatsecret_food_id, fatsecret_food_name, quick_name, quantity, serving_size_g, kcal, protein_g, carbs_g, fat_g, nutrients",
+      )
+      .eq("user_id", user.id)
+      .eq("entry_date", yesterday);
+    if (mealFilter) query = query.eq("meal", mealFilter);
+
+    const { data: items, error: fetchError } = await query;
+    if (fetchError) {
+      setError(fetchError.message);
+      return;
+    }
+    if (!items || items.length === 0) {
+      setError(mealFilter ? "วันก่อนหน้าไม่มีรายการในมื้อนี้" : "วันก่อนหน้าไม่มีรายการบันทึกไว้");
+      return;
+    }
+
+    const rows = items.map((item) => ({ ...item, user_id: user.id, entry_date: date }));
+    const { error: insertError } = await supabase.from("diary_entries").insert(rows);
+    if (insertError) {
+      setError(insertError.message);
+      return;
+    }
+    await loadEntries();
+  }
+
   const isToday = date === todayLocalDate();
 
   return (
@@ -298,6 +335,10 @@ export default function Diary() {
           ยังตั้งค่า Settings → Profile ไม่ครบ — <Link to="/settings/profile">ตั้งค่าเพื่อดู target</Link>
         </p>
       )}
+
+      <button type="button" className="diary-add-link diary-copy-day-link" onClick={() => copyFromYesterday()}>
+        คัดลอกทั้งวันจากวันก่อนหน้า
+      </button>
 
       {isToday && IS_IOS && (
         <a
@@ -378,6 +419,9 @@ export default function Diary() {
                 </button>
                 <button type="button" className="diary-add-link" onClick={() => setRecentFavMeal(meal)}>
                   โปรด/ล่าสุด
+                </button>
+                <button type="button" className="diary-add-link" onClick={() => copyFromYesterday(meal)}>
+                  คัดลอกจากวันก่อนหน้า
                 </button>
               </div>
 

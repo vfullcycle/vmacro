@@ -1,0 +1,20 @@
+.favorite-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.favorite-toggle-active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+}

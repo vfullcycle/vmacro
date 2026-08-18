@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import FatSecretAttribution from "../components/FatSecretAttribution";
+import FavoriteToggle from "../components/FavoriteToggle";
 import NutritionFactsLabel from "../components/NutritionFactsLabel";
 import VerifiedBadge from "../components/VerifiedBadge";
 import { API_BASE_URL } from "../config";
@@ -306,7 +307,10 @@ function FatSecretFoodDetail({ foodId }: { foodId: string }) {
       <Link to="/food/search" className="back-link">
         ← กลับไปค้นหา
       </Link>
-      <h1>{thaiName ?? foodName}</h1>
+      <div className="food-detail-title-row">
+        <h1>{thaiName ?? foodName}</h1>
+        <FavoriteToggle source="fatsecret" refId={foodId} fatsecretName={thaiName ?? foodName} />
+      </div>
       {thaiName && <p className="food-detail-source">{foodName}</p>}
 
       <label className="serving-select">
@@ -489,10 +493,13 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
       <Link to="/food/search" className="back-link">
         ← กลับไปค้นหา
       </Link>
-      <h1>
-        {food.name}
-        {food.is_verified && <VerifiedBadge className="verified-badge" />}
-      </h1>
+      <div className="food-detail-title-row">
+        <h1>
+          {food.name}
+          {food.is_verified && <VerifiedBadge className="verified-badge" />}
+        </h1>
+        <FavoriteToggle source="custom_food" refId={foodId} />
+      </div>
       <p className="food-detail-source">
         Custom food{creatorName ? ` — โดย ${creatorName}` : ""}
         {user?.id === food.creator_id && (
@@ -617,7 +624,10 @@ function DishFoodDetail({ dishId }: { dishId: string }) {
       <Link to="/food/search" className="back-link">
         ← กลับไปค้นหา
       </Link>
-      <h1>{dish.name}</h1>
+      <div className="food-detail-title-row">
+        <h1>{dish.name}</h1>
+        <FavoriteToggle source="dish" refId={dishId} />
+      </div>
       <p className="food-detail-source">
         จานที่ปรุงเอง{creatorName ? ` — โดย ${creatorName}` : ""}
         {user?.id === dish.creator_id && (

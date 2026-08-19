@@ -1,4 +1,4 @@
-# REQUIREMENTS — Vmacro (FROZEN v1.7, 2026-08-19)
+# REQUIREMENTS — Vmacro (FROZEN v1.8, 2026-08-19)
 
 > แก้ไขได้เฉพาะเมื่อวีสั่ง + bump version + บันทึก changelog ท้ายไฟล์
 > ทุก FR ระบุ phase ที่ implement ตาม SCOPE.md
@@ -108,6 +108,15 @@ D-017) — LLM ไม่มีสิทธิ์เขียน DB ตรงใ�
 ความแม่นยำแสดงตลอดเวลา ไม่ใช่แค่ตอน error; ปิดการเข้าถึงไว้หลัง config flag จนกว่า validation (ground-truth
 diff กับ custom food ที่ verify แล้ว ≥15-20 รายการ) จะผ่านและวีสั่งเปิด*
 
+**FR-FOOD-8 (P4a)** Admin custom food list — หน้า `/settings/admin/custom-foods` (admin เท่านั้น, ตาม
+D-017) แสดง list custom food ทั้งหมด (ชื่อ, ชื่อ creator, สถานะ verified) ค่าเริ่มต้นกรองเฉพาะที่ยังไม่
+verify เพื่อให้ admin ไล่ตรวจได้ไว — สลับดู "ทั้งหมด" ได้ กด verify/unverify ได้ตรงจาก list โดยใช้ RPC
+`set_food_verified()` เดิม (D-017) ไม่มี action อื่นนอกจากนี้ (แก้ไข/ลบยังคงทำได้เฉพาะ creator ผ่านช่องทาง
+เดิม ตาม FR-FOOD-2)
+*AC: เปิดหน้าแล้วเห็น list default กรองเฉพาะยังไม่ verify; สลับ filter "ทั้งหมด/ยังไม่ verify" ได้; กด
+verify แล้วสถานะอัปเดตทันทีในหน้า list โดยไม่ต้อง reload และ item หายจาก filter "ยังไม่ verify" ทันที;
+ยกเลิก verify ได้เหมือนใน FoodDetail (ขอ source ตอน verify, ล้าง source ตอน unverify)*
+
 ## FR-DIARY — Daily Logging (P2)
 
 **FR-DIARY-1** บันทึกอาหารรายมื้อ (เช้า/กลางวัน/เย็น/ว่าง) ระบุ quantity — หน้าสรุปวันแสดงยอดรวม f/c/p/kcal
@@ -161,6 +170,10 @@ RLS: diary/health/profile/weight เห็นเฉพาะเจ้าขอ�
 
 ## Changelog
 
+- v1.8 (2026-08-19): เพิ่ม FR-FOOD-8 (Admin custom food list, คำสั่งวี) — หน้า admin แยกต่างหาก รวม
+  Import อาหาร (เดิมอยู่แทรกใน Settings list ตรง ๆ) กับ list custom food ที่กรอง unverified เป็นค่าเริ่มต้น
+  ให้ admin verify ได้จากจุดเดียว ไม่ต้องค้นหาทีละรายการผ่าน FoodSearch/FoodDetail เหมือนก่อนหน้า — ไม่มี
+  action ใหม่นอกจาก verify/unverify ที่มีอยู่แล้ว (D-017), ไม่แตะ RLS/schema — เข้าคิว P4a
 - v1.7 (2026-08-19): เพิ่ม FR-FOOD-7 (AI Import, D-023, คำสั่งวี) — user ทุกคนกรอกชื่อ+ปริมาณ+ภาพ (optional)
   ให้ Claude pre-fill custom food, ทุก field แก้ได้ก่อน save เสมอ, ปิดหลัง config flag จนกว่า ground-truth
   validation จะผ่าน — เข้าคิว P4a

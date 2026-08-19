@@ -11,9 +11,9 @@ const SETTINGS_ITEMS = [
 ];
 
 const ADMIN_SETTINGS_ITEM = {
-  to: "/settings/admin/food-import",
-  label: "Import อาหาร (Admin)",
-  desc: "เพิ่ม custom food จาก JSON หลายรายการพร้อมกัน",
+  to: "/settings/admin",
+  label: "Admin",
+  desc: "Import อาหาร, ตรวจสอบ custom food",
   Icon: WrenchIcon,
 };
 

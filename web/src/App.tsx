@@ -2,7 +2,9 @@ import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import { AuthProvider } from "./lib/auth-context";
+import AdminCustomFoods from "./pages/AdminCustomFoods";
 import AdminFoodImport from "./pages/AdminFoodImport";
+import AdminHome from "./pages/AdminHome";
 import AiFoodImport from "./pages/AiFoodImport";
 import Calculator from "./pages/Calculator";
 import CustomFoodForm from "./pages/CustomFoodForm";
@@ -47,7 +49,9 @@ function App() {
             <Route path="/settings/profile" element={<SettingsProfile />} />
             <Route path="/settings/system" element={<SettingsSystem />} />
             <Route path="/settings/meal-templates" element={<SettingsMealTemplates />} />
+            <Route path="/settings/admin" element={<AdminHome />} />
             <Route path="/settings/admin/food-import" element={<AdminFoodImport />} />
+            <Route path="/settings/admin/custom-foods" element={<AdminCustomFoods />} />
             <Route path="/weight-log" element={<WeightLog />} />
             <Route path="/food/ai-import" element={<AiFoodImport />} />
             <Route path="/food/custom/new" element={<CustomFoodForm />} />

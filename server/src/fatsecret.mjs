@@ -41,10 +41,11 @@ async function getAccessToken() {
   return cachedToken;
 }
 
-// Capped well below FatSecret's default page size (20) — every result has to be
-// AI-translated to Thai before the search page shows anything (DF7), so fewer results
-// means a shorter wait. 10 is the app's current tradeoff between choice and latency.
-const DEFAULT_MAX_RESULTS = 10;
+// Every result has to be AI-translated to Thai before the search page shows anything
+// (DF7), so more results means more translation calls on cache miss. Raised 10 -> 50
+// (2026-08-19, วีrequest) after friend feedback that FatSecret coverage felt thin —
+// re-evaluate against BL-11 latency numbers once they're in.
+const DEFAULT_MAX_RESULTS = 50;
 
 export async function searchFoods(searchExpression, maxResults = DEFAULT_MAX_RESULTS) {
   const token = await getAccessToken();

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateBMR, calculateMacros, calculateTDEE, calculateTarget, activityMultiplier } from "./tdee";
+import { calculateBMR, calculateDayTypeMacros, calculateMacros, calculateTDEE, calculateTarget, activityMultiplier } from "./tdee";
 
 describe("calculateBMR — mifflin", () => {
   it("male, 80kg/180cm/30y", () => {
@@ -111,5 +111,77 @@ describe("calculateMacros", () => {
       const result = calculateMacros(c);
       expect(Math.abs(result.total_kcal - c.target_kcal)).toBeLessThanOrEqual(5);
     }
+  });
+});
+
+describe("calculateDayTypeMacros (FR-CALC-4, D-019)", () => {
+  it("matches calculateMacros exactly when there's plenty of room (no floor hit)", () => {
+    const plain = calculateMacros({ target_kcal: 2000, weight_kg: 80, goal: "lose" });
+    const dayType = calculateDayTypeMacros({ target_kcal: 2000, weight_kg: 80, goal: "lose" });
+    expect(dayType.hit_floor).toBe(false);
+    expect(dayType.protein_g).toBe(plain.protein_g);
+    expect(dayType.fat_g).toBe(plain.fat_g);
+    expect(dayType.carb_g).toBe(plain.carb_g);
+  });
+
+  it("sends a full surplus (hard day) entirely to carb, protein/fat unaffected", () => {
+    const result = calculateDayTypeMacros({ target_kcal: 3000, weight_kg: 80, goal: "maintain" });
+    expect(result.hit_floor).toBe(false);
+    expect(result.protein_g).toBe(128); // 1.6 g/kg * 80kg, unaffected by the day-type target
+    expect(result.fat_g).toBe(83); // still ~25% of the (higher) target
+    expect(Math.abs(result.total_kcal - 3000)).toBeLessThanOrEqual(5);
+  });
+
+  it("pins carb at its floor when the default split would go below it, without touching fat", () => {
+    // fat floor overridden artificially low so only the carb-floor branch is exercised
+    const result = calculateDayTypeMacros({
+      target_kcal: 1000,
+      weight_kg: 80,
+      goal: "lose",
+      fat_floor_g_per_kg: 0.1,
+      fat_floor_pct: 0.05,
+    });
+    expect(result.hit_floor).toBe(false);
+    expect(result.protein_g).toBe(160); // 2.0 g/kg * 80kg
+    expect(result.carb_g).toBe(50); // carb_floor_g default
+    expect(result.fat_g).toBe(18); // absorbed the rest once carb was pinned at its floor
+  });
+
+  it("hits both floors on an extreme deficit and lets total_kcal diverge from target_kcal instead of going below either floor", () => {
+    const result = calculateDayTypeMacros({ target_kcal: 900, weight_kg: 80, goal: "lose" });
+    expect(result.hit_floor).toBe(true);
+    expect(result.protein_g).toBe(160);
+    expect(result.carb_g).toBe(50); // carb floor: max(50g, 10% * 900 / 4 = 22.5g)
+    expect(result.fat_g).toBe(40); // fat floor: max(0.5g/kg * 80kg = 40g, 20% * 900 / 9 = 20g)
+    expect(result.total_kcal).toBe(1200); // > target_kcal — floors won over hitting the exact target
+    expect(result.total_kcal).toBeGreaterThan(900);
+  });
+
+  it("never returns a negative macro, even under wildly extreme/negative targets", () => {
+    const targets = [-5000, -500, 0, 200, 900, 1500, 3000, 6000];
+    const weights = [40, 60, 80, 110];
+    for (const target_kcal of targets) {
+      for (const weight_kg of weights) {
+        for (const goal of ["lose", "maintain", "gain"] as const) {
+          const result = calculateDayTypeMacros({ target_kcal, weight_kg, goal });
+          expect(result.protein_g).toBeGreaterThanOrEqual(0);
+          expect(result.fat_g).toBeGreaterThanOrEqual(0);
+          expect(result.carb_g).toBeGreaterThanOrEqual(0);
+        }
+      }
+    }
+  });
+
+  it("respects carb/fat floor overrides", () => {
+    const result = calculateDayTypeMacros({
+      target_kcal: 900,
+      weight_kg: 80,
+      goal: "lose",
+      carb_floor_g: 100,
+      fat_floor_g_per_kg: 1,
+    });
+    expect(result.hit_floor).toBe(true);
+    expect(result.carb_g).toBe(100);
+    expect(result.fat_g).toBe(80); // 1 g/kg * 80kg
   });
 });

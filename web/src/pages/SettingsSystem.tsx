@@ -1,15 +1,31 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../lib/auth-context";
 import { supabase } from "../lib/supabase";
+import {
+  DEFAULT_CARB_FLOOR_G,
+  DEFAULT_CARB_FLOOR_PCT,
+  DEFAULT_DAY_TYPE_ALLOWANCE_KCAL,
+  DEFAULT_FAT_FLOOR_G_PER_KG,
+  DEFAULT_FAT_FLOOR_PCT,
+} from "../lib/tdee";
 import "./SettingsSystem.css";
 
 type UnitSystem = "metric" | "imperial";
+type DayType = "rest" | "light" | "hard";
 
 interface SystemForm {
   unit_system: UnitSystem;
   default_protein_g_per_kg: number | null;
   default_fat_pct: number | null;
   health_shortcut_name: string;
+  default_day_type: DayType | null;
+  day_type_allowance_rest_kcal: number | null;
+  day_type_allowance_light_kcal: number | null;
+  day_type_allowance_hard_kcal: number | null;
+  carb_floor_g: number | null;
+  carb_floor_pct: number | null;
+  fat_floor_g_per_kg: number | null;
+  fat_floor_pct: number | null;
 }
 
 interface HealthTokenRow {
@@ -34,7 +50,9 @@ export default function SettingsSystem() {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("unit_system, default_protein_g_per_kg, default_fat_pct, health_shortcut_name")
+      .select(
+        "unit_system, default_protein_g_per_kg, default_fat_pct, health_shortcut_name, default_day_type, day_type_allowance_rest_kcal, day_type_allowance_light_kcal, day_type_allowance_hard_kcal, carb_floor_g, carb_floor_pct, fat_floor_g_per_kg, fat_floor_pct",
+      )
       .eq("id", user.id)
       .single()
       .then(({ data, error }) => {
@@ -153,6 +171,121 @@ export default function SettingsSystem() {
             }
           />
         </label>
+
+        <div className="day-type-target">
+          <h2>Day-type target (FR-CALC-4)</h2>
+          <p className="note">
+            เป้า kcal ต่อวันปรับตามที่เลือกในหน้า Diary — rest = ไม่เพิ่ม, light/hard = เพิ่มจากเป้าปกติ
+            ตามค่าด้านล่าง (ค่าเริ่มต้น: rest +0, light +{DEFAULT_DAY_TYPE_ALLOWANCE_KCAL.light},
+            hard +{DEFAULT_DAY_TYPE_ALLOWANCE_KCAL.hard} kcal)
+          </p>
+
+          <label>
+            Default day type (ใช้เมื่อยังไม่ได้เลือกในวันนั้น)
+            <select
+              value={form.default_day_type ?? "rest"}
+              onChange={(e) => setForm({ ...form, default_day_type: e.target.value as DayType })}
+            >
+              <option value="rest">Rest</option>
+              <option value="light">Light</option>
+              <option value="hard">Hard</option>
+            </select>
+          </label>
+
+          <label>
+            Allowance วัน Light (kcal เพิ่มจากเป้าปกติ)
+            <input
+              type="number"
+              step="10"
+              placeholder={`ใช้ default +${DEFAULT_DAY_TYPE_ALLOWANCE_KCAL.light}`}
+              value={form.day_type_allowance_light_kcal ?? ""}
+              onChange={(e) =>
+                setForm({ ...form, day_type_allowance_light_kcal: e.target.value ? Number(e.target.value) : null })
+              }
+            />
+          </label>
+
+          <label>
+            Allowance วัน Hard (kcal เพิ่มจากเป้าปกติ)
+            <input
+              type="number"
+              step="10"
+              placeholder={`ใช้ default +${DEFAULT_DAY_TYPE_ALLOWANCE_KCAL.hard}`}
+              value={form.day_type_allowance_hard_kcal ?? ""}
+              onChange={(e) =>
+                setForm({ ...form, day_type_allowance_hard_kcal: e.target.value ? Number(e.target.value) : null })
+              }
+            />
+          </label>
+
+          <label>
+            Allowance วัน Rest (kcal ปรับจากเป้าปกติ — ปกติ 0, ใส่ค่าลบได้ถ้าต้องการวันพักที่เข้มกว่า)
+            <input
+              type="number"
+              step="10"
+              placeholder={`ใช้ default ${DEFAULT_DAY_TYPE_ALLOWANCE_KCAL.rest >= 0 ? "+" : ""}${DEFAULT_DAY_TYPE_ALLOWANCE_KCAL.rest}`}
+              value={form.day_type_allowance_rest_kcal ?? ""}
+              onChange={(e) =>
+                setForm({ ...form, day_type_allowance_rest_kcal: e.target.value ? Number(e.target.value) : null })
+              }
+            />
+          </label>
+
+          <p className="note">
+            Carb/fat floor — เพดานล่างกัน macro ติดลบเมื่อ allowance ต่ำมาก (protein คงที่เสมอ, carb รับ
+            ส่วนต่างก่อน, fat รับต่อถ้า carb ชน floor แล้ว)
+          </p>
+
+          <label>
+            Carb floor (กรัม)
+            <input
+              type="number"
+              step="1"
+              min="0"
+              placeholder={`ใช้ default ${DEFAULT_CARB_FLOOR_G}g`}
+              value={form.carb_floor_g ?? ""}
+              onChange={(e) => setForm({ ...form, carb_floor_g: e.target.value ? Number(e.target.value) : null })}
+            />
+          </label>
+
+          <label>
+            Carb floor (% ของ kcal เป้าหมาย)
+            <input
+              type="number"
+              step="1"
+              min="0"
+              max="100"
+              placeholder={`ใช้ default ${DEFAULT_CARB_FLOOR_PCT * 100}%`}
+              value={form.carb_floor_pct != null ? form.carb_floor_pct * 100 : ""}
+              onChange={(e) => setForm({ ...form, carb_floor_pct: e.target.value ? Number(e.target.value) / 100 : null })}
+            />
+          </label>
+
+          <label>
+            Fat floor (g/kg น้ำหนักตัว)
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              placeholder={`ใช้ default ${DEFAULT_FAT_FLOOR_G_PER_KG}g/kg`}
+              value={form.fat_floor_g_per_kg ?? ""}
+              onChange={(e) => setForm({ ...form, fat_floor_g_per_kg: e.target.value ? Number(e.target.value) : null })}
+            />
+          </label>
+
+          <label>
+            Fat floor (% ของ kcal เป้าหมาย)
+            <input
+              type="number"
+              step="1"
+              min="0"
+              max="100"
+              placeholder={`ใช้ default ${DEFAULT_FAT_FLOOR_PCT * 100}%`}
+              value={form.fat_floor_pct != null ? form.fat_floor_pct * 100 : ""}
+              onChange={(e) => setForm({ ...form, fat_floor_pct: e.target.value ? Number(e.target.value) / 100 : null })}
+            />
+          </label>
+        </div>
 
         <div className="health-sync">
           <h2>Apple Health</h2>

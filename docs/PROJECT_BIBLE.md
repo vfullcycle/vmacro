@@ -1,4 +1,4 @@
-# PROJECT_BIBLE — Vmacro v1.15
+# PROJECT_BIBLE — Vmacro v1.16
 
 > Single source of truth ของโปรเจกต์ ถ้าไฟล์อื่นขัดกับไฟล์นี้ ให้ยึดไฟล์นี้แล้วแจ้งวีเพื่อ sync
 
@@ -126,15 +126,15 @@ D-013 (Research Gate) — ห้ามเริ่มโค้ดจนกว่
 | ID | Phase | Tag | รายละเอียด |
 |---|---|---|---|
 | BL-01 | P2 | | diary entry เพิ่ม field ราคา (optional, บาท) — เก็บข้อมูลเพื่อ food cost analytics และสะสม dataset ศึกษาความสัมพันธ์ราคา↔ปริมาณในอนาคต ตอนวางแผน P2 ให้รวม field นี้เข้า scope เลย |
-| BL-02 | P4 | research-gated (เบา) | **AI Import** — ดู D-023 สำหรับ design เต็ม (เดิมคือ "LLM recipe decomposition" ก่อน D-023 เปลี่ยนขอบเขต+เลื่อนจาก P5) |
+| BL-02 | P4a | research-gated (เบา) | **AI Import** — ดู D-023 สำหรับ design เต็ม (เดิมคือ "LLM recipe decomposition" ก่อน D-023 เปลี่ยนขอบเขต+เลื่อนจาก P5) |
 | BL-03 | Post-P5 | research-gated | Camera volume estimation — ประมาณปริมาณอาหารจากภาพถ่ายด้วยเรขาคณิต เงื่อนไขขั้นต่ำ: ต้องมี reference object ในเฟรม แยกเป็น experimental track ต่างหาก รวมแนวคิด ensemble เปรียบเทียบ 3 ตัวประมาณ (สูตรมาตรฐาน/ราคา/ภาพ) เมื่อมี error data จริงจากการใช้งานสะสม |
 | BL-04 | Post-P5 | | Barcode scan ผ่าน Open Food Facts (OFF, open data ODbL) — เรียกตรงจาก client ไม่ผ่าน proxy (ไม่มี secret + กระจาย rate limit เป็นราย user แทนรวมที่ IP VPS), rate ต่ำ (อ่าน 15/นาที, ค้น 10/นาที) เฉพาะ barcode lookup + submit search ห้าม search-as-you-type เด็ดขาด, cache ผลลง Supabase เสมอ, custom User-Agent "Vmacro/x.x (email)" + กรอกฟอร์มแจ้งการใช้งานกับ OFF ก่อนใช้จริง, ข้อมูล crowdsource เข้า admin verification ได้ (D-017) — พิจารณาพร้อม NOVA group (ultra-processed level) เป็นตัวแปรวิเคราะห์ P4/P5 |
-| BL-05 | P4 (เดิมวางไว้ P3 แต่ P3 ปิดขอบเขตเหลือแค่ Health WRITE core ตาม D-021 — เลื่อนมา P4 ตามร่างแผน P4a/P4b ที่รอเสนอวี) | | Day-type energy target — ดู D-019 สำหรับ design เต็ม ระบุเป็น FR ใหม่ตอนวางแผน P4 |
+| BL-05 | P4a (อนุมัติแล้ว 2026-08-19 — เดิมวางไว้ P3 แต่ P3 ปิดขอบเขตเหลือแค่ Health WRITE core ตาม D-021) | | Day-type energy target — ดู D-019 สำหรับ design เต็ม ระบุเป็น FR ใหม่ก่อนเริ่มโค้ดตามกติกา FR-first (CLAUDE.md) |
 | BL-06 | Post-P5 (หรือเร็วกว่านั้นถ้า R-03 กลายเป็น pain point จริงจัง) | | Native iOS app แทนที่ PWA ทั้งระบบ (Swift/SwiftUI) เพื่อเข้าถึง HealthKit เต็มรูปแบบ (read/write/delete จริง, background sync ใกล้ real-time กว่า Shortcuts) — ประเมินขอบเขตแล้ว (2026-08-16, ระหว่างทำ FR-HLTH-1/2): business logic core (`lib/tdee.ts`/`scaling.ts`/`dish.ts` ~970 บรรทัด + test 18 เคส) และ backend (raw JSON REST + Supabase) port/reuse ได้ง่าย แต่ UI ~4,000 บรรทัด (14 หน้าที่ dogfood ผ่านแล้วใน P0-P2) ต้องเขียนใหม่ทั้งหมด ไม่มีทาง reuse จาก React — ตัดสินใจไม่ทำตอนนี้เพราะต้นทุนสูงเกินไปเทียบกับปัญหาที่แก้ได้ด้วย delta approach (D-022) อยู่แล้ว |
 | BL-07 | รอ core ทุกอย่างจบก่อน (ยาว, ไม่รีบ) | | Shortcut #1 ส่วน extended nutrients (กลุ่ม D ใน `docs/shortcuts/shortcut-1-write.md` — sodium/sugar/fiber/potassium/calcium/iron/vitamin C,D/sat-mono-poly fat/cholesterol, 12 field, 36 action) — core 4 (kcal/protein/carb/fat) เสร็จ+ยืนยันทำงานจริงแล้ว (2026-08-18) แต่ extended nutrients ยังไม่ได้เริ่ม วีตั้งใจแยกเป็น **shortcut ที่สอง** ("extension") ที่ main shortcut เรียกผ่าน action `Run Shortcut` ส่ง `Data` dictionary ต่อให้ ไม่ยิง API ซ้ำ — มีจุดต้องตัดสินใจตอนเริ่มจริง: จะแจก extension คู่กับ main shortcut ให้เพื่อนเสมอ (กัน `Run Shortcut` error ถ้าไม่มี) หรือ extension เป็นของวีใช้เองอย่างเดียว — **วีขอให้ remind เรื่องนี้อีกครั้งหลัง core ทุกอย่าง (รวม FR-DIARY-3) เคลียร์จบแล้ว** |
-| BL-08 | P4 | | Dashboard tab แทน Weight tab: today-at-a-glance (kcal ring + P/C/F + day type), weight card + sparkline (หน้า weight เดิมย้ายมาอยู่ใต้), streak/สรุปสัปดาห์, โซน analytics tier 1 (FR-ANLT-1) — เป็นบ้านของ P4 analytics |
-| BL-09 | P4+ | | Friends tab: streak leaderboard, contribution board (สร้าง/verify custom food), opt-in activity feed — หลักการ: แข่งที่พฤติกรรม ห้ามมี leaderboard น้ำหนัก/kcal, diary ยัง private ตาม RLS เดิม. Toolbar ใหม่เมื่อทั้งสองมา: Dashboard·Diary·Search·Friends·Settings — ลำดับสุดท้ายตัดสินจาก dogfood |
-| BL-10 | P4 (หลัง D-019 + BL-08) | | Per-meal targets + meal-time reminders — Profile: จำนวนมื้อ/วัน (1–6) + เวลาแต่ละมื้อ + สัดส่วน % ต่อมื้อ (default หารเท่า ปรับได้ รวม 100%). Engine กระจาย daily target (ที่ผ่าน day-type แล้ว) เป็น target ต่อมื้อ + โหมด remaining-based ("ก่อนมื้อนี้เหลือให้กินอีก X" คำนวณจากที่กินจริงไปแล้ว ไม่ยึดตัวเลขตายตัว) แสดงผลใน diary/dashboard เป็นระยะแรก (ไม่พึ่ง push). Reminder ตามเวลามื้อ: ทางหลัก = iOS Shortcuts Automation ยิง VPS endpoint (pattern เดียวกับ P3 health token) เพราะ reliability สูงกว่า Web Push บน iOS PWA — Web Push เป็นทางเลือกรอง, ข้อจำกัด iOS นี้บันทึกไว้เป็น risk |
+| BL-08 | P4a | | Dashboard tab แทน Weight tab: today-at-a-glance (kcal ring + P/C/F + day type), weight card + sparkline (หน้า weight เดิมย้ายมาอยู่ใต้), streak/สรุปสัปดาห์, โซน analytics tier 1 (FR-ANLT-1) — เป็นบ้านของ P4 analytics |
+| BL-09 | หลัง P4b — ตัดสินตอนปิด P4b ว่าเข้าก่อน/คู่ P5 (2026-08-19: วีตัดสินใจ เหตุผล — Friends มีค่าเมื่อมีเพื่อนใช้จริง ซึ่ง D-023 AI Import ใน P4a คือตัวปลดล็อกพฤติกรรมนั้น ต้องเห็นพฤติกรรมเพื่อนก่อนออกแบบ) | | Friends tab: streak leaderboard, contribution board (สร้าง/verify custom food), opt-in activity feed — หลักการ: แข่งที่พฤติกรรม ห้ามมี leaderboard น้ำหนัก/kcal, diary ยัง private ตาม RLS เดิม. Toolbar ใหม่เมื่อทั้งสองมา: Dashboard·Diary·Search·Friends·Settings — ลำดับสุดท้ายตัดสินจาก dogfood |
+| BL-10 | P4b (งานแรกของ P4b, ทำได้ทันทีที่ D-019+BL-08 จาก P4a จบ) | | Per-meal targets + meal-time reminders — Profile: จำนวนมื้อ/วัน (1–6) + เวลาแต่ละมื้อ + สัดส่วน % ต่อมื้อ (default หารเท่า ปรับได้ รวม 100%). Engine กระจาย daily target (ที่ผ่าน day-type แล้ว) เป็น target ต่อมื้อ + โหมด remaining-based ("ก่อนมื้อนี้เหลือให้กินอีก X" คำนวณจากที่กินจริงไปแล้ว ไม่ยึดตัวเลขตายตัว) แสดงผลใน diary/dashboard เป็นระยะแรก (ไม่พึ่ง push). Reminder ตามเวลามื้อ: ทางหลัก = iOS Shortcuts Automation ยิง VPS endpoint (pattern เดียวกับ P3 health token) เพราะ reliability สูงกว่า Web Push บน iOS PWA — Web Push เป็นทางเลือกรอง, ข้อจำกัด iOS นี้บันทึกไว้เป็น risk |
 | BL-11 | P4a (งานแรกของ P4a) | | Search UX เร็วขึ้น+อ่านง่ายขึ้น — ปรับ UI/พฤติกรรมของ FR-FOOD-1 ที่มีอยู่แล้ว ไม่ใช่ FR ใหม่: (1) วัดก่อนทำ — instrument latency จริงว่าหายไปที่ Supabase/FatSecret/Haiku translation ช่วงไหน รายงานตัวเลขก่อนตัดสินใจ implement (2) progressive results — ผลจาก Supabase (custom food/จาน/template/recent) แสดงทันทีที่ได้ ไม่รอ FatSecret, FatSecret+คำแปลไหลมาต่อท้ายพร้อม loading indicator (3) Settings: switch เปิด/ปิด FatSecret ต่อ user (default เปิด) (4) จัดกลุ่มผลค้นหาเป็น section (ของฉัน/จาน/recent/FatSecret) แต่ละกลุ่มแสดงจำกัด+"ดูทั้งหมด", ใช้ load-more/infinite scroll แทน pagination ตัวเลข (mobile-first) — เสนอรูปแบบสุดท้ายพร้อม mock สั้นๆ ก่อนทำจริง |
 
 ## 8. Naming (ยุติแล้ว — D-010)
@@ -147,6 +147,10 @@ D-013 (Research Gate) — ห้ามเริ่มโค้ดจนกว่
 
 ## Changelog
 
+- v1.16 (2026-08-19): วีอนุมัติแผน P4a/P4b (ดู SCOPE.md v1.3) — อัปเดต phase ของ BL-02/05/08/10 เป็น
+  P4a/P4b ตามลำดับ, ย้าย BL-09 (Friends tab) เป็น "หลัง P4b — ตัดสินตอนปิด P4b" เพราะ Friends มีค่าเมื่อ
+  มีเพื่อนใช้จริง ซึ่ง D-023 AI Import คือตัวปลดล็อกพฤติกรรมนั้น — context เปลี่ยน: มีเพื่อนเริ่มใช้จริง
+  แล้ว 2 คน (รวมวี 3 users)
 - v1.15 (2026-08-19): เพิ่ม D-024 (Exception ของ Phase Gate Rule ครั้งที่ 2 — ปิด P2/ตี `v1.0.0` โดยไม่รอ
   FR-DIARY-3 ผ่าน dogfood ครบ 2-3 วัน เพราะเป็น shortcut ความเสี่ยงต่ำ, บั๊กที่เจอทีหลังแก้เป็น patch
   `v1.0.x`; ตี `v1.1.0` ต่อทันทีเพราะ P3 core (FR-HLTH-1/2) ยืนยันทำงานจริงแล้ว) แก้ Phase ของ BL-05

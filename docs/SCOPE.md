@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.2
+# SCOPE — Vmacro v1.3
 
 ## In Scope
 
@@ -52,11 +52,22 @@
 - VPS endpoint ให้ Shortcut ดึงยอด f/c/p/kcal ของวัน (auth ด้วย per-user token)
 - Shortcut #1 + iCloud share link + คู่มือติดตั้ง 1 หน้า
 
-### P4 — Apple Health READ + Analysis tier 1 → tag `v1.2.0`
-- VPS ingest endpoint + Shortcut #2 (workout/HR/active energy)
-- Dashboard: correlation/trend พื้นฐาน (เช่น kcal balance vs weight trend, protein vs training days)
+### P4a — Daily-use impact → tag `v1.2.0`
+(แบ่งจาก P4 เดิมเป็นสองครึ่ง มี tag คั่นกลาง — บทเรียนจาก P2 ที่ phase ไม่มีหมุดกลางทางไหลยาว)
+- BL-11 (งานแรก): Search UX เร็วขึ้น+อ่านง่ายขึ้น — วัด latency จริงก่อนตัดสินใจ implement, progressive
+  results, FatSecret toggle, จัดกลุ่มผลค้นหา
+- D-019: Day-type energy target (ต้องมี FR ใหม่ + AC ก่อนเริ่มโค้ด — FR-first workflow ใน CLAUDE.md)
+- BL-08: Dashboard tab แทน Weight tab (ต้องมี D-019 จบก่อน เพราะ ring ต้องโชว์ day-type)
+- D-023: AI Import (research doc สั้นตาม gate แบบเบาก่อนเริ่มโค้ด)
 
-### P5 — Insight tier 2 (LLM) → tag `v1.3.0`
+### P4b — Data-dependent → tag `v1.3.0`
+- BL-10 (งานแรก, ทำได้ทันทีที่ D-019+BL-08 จาก P4a จบ): Per-meal targets + meal-time reminders
+- FR-HLTH-3: VPS ingest endpoint + Shortcut #2 (workout/HR/active energy) — Apple Health READ
+- FR-ANLT-1: Dashboard analytics tier 1 — correlation/trend พื้นฐาน (เช่น kcal balance vs weight trend,
+  protein vs training days) ต้องมีข้อมูล health+diary สะสมจาก FR-HLTH-3 ก่อนถึงมีอะไรวิเคราะห์
+- ปิด P4b แล้วค่อยตัดสินใจ BL-09 (Friends tab) ว่าเข้าก่อน/คู่ P5
+
+### P5 — Insight tier 2 (LLM) → tag `v1.4.0`
 - LLM endpoint บน VPS สรุป pattern รายสัปดาห์เป็นภาษาไทย
 - (ประตูสู่อนาคต) เมื่อข้อมูล ≥3–6 เดือน ค่อยประเมิน ML tier 3 เป็นโปรเจกต์ย่อยแยก
 
@@ -72,6 +83,10 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.3 (2026-08-19): แบ่ง P4 เป็น P4a (`v1.2.0`: BL-11 search UX, D-019 day-type, BL-08 dashboard,
+  D-023 AI Import) / P4b (`v1.3.0`: BL-10 per-meal targets, FR-HLTH-3 Health READ, FR-ANLT-1 analytics
+  tier 1) — P5 เลื่อน tag เป็น `v1.4.0` — วีอนุมัติหลัง discuss ลำดับ dependency, ดู PROJECT_BIBLE v1.16
+  สำหรับบริบทเต็ม (มีเพื่อนเริ่มใช้จริงแล้ว 2 คน)
 - v1.2 (2026-08-11): เพิ่มข้อยกเว้น Phase Gate Rule สำหรับ P0 (ไม่มี dogfood surface จริง จนกว่าจะถึง P1) —
   ตัดสินใจโดยวีหลังพิสูจน์ residual risk ด้วย test แทนการรอเวลา: certbot renew --dry-run
   (vmacro.persiq.net ผ่าน — พบ bug เดิมไม่เกี่ยวกับ Vmacro ที่ persiq.net/ssdhr.persiq.net แยกไปแจ้งต่างหาก)

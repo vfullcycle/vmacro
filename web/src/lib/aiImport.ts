@@ -22,10 +22,13 @@ export interface AiNutritionEstimate {
   };
 }
 
+export type AiImportMode = "estimate" | "read_label";
+
 export async function getAiNutritionEstimate(
   name: string,
   quantity: string,
   photo?: { base64: string; mediaType: string },
+  mode: AiImportMode = "estimate",
 ): Promise<AiNutritionEstimate> {
   const {
     data: { session },
@@ -44,6 +47,7 @@ export async function getAiNutritionEstimate(
       quantity,
       photoBase64: photo?.base64,
       photoMediaType: photo?.mediaType,
+      mode,
     }),
   });
   if (!res.ok) {

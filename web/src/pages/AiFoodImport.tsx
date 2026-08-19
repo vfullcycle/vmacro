@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import CustomFoodFieldsForm from "../components/CustomFoodFieldsForm";
 import { AI_IMPORT_ENABLED } from "../config";
-import { getAiNutritionEstimate, resizeImageToBase64, type AiNutritionEstimate } from "../lib/aiImport";
+import { getAiNutritionEstimate, resizeImageToBase64, type AiImportMode, type AiNutritionEstimate } from "../lib/aiImport";
 import { useAuth } from "../lib/auth-context";
 import { buildNutrients, EMPTY_CORE, flattenNutrients, type CoreFormState, type ExtraFormState } from "../lib/customFoodNutrients";
 import type { NutrientPanel } from "../lib/scaling";
@@ -15,6 +15,7 @@ export default function AiFoodImport() {
   const navigate = useNavigate();
 
   const [step, setStep] = useState<"input" | "preview">("input");
+  const [mode, setMode] = useState<AiImportMode>("estimate");
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -32,11 +33,14 @@ export default function AiFoodImport() {
   async function handleEstimate(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim() || !quantity.trim()) return;
+    if (mode === "read_label" && !photoFile) return; // required in this mode, button stays disabled too
     setEstimating(true);
     setEstimateError(null);
     try {
-      const photo = photoFile ? await resizeImageToBase64(photoFile) : undefined;
-      const estimate = await getAiNutritionEstimate(name.trim(), quantity.trim(), photo);
+      // Label text is small — keep more resolution than the default estimate-mode resize
+      // (context-only photo) so it's actually legible to the model.
+      const photo = photoFile ? await resizeImageToBase64(photoFile, mode === "read_label" ? 1600 : 1024) : undefined;
+      const estimate = await getAiNutritionEstimate(name.trim(), quantity.trim(), photo, mode);
       setCore({
         name: estimate.name,
         serving_label: estimate.serving_label ?? "",
@@ -95,23 +99,43 @@ export default function AiFoodImport() {
           ตรวจสอบ/แก้ในขั้นถัดไปก่อน save เสมอ
         </p>
         <form onSubmit={handleEstimate}>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={mode === "read_label"}
+              onChange={(e) => setMode(e.target.checked ? "read_label" : "estimate")}
+            />
+            เป็นสินค้าบรรจุภัณฑ์มีฉลากโภชนาการ (อ่านค่าจากฉลากแทนการประมาณ — แม่นกว่ามาก แต่ต้องมีรูป)
+          </label>
+
           <label>
             ชื่ออาหาร
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="เช่น แกงเขียวหวานไก่" required />
           </label>
           <label>
-            ปริมาณ
-            <input value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="เช่น 1 จาน, 250 กรัม" required />
+            {mode === "read_label" ? "กินเท่าไหร่" : "ปริมาณ"}
+            <input
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              placeholder={mode === "read_label" ? "เช่น ทั้งกล่อง, ครึ่งขวด, 1 ซอง" : "เช่น 1 จาน, 250 กรัม"}
+              required
+            />
           </label>
           <label>
-            รูปประกอบ (ไม่บังคับ)
-            <input type="file" accept="image/*" capture="environment" onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)} />
+            {mode === "read_label" ? "ถ่ายภาพฉลากโภชนาการให้ชัด" : "รูปประกอบ (ไม่บังคับ)"}
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              required={mode === "read_label"}
+              onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+            />
           </label>
 
           {estimateError && <p className="error">{estimateError}</p>}
 
-          <button type="submit" disabled={estimating}>
-            {estimating ? "กำลังประมาณค่า..." : "ให้ AI ช่วยกรอก"}
+          <button type="submit" disabled={estimating || (mode === "read_label" && !photoFile)}>
+            {estimating ? "กำลังอ่านค่า..." : "ให้ AI ช่วยกรอก"}
           </button>
         </form>
       </main>
@@ -122,8 +146,10 @@ export default function AiFoodImport() {
     <main className="custom-food-form-page ai-food-import-page">
       <h1>ตรวจสอบก่อนบันทึก</h1>
       <p className="ai-food-import-disclaimer">
-        ค่าประมาณจากค่ากลาง โปรดตรวจสอบ/ปรับตามของจริง — AI ประมาณจากอาหารประเภทนี้โดยเฉลี่ย ไม่รู้สูตร
-        ของร้าน/มื้อที่กินจริง แก้ค่าด้านล่างได้ทุกช่องก่อนบันทึก
+        {mode === "read_label"
+          ? "อ่านค่าจากฉลากที่ถ่ายมา — เช็คว่าตัวเลขตรงกับฉลากจริงก่อนบันทึก (โมเดลอาจอ่านตัวเลขบางตัวผิดหรือคำนวณสัดส่วนคลาดเคลื่อนได้)"
+          : "ค่าประมาณจากค่ากลาง โปรดตรวจสอบ/ปรับตามของจริง — AI ประมาณจากอาหารประเภทนี้โดยเฉลี่ย ไม่รู้สูตรของร้าน/มื้อที่กินจริง"}{" "}
+        แก้ค่าด้านล่างได้ทุกช่องก่อนบันทึก
       </p>
       <form onSubmit={handleSave}>
         <CustomFoodFieldsForm core={core} setCore={setCore} extras={extras} setExtras={setExtras} ranges={ranges ?? undefined} />

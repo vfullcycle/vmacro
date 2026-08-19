@@ -5,6 +5,11 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://vmacro
 // See PROJECT_BIBLE §7 BL-11.
 export const SEARCH_LATENCY_LOGGING = true;
 
+// FR-FOOD-7 / D-023 (2026-08-19) — off until the ground-truth validation (docs/research/
+// ai-import.md §5) is reported to วีand he explicitly says to open it. Flip to true +
+// redeploy when that happens; no other code changes needed.
+export const AI_IMPORT_ENABLED = false;
+
 // Safe to keep as a public default: the anon key is designed to be embedded in client bundles
 // (RLS is what actually protects data, not secrecy of this key).
 export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://fagkzpygsqiwnaluozdc.supabase.co";

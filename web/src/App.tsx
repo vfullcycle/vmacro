@@ -3,6 +3,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import { AuthProvider } from "./lib/auth-context";
 import AdminFoodImport from "./pages/AdminFoodImport";
+import AiFoodImport from "./pages/AiFoodImport";
 import Calculator from "./pages/Calculator";
 import CustomFoodForm from "./pages/CustomFoodForm";
 import Diary from "./pages/Diary";
@@ -48,6 +49,7 @@ function App() {
             <Route path="/settings/meal-templates" element={<SettingsMealTemplates />} />
             <Route path="/settings/admin/food-import" element={<AdminFoodImport />} />
             <Route path="/weight-log" element={<WeightLog />} />
+            <Route path="/food/ai-import" element={<AiFoodImport />} />
             <Route path="/food/custom/new" element={<CustomFoodForm />} />
             <Route path="/food/custom/:id/edit" element={<CustomFoodForm />} />
             <Route path="/food/dish/new" element={<DishBuilder />} />

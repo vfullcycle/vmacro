@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import FatSecretAttribution from "../components/FatSecretAttribution";
 import QuickAddFoodModal from "../components/QuickAddFoodModal";
 import VerifiedBadge from "../components/VerifiedBadge";
-import { API_BASE_URL, SEARCH_LATENCY_LOGGING } from "../config";
+import { AI_IMPORT_ENABLED, API_BASE_URL, SEARCH_LATENCY_LOGGING } from "../config";
 import { useAuth } from "../lib/auth-context";
 import { entryDisplayName, entryQuantityLabel, MEAL_LABELS, type DiaryEntryRow, type Meal } from "../lib/diary";
 import { parseSearchResults, type FatSecretSearchResult } from "../lib/fatsecret";
@@ -509,6 +509,11 @@ export default function FoodSearch() {
         <Link to="/food/custom/new" className="add-food-link">
           + เพิ่มอาหารของคุณเอง
         </Link>
+        {user && AI_IMPORT_ENABLED && (
+          <Link to="/food/ai-import" className="add-food-link">
+            + ให้ AI ช่วยกรอก
+          </Link>
+        )}
         {!forDish && (
           <Link to="/food/dish/new" className="add-food-link">
             + สร้างจานอาหาร

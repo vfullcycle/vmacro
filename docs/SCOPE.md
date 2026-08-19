@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.3
+# SCOPE — Vmacro v1.4
 
 ## In Scope
 
@@ -54,11 +54,14 @@
 
 ### P4a — Daily-use impact → tag `v1.2.0`
 (แบ่งจาก P4 เดิมเป็นสองครึ่ง มี tag คั่นกลาง — บทเรียนจาก P2 ที่ phase ไม่มีหมุดกลางทางไหลยาว)
-- BL-11 (งานแรก): Search UX เร็วขึ้น+อ่านง่ายขึ้น — วัด latency จริงก่อนตัดสินใจ implement, progressive
-  results, FatSecret toggle, จัดกลุ่มผลค้นหา
-- D-019: Day-type energy target (ต้องมี FR ใหม่ + AC ก่อนเริ่มโค้ด — FR-first workflow ใน CLAUDE.md)
+- BL-11: Search UX เร็วขึ้น+อ่านง่ายขึ้น — วัด latency อยู่เบื้องหลังคู่ขนานกับงานอื่นด้านล่าง (ไม่ block
+  คิว), ห้ามแตะ search logic จนกว่าจะรายงานตัวเลข (2026-08-19)
+- D-019 (งานแรก): Day-type energy target — ต้องมี FR ใหม่ + AC อนุมัติก่อนเริ่มโค้ด (FR-first workflow
+  ใน CLAUDE.md)
+- D-023: AI Import — เริ่ม research doc (gate แบบเบา) คู่ขนานกับ D-019 ตั้งแต่ตอนนี้, เริ่มโค้ดทันทีที่
+  D-019 จบ (2026-08-19: เลื่อนขึ้นก่อน BL-08 เพราะเพื่อนที่ใช้จริงติดขัดตรงหาไม่เจอแล้วให้วี import ให้ —
+  วีกลายเป็นคอขวด, AI Import คือตัวแก้ตรงจุดนั้น)
 - BL-08: Dashboard tab แทน Weight tab (ต้องมี D-019 จบก่อน เพราะ ring ต้องโชว์ day-type)
-- D-023: AI Import (research doc สั้นตาม gate แบบเบาก่อนเริ่มโค้ด)
 
 ### P4b — Data-dependent → tag `v1.3.0`
 - BL-10 (งานแรก, ทำได้ทันทีที่ D-019+BL-08 จาก P4a จบ): Per-meal targets + meal-time reminders
@@ -83,6 +86,9 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.4 (2026-08-19): ปรับลำดับ P4a เป็น D-019 → D-023 → BL-08 (เดิม D-019 → BL-08 → D-023) — feedback
+  จากเพื่อน 2 คนที่ใช้จริง: ค้นไม่เจอแล้วให้วี import ให้เอง (วีกลายเป็นคอขวด) ทำให้ D-023 (AI Import)
+  มีค่าเร่งด่วนกว่า dashboard — เริ่ม research doc คู่ขนานกับ D-019 ได้ทันที ดู PROJECT_BIBLE v1.17+
 - v1.3 (2026-08-19): แบ่ง P4 เป็น P4a (`v1.2.0`: BL-11 search UX, D-019 day-type, BL-08 dashboard,
   D-023 AI Import) / P4b (`v1.3.0`: BL-10 per-meal targets, FR-HLTH-3 Health READ, FR-ANLT-1 analytics
   tier 1) — P5 เลื่อน tag เป็น `v1.4.0` — วีอนุมัติหลัง discuss ลำดับ dependency, ดู PROJECT_BIBLE v1.16

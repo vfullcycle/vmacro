@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import FatSecretAttribution from "../components/FatSecretAttribution";
 import QuickAddFoodModal from "../components/QuickAddFoodModal";
 import VerifiedBadge from "../components/VerifiedBadge";
-import { API_BASE_URL } from "../config";
+import { API_BASE_URL, SEARCH_LATENCY_LOGGING } from "../config";
 import { useAuth } from "../lib/auth-context";
 import { entryDisplayName, entryQuantityLabel, MEAL_LABELS, type DiaryEntryRow, type Meal } from "../lib/diary";
 import { parseSearchResults, type FatSecretSearchResult } from "../lib/fatsecret";
@@ -56,6 +56,39 @@ function foodIdentityKey(entry: DiaryEntryRow): string {
   return `dish:${entry.dish_id}`;
 }
 
+// BL-11 temp instrumentation (2026-08-19) — measures where FoodSearch latency actually
+// goes before deciding whether/how to rebuild it (progressive results, FatSecret toggle,
+// etc). Remove this block + the logSearchLatency call sites + search_latency_log table
+// once that decision is made (see PROJECT_BIBLE §7 BL-11, SCOPE.md P4a).
+// Supabase query builders are thenable but not real Promises, hence PromiseLike here.
+async function timed<T>(promiseLike: PromiseLike<T>): Promise<[T, number]> {
+  const start = performance.now();
+  const result = await promiseLike;
+  return [result, performance.now() - start];
+}
+
+const MAX_SEARCH_LATENCY_LOGS = 300; // runaway-loop guard, not real sampling — 3 users won't hit this
+let searchLatencyLogCount = 0;
+
+function logSearchLatency(payload: {
+  user_id: string | null;
+  query_had_thai: boolean;
+  timings_ms: Record<string, number | null>;
+  result_counts: { fatsecret: number; custom: number; dish: number };
+  result_translate_hits: number | null;
+  result_translate_misses: number | null;
+}) {
+  if (!SEARCH_LATENCY_LOGGING) return;
+  if (searchLatencyLogCount >= MAX_SEARCH_LATENCY_LOGS) return;
+  searchLatencyLogCount++;
+  console.debug("[search-latency]", payload);
+  // best-effort — logging must never affect the user's actual search
+  supabase.from("search_latency_log").insert(payload).then(
+    () => {},
+    () => {},
+  );
+}
+
 async function translateQueryToEnglish(query: string): Promise<string> {
   try {
     const [english] = await translateTexts([query], "en");
@@ -67,14 +100,17 @@ async function translateQueryToEnglish(query: string): Promise<string> {
 
 // Awaited (not fired in the background) so results only ever appear already in Thai —
 // no flash of the raw English name while translation is still in flight (DF7).
-async function attachThaiNames(results: FatSecretSearchResult[]): Promise<FatSecretResultWithThai[]> {
-  if (results.length === 0) return [];
+async function attachThaiNames(
+  results: FatSecretSearchResult[],
+): Promise<{ results: FatSecretResultWithThai[]; hits: number; misses: number }> {
+  if (results.length === 0) return { results: [], hits: 0, misses: 0 };
 
   const ids = results.map((r) => r.food_id);
   const { data: cached } = await supabase.from("food_translations").select("fatsecret_food_id, thai_name").in("fatsecret_food_id", ids);
 
   const cache = new Map((cached ?? []).map((row) => [row.fatsecret_food_id, row.thai_name]));
   const uncached = results.filter((r) => !cache.has(r.food_id));
+  const hits = results.length - uncached.length;
 
   if (uncached.length > 0) {
     try {
@@ -91,7 +127,7 @@ async function attachThaiNames(results: FatSecretSearchResult[]): Promise<FatSec
     }
   }
 
-  return results.map((r) => ({ ...r, thai_name: cache.get(r.food_id) }));
+  return { results: results.map((r) => ({ ...r, thai_name: cache.get(r.food_id) })), hits, misses: uncached.length };
 }
 
 async function attachCreatorNames<T extends { creator_id: string }>(results: T[]): Promise<(T & { creator_name?: string })[]> {
@@ -219,6 +255,7 @@ export default function FoodSearch() {
     const timeout = setTimeout(async () => {
       const thisSearchId = ++searchIdRef.current;
       const isStale = () => thisSearchId !== searchIdRef.current;
+      const searchStart = performance.now(); // BL-11 temp instrumentation
 
       setLoading(true);
       setError(null);
@@ -235,7 +272,7 @@ export default function FoodSearch() {
 
         // Dishes can't be nested inside another dish, so skip this query entirely when
         // picking an ingredient for a dish under construction (forDish).
-        const dishesPromise = forDish
+        const dishesPromise: PromiseLike<{ data: DishResult[] | null }> = forDish
           ? Promise.resolve({ data: [] as DishResult[] })
           : supabase.from("dishes").select("id, name, kcal, creator_id").ilike("name", `%${trimmed}%`).limit(20);
 
@@ -246,10 +283,10 @@ export default function FoodSearch() {
         // here means nobody's searched this in Thai yet — show no FatSecret results rather
         // than a broken search, per discussion with วี.
         if (!user && containsThai(trimmed)) {
-          const [cachedRows, customRes, dishRes] = await Promise.all([
-            supabase.from("food_translations").select("fatsecret_food_id, thai_name").ilike("thai_name", `%${trimmed}%`).limit(10),
-            customFoodsPromise,
-            dishesPromise,
+          const [[cachedRows, cacheMs], [customRes, customMs], [dishRes, dishMs]] = await Promise.all([
+            timed(supabase.from("food_translations").select("fatsecret_food_id, thai_name").ilike("thai_name", `%${trimmed}%`).limit(10)),
+            timed(customFoodsPromise),
+            timed(dishesPromise),
           ]);
           if (isStale()) return;
 
@@ -265,16 +302,35 @@ export default function FoodSearch() {
             thai_name: row.thai_name,
           }));
           setFatsecretResults(cached);
+
+          logSearchLatency({
+            user_id: null,
+            query_had_thai: true,
+            timings_ms: {
+              query_translate_ms: null,
+              fatsecret_ms: null,
+              guest_cache_lookup_ms: Math.round(cacheMs),
+              supabase_custom_ms: Math.round(customMs),
+              supabase_dish_ms: Math.round(dishMs),
+              result_translate_ms: null,
+              total_ms: Math.round(performance.now() - searchStart),
+            },
+            result_counts: { fatsecret: cached.length, custom: customSorted.length, dish: dishWithNames.length },
+            result_translate_hits: null,
+            result_translate_misses: null,
+          });
           return;
         }
 
+        const queryTranslateStart = performance.now();
         const fatsecretQuery = containsThai(trimmed) ? await translateQueryToEnglish(trimmed) : trimmed;
+        const queryTranslateMs = containsThai(trimmed) ? performance.now() - queryTranslateStart : null;
         if (isStale()) return;
 
-        const [fsRaw, customRes, dishRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/food/search?q=${encodeURIComponent(fatsecretQuery)}`).then((r) => r.json()),
-          customFoodsPromise,
-          dishesPromise,
+        const [[fsRaw, fatsecretMs], [customRes, customMs], [dishRes, dishMs]] = await Promise.all([
+          timed(fetch(`${API_BASE_URL}/food/search?q=${encodeURIComponent(fatsecretQuery)}`).then((r) => r.json())),
+          timed(customFoodsPromise),
+          timed(dishesPromise),
         ]);
         if (isStale()) return;
 
@@ -288,9 +344,28 @@ export default function FoodSearch() {
         setDishResults(dishWithNames.slice(0, DISH_RESULTS_LIMIT));
 
         const parsed = parseSearchResults(fsRaw);
-        const withThai = await attachThaiNames(parsed);
+        const [{ results: withThai, hits: translateHits, misses: translateMisses }, resultTranslateMs] = await timed(
+          attachThaiNames(parsed),
+        );
         if (isStale()) return;
         setFatsecretResults(withThai);
+
+        logSearchLatency({
+          user_id: user?.id ?? null,
+          query_had_thai: containsThai(trimmed),
+          timings_ms: {
+            query_translate_ms: queryTranslateMs !== null ? Math.round(queryTranslateMs) : null,
+            fatsecret_ms: Math.round(fatsecretMs),
+            guest_cache_lookup_ms: null,
+            supabase_custom_ms: Math.round(customMs),
+            supabase_dish_ms: Math.round(dishMs),
+            result_translate_ms: Math.round(resultTranslateMs),
+            total_ms: Math.round(performance.now() - searchStart),
+          },
+          result_counts: { fatsecret: withThai.length, custom: customSorted.length, dish: dishWithNames.length },
+          result_translate_hits: translateHits,
+          result_translate_misses: translateMisses,
+        });
       } catch (err) {
         if (!isStale()) setError(String(err));
       } finally {

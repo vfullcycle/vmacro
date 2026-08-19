@@ -1,4 +1,4 @@
-# PROJECT_BIBLE — Vmacro v1.21
+# PROJECT_BIBLE — Vmacro v1.22
 
 > Single source of truth ของโปรเจกต์ ถ้าไฟล์อื่นขัดกับไฟล์นี้ ให้ยึดไฟล์นี้แล้วแจ้งวีเพื่อ sync
 
@@ -131,7 +131,7 @@ D-013 (Research Gate) — ห้ามเริ่มโค้ดจนกว่
 | ID | Phase | Tag | รายละเอียด |
 |---|---|---|---|
 | BL-01 | P2 | | diary entry เพิ่ม field ราคา (optional, บาท) — เก็บข้อมูลเพื่อ food cost analytics และสะสม dataset ศึกษาความสัมพันธ์ราคา↔ปริมาณในอนาคต ตอนวางแผน P2 ให้รวม field นี้เข้า scope เลย |
-| BL-02 | P4a | research-gated (เบา) | **AI Import** — ดู D-023 สำหรับ design เต็ม (เดิมคือ "LLM recipe decomposition" ก่อน D-023 เปลี่ยนขอบเขต+เลื่อนจาก P5) — **(สถานะ 2026-08-19)** FR-FOOD-7 เขียนโค้ด+deploy แล้ว ทั้ง server (`getNutritionEstimate`, `/ai-import`) และ web (`AiFoodImport.tsx`) แต่ปิดหลัง flag `AI_IMPORT_ENABLED=false` — validation ground-truth diff รันแล้ว (n=20, ผลอยู่ใน conversation/`server/scripts/validate-ai-import.mjs`): error % ยังสูง (kcal median 36.8%/avg 57.1%, protein median 31.4%, fat median 42.9% แต่ p90 พุ่งสูงมาก) โดยเฉพาะสินค้าแบรนด์/บรรจุภัณฑ์และรายการปริมาณน้อย ส่วนอาหารจานเดียวทั่วไป (ข้าวมันไก่, ผัดไทย, ก๋วยเตี๋ยว ฯลฯ) แม่นกว่ามาก (kcal error เดียวหลักหน่วย-20%) — **รอวีตัดสินใจ threshold/ขอบเขต/ปรับ prompt ก่อนเปิด flag** ยังไม่มีคำตอบ ณ จุดนี้ |
+| BL-02 | P4a | research-gated (เบา) | **AI Import** — ดู D-023 สำหรับ design เต็ม (เดิมคือ "LLM recipe decomposition" ก่อน D-023 เปลี่ยนขอบเขต+เลื่อนจาก P5) — **(สถานะ 2026-08-19 รอบ 2)** เปลี่ยน metric validation จาก % เป็น absolute error ต่อ macro (kcal/g) ตามที่วีท้วง (% เบ้จากรายการค่าเล็ก) — รัน n=50: kcal median off 90kcal/avg 90.4kcal, protein median 4g, carbs median 4g, fat median 5g (p90 สูงกว่ามาก — kcal p90=198). แยกกลุ่มแบรนด์/บรรจุภัณฑ์ (n=9) vs อื่นๆ (n=41) ด้วยมือ: **ผลไม่ตรงสมมติฐานเดิมทั้งหมด** — median แบรนด์ (40kcal) ต่ำกว่า median กลุ่มอื่น (90kcal) จริง แต่ average แบรนด์สูงกว่า (100 vs 88) เพราะมี outlier รุนแรง (Betagen Pro พลาด fat 650%) ส่วน 2 ใน 3 อันดับ error หนักสุดกลับเป็นอาหารทั่วไป (หอยทอด, ผัดพริกแกงปลาดุก) ไม่ใช่แบรนด์ — สรุปคือ pattern ซับซ้อนกว่าที่คิด ไม่ใช่แค่ branded=แย่. เพิ่ม 2 ฟีเจอร์ตามที่วีสั่ง (ทั้งคู่ deploy แล้ว หลัง flag เดิม): **confidence range** (`ranges` ต่อ macro, preview แสดง "ช่วงประมาณ X–Y", ไม่กระทบ `custom_foods` schema) และ **`read_label` mode** (ถ่ายภาพฉลากบังคับ → โมเดล transcribe แทนประมาณ, prompt คนละชุดกับ `estimate` mode แต่ schema เดียวกัน) — รอ "รอบ C" (วัดใหม่ด้วย coverage+range-width metric) ก่อนตัดสินใจ threshold/เปิด flag |
 | BL-03 | Post-P5 | research-gated | Camera volume estimation — ประมาณปริมาณอาหารจากภาพถ่ายด้วยเรขาคณิต เงื่อนไขขั้นต่ำ: ต้องมี reference object ในเฟรม แยกเป็น experimental track ต่างหาก รวมแนวคิด ensemble เปรียบเทียบ 3 ตัวประมาณ (สูตรมาตรฐาน/ราคา/ภาพ) เมื่อมี error data จริงจากการใช้งานสะสม |
 | BL-04 | Post-P5 | | Barcode scan ผ่าน Open Food Facts (OFF, open data ODbL) — เรียกตรงจาก client ไม่ผ่าน proxy (ไม่มี secret + กระจาย rate limit เป็นราย user แทนรวมที่ IP VPS), rate ต่ำ (อ่าน 15/นาที, ค้น 10/นาที) เฉพาะ barcode lookup + submit search ห้าม search-as-you-type เด็ดขาด, cache ผลลง Supabase เสมอ, custom User-Agent "Vmacro/x.x (email)" + กรอกฟอร์มแจ้งการใช้งานกับ OFF ก่อนใช้จริง, ข้อมูล crowdsource เข้า admin verification ได้ (D-017) — พิจารณาพร้อม NOVA group (ultra-processed level) เป็นตัวแปรวิเคราะห์ P4/P5 |
 | BL-05 | P4a (อนุมัติแล้ว 2026-08-19 — เดิมวางไว้ P3 แต่ P3 ปิดขอบเขตเหลือแค่ Health WRITE core ตาม D-021) | | Day-type energy target — ดู D-019 สำหรับ design เต็ม ระบุเป็น FR ใหม่ก่อนเริ่มโค้ดตามกติกา FR-first (CLAUDE.md) |
@@ -152,6 +152,9 @@ D-013 (Research Gate) — ห้ามเริ่มโค้ดจนกว่
 
 ## Changelog
 
+- v1.22 (2026-08-19): AI Import รอบ 2 — เปลี่ยน validation metric เป็น absolute error, รัน n=50
+  แยกกลุ่มแบรนด์/ทั่วไป (ผลไม่ตรงสมมติฐานเดิม), เพิ่ม confidence range + `read_label` mode (deploy
+  แล้วทั้งคู่) — ยังปิด `AI_IMPORT_ENABLED` รอรอบ C
 - v1.21 (2026-08-19): FR-FOOD-7 (AI Import) เขียนโค้ด+deploy เสร็จ หลัง flag `AI_IMPORT_ENABLED=false` —
   ground-truth validation รัน n=20 แล้ว รายงานตัวเลขให้วีดู (error % ยังสูงโดยเฉพาะแบรนด์/ปริมาณน้อย,
   อาหารจานเดียวทั่วไปแม่นกว่ามาก) รอวีตัดสินใจ threshold/scope ก่อนเปิด flag

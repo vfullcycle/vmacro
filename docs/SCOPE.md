@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.5
+# SCOPE — Vmacro v1.6
 
 ## In Scope
 
@@ -54,8 +54,8 @@
 
 ### P4a — Daily-use impact → tag `v1.2.0`
 (แบ่งจาก P4 เดิมเป็นสองครึ่ง มี tag คั่นกลาง — บทเรียนจาก P2 ที่ phase ไม่มีหมุดกลางทางไหลยาว)
-- BL-11: Search UX เร็วขึ้น+อ่านง่ายขึ้น — วัด latency อยู่เบื้องหลังคู่ขนานกับงานอื่นด้านล่าง (ไม่ block
-  คิว), ห้ามแตะ search logic จนกว่าจะรายงานตัวเลข (2026-08-19)
+- BL-11: Search UX เร็วขึ้น+อ่านง่ายขึ้น — **เสร็จแล้ว** (batch translation, FatSecret toggle, "ดูทั้งหมด"
+  บน custom/dish, deploy 2026-08-19) — instrumentation ยังเก็บข้อมูลต่อเบื้องหลัง
 - D-019: Day-type energy target — **เสร็จแล้ว** (FR-CALC-4, deploy 2026-08-19)
 - D-023: AI Import — เริ่ม research doc (gate แบบเบา) คู่ขนานกับ D-019 ตั้งแต่ตอนนี้, เริ่มโค้ดทันทีที่
   D-019 จบ (2026-08-19: เลื่อนขึ้นก่อน BL-08 เพราะเพื่อนที่ใช้จริงติดขัดตรงหาไม่เจอแล้วให้วี import ให้ —
@@ -85,6 +85,7 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.6 (2026-08-19): BL-11 เสร็จ + deploy แล้ว — P4a เหลือแค่ D-023 (รอผลรีวิว research doc)
 - v1.5 (2026-08-19): D-019 (day-type target, FR-CALC-4) เสร็จ + deploy แล้ว — P4a งานถัดไปคือ D-023
 - v1.4 (2026-08-19): ปรับลำดับ P4a เป็น D-019 → D-023 → BL-08 (เดิม D-019 → BL-08 → D-023) — feedback
   จากเพื่อน 2 คนที่ใช้จริง: ค้นไม่เจอแล้วให้วี import ให้เอง (วีกลายเป็นคอขวด) ทำให้ D-023 (AI Import)

@@ -44,7 +44,10 @@ const MIN_QUERY_LENGTH = 2;
 const RECENT_PER_MEAL_LIMIT = 8;
 const CUSTOM_RESULTS_LIMIT = 3;
 const DISH_RESULTS_LIMIT = 3;
-const FATSECRET_PAGE_SIZE = 5;
+// BL-11: translate FatSecret results in batches instead of all-at-once — translation time
+// scales with item count (search_latency_log data: ~9.5s for 50 items vs ~2s for 10), so
+// only the visible batch gets translated up front; "load more" translates the next one.
+const FATSECRET_BATCH_SIZE = 10;
 
 const DIARY_ENTRY_COLUMNS =
   "id, entry_date, meal, source, custom_food_id, dish_id, fatsecret_food_id, fatsecret_food_name, quick_name, quantity, serving_size_g, kcal, protein_g, carbs_g, fat_g, nutrients, custom_foods(name), dishes(name)";
@@ -168,13 +171,40 @@ export default function FoodSearch() {
       .then(({ data }) => setDishName(data?.name ?? null));
   }, [forDish, dishId]);
 
+  // BL-11: per-user FatSecret toggle (Settings → System) — anonymous users have no profile
+  // to read this from, so they always get FatSecret search (unchanged behavior).
+  useEffect(() => {
+    if (!user) {
+      setFatsecretEnabled(true);
+      return;
+    }
+    supabase
+      .from("profiles")
+      .select("fatsecret_search_enabled")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => {
+        setFatsecretEnabled((data as { fatsecret_search_enabled: boolean } | null)?.fatsecret_search_enabled ?? true);
+      });
+  }, [user]);
+
   const [showQuickAdd, setShowQuickAdd] = useState(false);
 
   const [query, setQuery] = useState("");
-  const [fatsecretResults, setFatsecretResults] = useState<FatSecretResultWithThai[]>([]);
-  const [fatsecretPage, setFatsecretPage] = useState(0);
+  // fatsecretRaw: everything fetched (untranslated). fatsecretShown: the translated prefix,
+  // grown in batches. fatsecretVisibleCount: how much of fatsecretRaw is "revealed" — items
+  // between fatsecretShown.length and fatsecretVisibleCount are shown in English while their
+  // batch is still translating (see fatsecretDisplay below). Guest+Thai cache path (no
+  // FatSecret fetch) sets fatsecretShown directly and leaves fatsecretRaw empty.
+  const [fatsecretRaw, setFatsecretRaw] = useState<FatSecretSearchResult[]>([]);
+  const [fatsecretShown, setFatsecretShown] = useState<FatSecretResultWithThai[]>([]);
+  const [fatsecretVisibleCount, setFatsecretVisibleCount] = useState(0);
+  const [fatsecretTranslating, setFatsecretTranslating] = useState(false);
+  const [fatsecretEnabled, setFatsecretEnabled] = useState(true);
   const [customResults, setCustomResults] = useState<CustomFoodResult[]>([]);
+  const [customExpanded, setCustomExpanded] = useState(false);
   const [dishResults, setDishResults] = useState<DishResult[]>([]);
+  const [dishExpanded, setDishExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
@@ -245,9 +275,13 @@ export default function FoodSearch() {
     const trimmed = query.trim();
     if (trimmed.length < MIN_QUERY_LENGTH) {
       searchIdRef.current++; // invalidate any in-flight search
-      setFatsecretResults([]);
+      setFatsecretRaw([]);
+      setFatsecretShown([]);
+      setFatsecretVisibleCount(0);
       setCustomResults([]);
       setDishResults([]);
+      setCustomExpanded(false);
+      setDishExpanded(false);
       setSearched(false);
       return;
     }
@@ -259,10 +293,14 @@ export default function FoodSearch() {
 
       setLoading(true);
       setError(null);
-      setFatsecretResults([]);
-      setFatsecretPage(0);
+      setFatsecretRaw([]);
+      setFatsecretShown([]);
+      setFatsecretVisibleCount(0);
+      setFatsecretTranslating(false);
       setCustomResults([]);
       setDishResults([]);
+      setCustomExpanded(false);
+      setDishExpanded(false);
       try {
         const customFoodsPromise = supabase
           .from("custom_foods")
@@ -281,7 +319,8 @@ export default function FoodSearch() {
         // finds nothing). Instead, search only what's already been translated by a logged-in
         // user before (public read on food_translations, zero API cost either way). A miss
         // here means nobody's searched this in Thai yet — show no FatSecret results rather
-        // than a broken search, per discussion with วี.
+        // than a broken search, per discussion with วี. Already fully resolved (came straight
+        // from cache) so it goes directly into fatsecretShown — no raw/batch state needed.
         if (!user && containsThai(trimmed)) {
           const [[cachedRows, cacheMs], [customRes, customMs], [dishRes, dishMs]] = await Promise.all([
             timed(supabase.from("food_translations").select("fatsecret_food_id, thai_name").ilike("thai_name", `%${trimmed}%`).limit(10)),
@@ -294,14 +333,14 @@ export default function FoodSearch() {
           const dishWithNames = await attachCreatorNames(dishRes.data ?? []);
           if (isStale()) return;
           const customSorted = [...customWithNames].sort((a, b) => Number(b.is_verified) - Number(a.is_verified));
-          setCustomResults(customSorted.slice(0, CUSTOM_RESULTS_LIMIT));
-          setDishResults(dishWithNames.slice(0, DISH_RESULTS_LIMIT));
+          setCustomResults(customSorted);
+          setDishResults(dishWithNames);
 
           const cached: FatSecretResultWithThai[] = (cachedRows.data ?? []).map((row) => ({
             food_id: row.fatsecret_food_id,
             thai_name: row.thai_name,
           }));
-          setFatsecretResults(cached);
+          setFatsecretShown(cached);
 
           logSearchLatency({
             user_id: null,
@@ -322,13 +361,22 @@ export default function FoodSearch() {
           return;
         }
 
+        // BL-11: FatSecret toggle (Settings → System) — anon users always search FatSecret
+        // (they have no profile to read the toggle from); logged-in users can turn it off.
+        const shouldFetchFatsecret = !user || fatsecretEnabled;
+
         const queryTranslateStart = performance.now();
-        const fatsecretQuery = containsThai(trimmed) ? await translateQueryToEnglish(trimmed) : trimmed;
-        const queryTranslateMs = containsThai(trimmed) ? performance.now() - queryTranslateStart : null;
+        const fatsecretQuery =
+          shouldFetchFatsecret && containsThai(trimmed) ? await translateQueryToEnglish(trimmed) : trimmed;
+        const queryTranslateMs = shouldFetchFatsecret && containsThai(trimmed) ? performance.now() - queryTranslateStart : null;
         if (isStale()) return;
 
+        const fatsecretFetchPromise: PromiseLike<unknown> = shouldFetchFatsecret
+          ? fetch(`${API_BASE_URL}/food/search?q=${encodeURIComponent(fatsecretQuery)}`).then((r) => r.json())
+          : Promise.resolve(null);
+
         const [[fsRaw, fatsecretMs], [customRes, customMs], [dishRes, dishMs]] = await Promise.all([
-          timed(fetch(`${API_BASE_URL}/food/search?q=${encodeURIComponent(fatsecretQuery)}`).then((r) => r.json())),
+          timed(fatsecretFetchPromise),
           timed(customFoodsPromise),
           timed(dishesPromise),
         ]);
@@ -338,31 +386,42 @@ export default function FoodSearch() {
         const dishWithNames = await attachCreatorNames(dishRes.data ?? []);
         if (isStale()) return;
         // Verified results first so trimming to a short list never silently drops the
-        // one(s) an admin has actually checked (DF2).
+        // one(s) an admin has actually checked (DF2). Full (up to 20) list kept in state —
+        // the "ดูทั้งหมด" button just reveals more of what's already here, no refetch.
         const customSorted = [...customWithNames].sort((a, b) => Number(b.is_verified) - Number(a.is_verified));
-        setCustomResults(customSorted.slice(0, CUSTOM_RESULTS_LIMIT));
-        setDishResults(dishWithNames.slice(0, DISH_RESULTS_LIMIT));
+        setCustomResults(customSorted);
+        setDishResults(dishWithNames);
 
+        // BL-11 progressive loading: render the fetch immediately (English names) instead of
+        // waiting for translation — parsed becomes visible via fatsecretRaw right away, Thai
+        // names swap in per-batch once attachThaiNames resolves below (DF7 tradeoff reversed:
+        // was worth avoiding an English flash at ~2s/10 results, not at ~9.5s/50).
         const parsed = parseSearchResults(fsRaw);
+        setFatsecretRaw(parsed);
+        const firstBatchCount = Math.min(FATSECRET_BATCH_SIZE, parsed.length);
+        setFatsecretVisibleCount(firstBatchCount);
+        setFatsecretTranslating(firstBatchCount > 0);
+
         const [{ results: withThai, hits: translateHits, misses: translateMisses }, resultTranslateMs] = await timed(
-          attachThaiNames(parsed),
+          attachThaiNames(parsed.slice(0, firstBatchCount)),
         );
         if (isStale()) return;
-        setFatsecretResults(withThai);
+        setFatsecretShown(withThai);
+        setFatsecretTranslating(false);
 
         logSearchLatency({
           user_id: user?.id ?? null,
           query_had_thai: containsThai(trimmed),
           timings_ms: {
             query_translate_ms: queryTranslateMs !== null ? Math.round(queryTranslateMs) : null,
-            fatsecret_ms: Math.round(fatsecretMs),
+            fatsecret_ms: shouldFetchFatsecret ? Math.round(fatsecretMs) : null,
             guest_cache_lookup_ms: null,
             supabase_custom_ms: Math.round(customMs),
             supabase_dish_ms: Math.round(dishMs),
-            result_translate_ms: Math.round(resultTranslateMs),
+            result_translate_ms: firstBatchCount > 0 ? Math.round(resultTranslateMs) : null,
             total_ms: Math.round(performance.now() - searchStart),
           },
-          result_counts: { fatsecret: withThai.length, custom: customSorted.length, dish: dishWithNames.length },
+          result_counts: { fatsecret: parsed.length, custom: customSorted.length, dish: dishWithNames.length },
           result_translate_hits: translateHits,
           result_translate_misses: translateMisses,
         });
@@ -377,14 +436,33 @@ export default function FoodSearch() {
     }, DEBOUNCE_MS);
 
     return () => clearTimeout(timeout);
-  }, [query, user, forDish]);
+  }, [query, user, forDish, fatsecretEnabled]);
 
-  const noResults = searched && !loading && customResults.length === 0 && dishResults.length === 0 && fatsecretResults.length === 0;
-  const fatsecretPageCount = Math.ceil(fatsecretResults.length / FATSECRET_PAGE_SIZE);
-  const pagedFatsecretResults = fatsecretResults.slice(
-    fatsecretPage * FATSECRET_PAGE_SIZE,
-    (fatsecretPage + 1) * FATSECRET_PAGE_SIZE,
-  );
+  // "โหลดเพิ่ม" — translates the next FATSECRET_BATCH_SIZE slice of the already-fetched
+  // fatsecretRaw on demand, instead of the original code translating up to 50 upfront.
+  async function loadMoreFatsecret() {
+    const loadMoreSearchId = searchIdRef.current;
+    const alreadyShown = fatsecretShown.length;
+    const nextCount = Math.min(fatsecretVisibleCount + FATSECRET_BATCH_SIZE, fatsecretRaw.length);
+    setFatsecretVisibleCount(nextCount);
+    if (nextCount <= alreadyShown) return;
+    setFatsecretTranslating(true);
+    const { results: translated } = await attachThaiNames(fatsecretRaw.slice(alreadyShown, nextCount));
+    if (searchIdRef.current !== loadMoreSearchId) return; // query changed while this batch translated
+    setFatsecretShown((prev) => [...prev, ...translated]);
+    setFatsecretTranslating(false);
+  }
+
+  // fatsecretRaw is empty for the guest+Thai cache path (already-resolved list lives directly
+  // in fatsecretShown there); otherwise show the translated prefix, falling back to the raw
+  // (English) item for anything revealed but not yet translated.
+  const fatsecretDisplay: FatSecretResultWithThai[] =
+    fatsecretRaw.length > 0 ? fatsecretRaw.slice(0, fatsecretVisibleCount).map((r, i) => fatsecretShown[i] ?? r) : fatsecretShown;
+  const canLoadMoreFatsecret = fatsecretVisibleCount < fatsecretRaw.length;
+
+  const noResults = searched && !loading && customResults.length === 0 && dishResults.length === 0 && fatsecretDisplay.length === 0;
+  const shownCustomResults = customExpanded ? customResults : customResults.slice(0, CUSTOM_RESULTS_LIMIT);
+  const shownDishResults = dishExpanded ? dishResults : dishResults.slice(0, DISH_RESULTS_LIMIT);
 
   return (
     <main className="food-search-page">
@@ -453,9 +531,9 @@ export default function FoodSearch() {
 
       {customResults.length > 0 && (
         <section>
-          <h2>Custom foods</h2>
+          <h2>ของฉัน</h2>
           <ul className="food-result-list">
-            {customResults.map((food) => (
+            {shownCustomResults.map((food) => (
               <li key={food.id}>
                 <Link to={`/food/custom/${food.id}${resultQuery}`}>
                   <span className="food-name">
@@ -470,6 +548,11 @@ export default function FoodSearch() {
               </li>
             ))}
           </ul>
+          {!customExpanded && customResults.length > CUSTOM_RESULTS_LIMIT && (
+            <button type="button" className="food-search-view-all" onClick={() => setCustomExpanded(true)}>
+              ดูทั้งหมด ({customResults.length})
+            </button>
+          )}
         </section>
       )}
 
@@ -477,7 +560,7 @@ export default function FoodSearch() {
         <section>
           <h2>จานอาหาร</h2>
           <ul className="food-result-list">
-            {dishResults.map((dish) => (
+            {shownDishResults.map((dish) => (
               <li key={dish.id}>
                 <Link to={`/food/dish/${dish.id}${resultQuery}`}>
                   <span className="food-name">{dish.name}</span>
@@ -489,14 +572,19 @@ export default function FoodSearch() {
               </li>
             ))}
           </ul>
+          {!dishExpanded && dishResults.length > DISH_RESULTS_LIMIT && (
+            <button type="button" className="food-search-view-all" onClick={() => setDishExpanded(true)}>
+              ดูทั้งหมด ({dishResults.length})
+            </button>
+          )}
         </section>
       )}
 
-      {fatsecretResults.length > 0 && (
+      {fatsecretDisplay.length > 0 && (
         <section>
           <h2>FatSecret</h2>
           <ul className="food-result-list">
-            {pagedFatsecretResults.map((food) => (
+            {fatsecretDisplay.map((food) => (
               <li key={food.food_id}>
                 <Link to={`/food/fatsecret/${food.food_id}${resultQuery}`}>
                   <span className="food-name">
@@ -514,18 +602,12 @@ export default function FoodSearch() {
             ))}
           </ul>
 
-          {fatsecretPageCount > 1 && (
-            <div className="food-search-pagination">
-              <button type="button" onClick={() => setFatsecretPage((p) => p - 1)} disabled={fatsecretPage === 0}>
-                ก่อนหน้า
-              </button>
-              <span>
-                หน้า {fatsecretPage + 1} / {fatsecretPageCount}
-              </span>
-              <button type="button" onClick={() => setFatsecretPage((p) => p + 1)} disabled={fatsecretPage >= fatsecretPageCount - 1}>
-                ถัดไป
-              </button>
-            </div>
+          {fatsecretTranslating && <p className="hint food-search-translating">กำลังแปล...</p>}
+
+          {canLoadMoreFatsecret && (
+            <button type="button" className="food-search-load-more" onClick={loadMoreFatsecret} disabled={fatsecretTranslating}>
+              โหลดเพิ่ม ({fatsecretRaw.length - fatsecretVisibleCount} เหลือ)
+            </button>
           )}
         </section>
       )}

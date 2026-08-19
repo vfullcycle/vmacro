@@ -58,16 +58,39 @@
   font-size: 0.875rem;
 }
 
-.settings-system .health-sync {
+.settings-system .health-sync,
+.settings-system .day-type-target,
+.settings-system .fatsecret-toggle {
   margin-top: 2rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--border);
   text-align: left;
 }
 
-.settings-system .health-sync h2 {
+.settings-system .health-sync h2,
+.settings-system .day-type-target h2,
+.settings-system .fatsecret-toggle h2 {
   font-size: 1rem;
   margin: 0 0 0.5rem;
+}
+
+.settings-system .day-type-target label,
+.settings-system .fatsecret-toggle label {
+  margin-top: 0.75rem;
+}
+
+.settings-system .checkbox-label {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.6rem !important;
+  min-height: 44px;
+}
+
+.settings-system .checkbox-label input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  min-height: 0;
+  flex-shrink: 0;
 }
 
 .settings-system .health-sync .status {

@@ -26,6 +26,7 @@ interface SystemForm {
   carb_floor_pct: number | null;
   fat_floor_g_per_kg: number | null;
   fat_floor_pct: number | null;
+  fatsecret_search_enabled: boolean;
 }
 
 interface HealthTokenRow {
@@ -51,7 +52,7 @@ export default function SettingsSystem() {
     supabase
       .from("profiles")
       .select(
-        "unit_system, default_protein_g_per_kg, default_fat_pct, health_shortcut_name, default_day_type, day_type_allowance_rest_kcal, day_type_allowance_light_kcal, day_type_allowance_hard_kcal, carb_floor_g, carb_floor_pct, fat_floor_g_per_kg, fat_floor_pct",
+        "unit_system, default_protein_g_per_kg, default_fat_pct, health_shortcut_name, default_day_type, day_type_allowance_rest_kcal, day_type_allowance_light_kcal, day_type_allowance_hard_kcal, carb_floor_g, carb_floor_pct, fat_floor_g_per_kg, fat_floor_pct, fatsecret_search_enabled",
       )
       .eq("id", user.id)
       .single()
@@ -171,6 +172,19 @@ export default function SettingsSystem() {
             }
           />
         </label>
+
+        <div className="fatsecret-toggle">
+          <h2>Search (BL-11)</h2>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={form.fatsecret_search_enabled}
+              onChange={(e) => setForm({ ...form, fatsecret_search_enabled: e.target.checked })}
+            />
+            ค้นหาจาก FatSecret ด้วย (ปิดได้ถ้าไม่ต้องการรอโหลด/แปลผล FatSecret — ยังค้นหา custom food/จาน
+            ของระบบได้ตามปกติ)
+          </label>
+        </div>
 
         <div className="day-type-target">
           <h2>Day-type target (FR-CALC-4)</h2>

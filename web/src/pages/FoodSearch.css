@@ -91,30 +91,30 @@
   color: var(--text);
 }
 
-.food-search-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
+.food-search-view-all,
+.food-search-load-more {
+  display: block;
+  width: 100%;
   margin-top: 0.75rem;
-  font-size: 0.85rem;
-  color: var(--text);
-}
-
-.food-search-pagination button {
-  padding: 0.4rem 0.8rem;
-  min-height: 36px;
+  padding: 0.55rem 0.8rem;
+  min-height: 44px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
   color: var(--accent);
   font: inherit;
+  font-weight: 600;
   cursor: pointer;
 }
 
-.food-search-pagination button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.food-search-load-more:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.food-search-translating {
+  text-align: center;
+  margin-top: 0.5rem;
 }
 
 .food-search-add-links {

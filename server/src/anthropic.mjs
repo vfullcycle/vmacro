@@ -91,7 +91,13 @@ Food name: ${name}
 Quantity: ${quantity}
 ${photoBase64 ? "A photo is attached for extra context (e.g. to help identify ambiguous ingredients) — use it as supporting context only, not as your primary source for portion size; the stated quantity above is the primary source." : ""}
 
-kcal, protein_g, carbs_g, fat_g must always be your best numeric estimate for the stated quantity — never omit these. For every other nutrient field, only include it if you have a reasonable estimate; omit fields you're not confident about instead of guessing 0. Respond in Thai for name/serving_label. Respond using the submit_nutrition_estimate tool.`;
+For kcal, protein_g, carbs_g, fat_g: give a realistic low-high range for the stated quantity that you're
+roughly 80% confident contains the true value — never omit these four. This is NOT an extreme min/max
+("could theoretically be anywhere from 0 to 2000") — make it as narrow as your actual confidence allows.
+A specific, well-known product or a simple staple food should get a narrow range; a vague or highly
+variable home-cooked dish should get a wider one. For every other nutrient field, only include it if you
+have a reasonable point estimate; omit fields you're not confident about instead of guessing 0. Respond
+in Thai for name/serving_label. Respond using the submit_nutrition_estimate tool.`;
 
   const content = [{ type: "text", text: promptText }];
   if (photoBase64) {
@@ -125,10 +131,30 @@ kcal, protein_g, carbs_g, fat_g must always be your best numeric estimate for th
                 description: "Human-readable serving description matching the stated quantity, e.g. '1 จาน', '250 กรัม' — omit if you can't state one clearly",
               },
               serving_size_g: { type: "number", description: "Best-estimate weight in grams for the stated quantity" },
-              kcal: { type: "number" },
-              protein_g: { type: "number" },
-              carbs_g: { type: "number" },
-              fat_g: { type: "number" },
+              kcal: {
+                type: "object",
+                description: "~80%-confidence range for kcal at the stated quantity, not an extreme min/max",
+                properties: { low: { type: "number" }, high: { type: "number" } },
+                required: ["low", "high"],
+              },
+              protein_g: {
+                type: "object",
+                description: "~80%-confidence range for protein (g) at the stated quantity",
+                properties: { low: { type: "number" }, high: { type: "number" } },
+                required: ["low", "high"],
+              },
+              carbs_g: {
+                type: "object",
+                description: "~80%-confidence range for carbs (g) at the stated quantity",
+                properties: { low: { type: "number" }, high: { type: "number" } },
+                required: ["low", "high"],
+              },
+              fat_g: {
+                type: "object",
+                description: "~80%-confidence range for fat (g) at the stated quantity",
+                properties: { low: { type: "number" }, high: { type: "number" } },
+                required: ["low", "high"],
+              },
               nutrients: {
                 type: "object",
                 description: "Only include keys you have a reasonable estimate for — omit anything uncertain rather than guessing 0",
@@ -171,14 +197,24 @@ kcal, protein_g, carbs_g, fat_g must always be your best numeric estimate for th
   }
 
   const est = toolUse.input;
+  // Midpoint becomes the flat single-number field (unchanged shape for custom_foods/admin
+  // bulk-import save), the low/high range rides along separately for the preview UI to show
+  // as a hint — never blocks or replaces the editable point value (D-023, FR-FOOD-7).
+  const midpoint = (range) => (range.low + range.high) / 2;
   return {
     name: est.name,
     serving_label: est.serving_label ?? null,
     serving_size_g: est.serving_size_g,
-    kcal: est.kcal,
-    protein_g: est.protein_g,
-    carbs_g: est.carbs_g,
-    fat_g: est.fat_g,
+    kcal: midpoint(est.kcal),
+    protein_g: midpoint(est.protein_g),
+    carbs_g: midpoint(est.carbs_g),
+    fat_g: midpoint(est.fat_g),
     nutrients: est.nutrients ?? {},
+    ranges: {
+      kcal: [est.kcal.low, est.kcal.high],
+      protein_g: [est.protein_g.low, est.protein_g.high],
+      carbs_g: [est.carbs_g.low, est.carbs_g.high],
+      fat_g: [est.fat_g.low, est.fat_g.high],
+    },
   };
 }

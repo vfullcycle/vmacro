@@ -40,16 +40,17 @@ vmacro/
 
 ## สถานะปัจจุบัน
 
-- **Docs version:** v1.6 (2026-08-18)
-- **Phase ปัจจุบัน:** P2 (Food & Diary) — **FR ทุกตัวเขียนโค้ดเสร็จแล้ว** (FR-FOOD-1..6, FR-DIARY-1..3) รวม
-  FR-DIARY-3 (copy จากวันก่อนหน้า ทั้งวัน/รายมื้อ, รายการโปรด, รายการล่าสุด) ที่เพิ่งเสร็จ — **แต่ FR-DIARY-3
-  ยังไม่ผ่านการทดสอบมือเลยสักครั้ง** (ต่างจาก FR อื่นที่ dogfood ผ่านมาระดับหนึ่งแล้ว) ต้องทดสอบตาม manual
-  test checklist ที่ commit ไว้ก่อน ถึงจะถือว่า AC ผ่านจริง — ยังไม่ตี tag `v1.0.0`** เพราะ Phase Gate Rule
-  ต้องการวีใช้งานจริง 2-3 วันก่อน (dogfooding) ยังไม่ครบตามนั้น
-- **P3 (Apple Health WRITE) เริ่มก่อนคิวแล้ว:** FR-HLTH-1/2 — exception ที่วีอนุมัติ (D-021, 2026-08-14)
-  **core 4 (kcal/protein/carb/fat) เสร็จ + ยืนยันทำงานจริงบนเครื่องแล้ว (2026-08-18)** ผ่าน Shortcut #1 +
-  ปุ่ม "ซิงก์เข้า Apple Health" ในหน้า Diary — extended nutrients (12 field เพิ่ม) เป็น backlog ยาว (BL-07)
-  รอ core ทุกอย่างจบก่อนค่อยกลับมาทำ
+- **Docs version:** v1.7 (2026-08-19)
+- **Phase ปัจจุบัน:** P2 จบแล้ว, tag `v1.0.0` — FR ทุกตัวเขียนโค้ดเสร็จ (FR-FOOD-1..6, FR-DIARY-1..3)
+  รวม FR-DIARY-3 (copy จากวันก่อนหน้า ทั้งวัน/รายมื้อ, รายการโปรด, รายการล่าสุด) **ปิดโดย exception ของ
+  Phase Gate Rule (D-024, 2026-08-19)** — ไม่รอ manual dogfood ครบ 2-3 วันตามเกณฑ์ปกติ เพราะเป็น
+  shortcut ลด friction ล้วน ความเสี่ยงต่ำกว่า feature ที่แตะ core data path โดยตรง บั๊กที่เจอภายหลัง
+  จากการใช้จริงจะแก้เป็น patch (`v1.0.x`) แทนที่จะบล็อก tag ไว้รอ
+- **P3 (Apple Health WRITE) จบแล้ว (core), tag `v1.1.0`:** FR-HLTH-1/2 — เริ่มก่อนคิวตาม exception ที่วี
+  อนุมัติ (D-021, 2026-08-14) **core 4 (kcal/protein/carb/fat) เสร็จ + ยืนยันทำงานจริงบนเครื่องแล้ว
+  (2026-08-18)** ผ่าน Shortcut #1 + ปุ่ม "ซิงก์เข้า Apple Health" ในหน้า Diary — extended nutrients
+  (12 field เพิ่ม) เป็น backlog ยาว (BL-07) รอ core ทุกอย่างจบก่อนค่อยกลับมาทำ, day-type energy target
+  (BL-05/D-019) ไม่ได้เข้า P3 นี้ — เลื่อนไป P4 ตามร่างแผน P4a/P4b ที่รอเสนอวี
 - **P0:** จบแล้ว, tag `v0.1.0` — R-01/R-02 ปิด, ดูรายละเอียดใน PROJECT_BIBLE §Risks
 - **P1:** จบแล้ว, tag `v0.2.0` — TDEE/macro engine (unit test 18 เคส), Supabase auth + routing,
   Settings/Profile (FR-PROF-1), Settings/System (FR-SET-1), weight log + กราฟ (FR-PROF-2), guest calculator
@@ -70,6 +71,9 @@ Vision → Boundary → Requirement → Decision → Freeze → Working Rules
 
 ## Changelog
 
+- v1.7 (2026-08-19): ปิด P2 (tag `v1.0.0`) และ P3 core (tag `v1.1.0`) — วีอนุมัติ exception ของ Phase
+  Gate Rule ไม่รอ FR-DIARY-3 dogfood ครบ 2-3 วัน (D-024) เพราะความเสี่ยงต่ำ, บั๊กที่เจอทีหลังจะแก้เป็น
+  patch แทน ดู `docs/PROJECT_BIBLE.md` D-024 สำหรับเหตุผลเต็ม
 - v1.6 (2026-08-18): FR-DIARY-3 เสร็จ (copy จากวันก่อนหน้า, รายการโปรด, รายการล่าสุด) — P2 ครบทุก FR แล้ว
   รอ dogfood 2-3 วันตาม Phase Gate Rule ก่อนตี tag `v1.0.0`
 - v1.5 (2026-08-18): FR-HLTH-1 core 4 ยืนยันทำงานจริง + extended nutrients (BL-07) เป็น backlog ยาว

@@ -3,16 +3,31 @@
 // convention. Purely presentational: caller owns the state and the <form>/submit button.
 import { EXTRA_FIELDS, GROUP_LABELS, GROUP_ORDER, type CoreFormState, type ExtraFormState, type ExtraUnit } from "../lib/customFoodNutrients";
 
+type CoreRangeKey = "kcal" | "protein_g" | "carbs_g" | "fat_g";
+
+function RangeHint({ range }: { range?: [number, number] }) {
+  if (!range) return null;
+  return (
+    <span className="core-range-hint">
+      ช่วงประมาณ {range[0]}–{range[1]}
+    </span>
+  );
+}
+
 export default function CustomFoodFieldsForm({
   core,
   setCore,
   extras,
   setExtras,
+  ranges,
 }: {
   core: CoreFormState;
   setCore: (core: CoreFormState) => void;
   extras: ExtraFormState;
   setExtras: (extras: ExtraFormState) => void;
+  // AI Import only (D-023) — manual entry (CustomFoodForm.tsx) never passes this, so it
+  // never renders there. Purely a hint; every field stays editable regardless.
+  ranges?: Partial<Record<CoreRangeKey, [number, number]>>;
 }) {
   return (
     <>
@@ -40,10 +55,12 @@ export default function CustomFoodFieldsForm({
       <div className="form-row">
         <label>
           Kcal
+          <RangeHint range={ranges?.kcal} />
           <input type="number" step="0.1" value={core.kcal} onChange={(e) => setCore({ ...core, kcal: e.target.value })} required />
         </label>
         <label>
           Protein (g)
+          <RangeHint range={ranges?.protein_g} />
           <input type="number" step="0.1" value={core.protein_g} onChange={(e) => setCore({ ...core, protein_g: e.target.value })} required />
         </label>
       </div>
@@ -51,10 +68,12 @@ export default function CustomFoodFieldsForm({
       <div className="form-row">
         <label>
           Carbs (g)
+          <RangeHint range={ranges?.carbs_g} />
           <input type="number" step="0.1" value={core.carbs_g} onChange={(e) => setCore({ ...core, carbs_g: e.target.value })} required />
         </label>
         <label>
           Fat (g)
+          <RangeHint range={ranges?.fat_g} />
           <input type="number" step="0.1" value={core.fat_g} onChange={(e) => setCore({ ...core, fat_g: e.target.value })} required />
         </label>
       </div>

@@ -101,3 +101,9 @@
   color: #dc2626;
   font-size: 0.875rem;
 }
+
+.custom-food-form-page .core-range-hint {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text);
+}

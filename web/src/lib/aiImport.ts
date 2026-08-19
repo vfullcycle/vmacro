@@ -12,6 +12,14 @@ export interface AiNutritionEstimate {
   carbs_g: number;
   fat_g: number;
   nutrients: Record<string, unknown>;
+  // ~80%-confidence range per core macro (server computes kcal/protein_g/carbs_g/fat_g
+  // above as the midpoint of these) — shown as a hint in the preview, never blocks editing.
+  ranges: {
+    kcal: [number, number];
+    protein_g: [number, number];
+    carbs_g: [number, number];
+    fat_g: [number, number];
+  };
 }
 
 export async function getAiNutritionEstimate(

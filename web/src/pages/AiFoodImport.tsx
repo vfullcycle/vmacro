@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import CustomFoodFieldsForm from "../components/CustomFoodFieldsForm";
 import { AI_IMPORT_ENABLED } from "../config";
-import { getAiNutritionEstimate, resizeImageToBase64 } from "../lib/aiImport";
+import { getAiNutritionEstimate, resizeImageToBase64, type AiNutritionEstimate } from "../lib/aiImport";
 import { useAuth } from "../lib/auth-context";
 import { buildNutrients, EMPTY_CORE, flattenNutrients, type CoreFormState, type ExtraFormState } from "../lib/customFoodNutrients";
 import type { NutrientPanel } from "../lib/scaling";
@@ -23,6 +23,7 @@ export default function AiFoodImport() {
 
   const [core, setCore] = useState<CoreFormState>(EMPTY_CORE);
   const [extras, setExtras] = useState<ExtraFormState>({});
+  const [ranges, setRanges] = useState<AiNutritionEstimate["ranges"] | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -46,6 +47,7 @@ export default function AiFoodImport() {
         fat_g: String(estimate.fat_g),
       });
       setExtras(flattenNutrients(estimate.nutrients as NutrientPanel));
+      setRanges(estimate.ranges);
       setStep("preview");
     } catch (err) {
       setEstimateError(err instanceof Error ? err.message : String(err));
@@ -124,7 +126,7 @@ export default function AiFoodImport() {
         ของร้าน/มื้อที่กินจริง แก้ค่าด้านล่างได้ทุกช่องก่อนบันทึก
       </p>
       <form onSubmit={handleSave}>
-        <CustomFoodFieldsForm core={core} setCore={setCore} extras={extras} setExtras={setExtras} />
+        <CustomFoodFieldsForm core={core} setCore={setCore} extras={extras} setExtras={setExtras} ranges={ranges ?? undefined} />
 
         {saveError && <p className="error">{saveError}</p>}
 

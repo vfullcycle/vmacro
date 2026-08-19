@@ -1,4 +1,4 @@
-# PROJECT_BIBLE — Vmacro v1.20
+# PROJECT_BIBLE — Vmacro v1.21
 
 > Single source of truth ของโปรเจกต์ ถ้าไฟล์อื่นขัดกับไฟล์นี้ ให้ยึดไฟล์นี้แล้วแจ้งวีเพื่อ sync
 
@@ -131,7 +131,7 @@ D-013 (Research Gate) — ห้ามเริ่มโค้ดจนกว่
 | ID | Phase | Tag | รายละเอียด |
 |---|---|---|---|
 | BL-01 | P2 | | diary entry เพิ่ม field ราคา (optional, บาท) — เก็บข้อมูลเพื่อ food cost analytics และสะสม dataset ศึกษาความสัมพันธ์ราคา↔ปริมาณในอนาคต ตอนวางแผน P2 ให้รวม field นี้เข้า scope เลย |
-| BL-02 | P4a | research-gated (เบา) | **AI Import** — ดู D-023 สำหรับ design เต็ม (เดิมคือ "LLM recipe decomposition" ก่อน D-023 เปลี่ยนขอบเขต+เลื่อนจาก P5) |
+| BL-02 | P4a | research-gated (เบา) | **AI Import** — ดู D-023 สำหรับ design เต็ม (เดิมคือ "LLM recipe decomposition" ก่อน D-023 เปลี่ยนขอบเขต+เลื่อนจาก P5) — **(สถานะ 2026-08-19)** FR-FOOD-7 เขียนโค้ด+deploy แล้ว ทั้ง server (`getNutritionEstimate`, `/ai-import`) และ web (`AiFoodImport.tsx`) แต่ปิดหลัง flag `AI_IMPORT_ENABLED=false` — validation ground-truth diff รันแล้ว (n=20, ผลอยู่ใน conversation/`server/scripts/validate-ai-import.mjs`): error % ยังสูง (kcal median 36.8%/avg 57.1%, protein median 31.4%, fat median 42.9% แต่ p90 พุ่งสูงมาก) โดยเฉพาะสินค้าแบรนด์/บรรจุภัณฑ์และรายการปริมาณน้อย ส่วนอาหารจานเดียวทั่วไป (ข้าวมันไก่, ผัดไทย, ก๋วยเตี๋ยว ฯลฯ) แม่นกว่ามาก (kcal error เดียวหลักหน่วย-20%) — **รอวีตัดสินใจ threshold/ขอบเขต/ปรับ prompt ก่อนเปิด flag** ยังไม่มีคำตอบ ณ จุดนี้ |
 | BL-03 | Post-P5 | research-gated | Camera volume estimation — ประมาณปริมาณอาหารจากภาพถ่ายด้วยเรขาคณิต เงื่อนไขขั้นต่ำ: ต้องมี reference object ในเฟรม แยกเป็น experimental track ต่างหาก รวมแนวคิด ensemble เปรียบเทียบ 3 ตัวประมาณ (สูตรมาตรฐาน/ราคา/ภาพ) เมื่อมี error data จริงจากการใช้งานสะสม |
 | BL-04 | Post-P5 | | Barcode scan ผ่าน Open Food Facts (OFF, open data ODbL) — เรียกตรงจาก client ไม่ผ่าน proxy (ไม่มี secret + กระจาย rate limit เป็นราย user แทนรวมที่ IP VPS), rate ต่ำ (อ่าน 15/นาที, ค้น 10/นาที) เฉพาะ barcode lookup + submit search ห้าม search-as-you-type เด็ดขาด, cache ผลลง Supabase เสมอ, custom User-Agent "Vmacro/x.x (email)" + กรอกฟอร์มแจ้งการใช้งานกับ OFF ก่อนใช้จริง, ข้อมูล crowdsource เข้า admin verification ได้ (D-017) — พิจารณาพร้อม NOVA group (ultra-processed level) เป็นตัวแปรวิเคราะห์ P4/P5 |
 | BL-05 | P4a (อนุมัติแล้ว 2026-08-19 — เดิมวางไว้ P3 แต่ P3 ปิดขอบเขตเหลือแค่ Health WRITE core ตาม D-021) | | Day-type energy target — ดู D-019 สำหรับ design เต็ม ระบุเป็น FR ใหม่ก่อนเริ่มโค้ดตามกติกา FR-first (CLAUDE.md) |
@@ -152,6 +152,9 @@ D-013 (Research Gate) — ห้ามเริ่มโค้ดจนกว่
 
 ## Changelog
 
+- v1.21 (2026-08-19): FR-FOOD-7 (AI Import) เขียนโค้ด+deploy เสร็จ หลัง flag `AI_IMPORT_ENABLED=false` —
+  ground-truth validation รัน n=20 แล้ว รายงานตัวเลขให้วีดู (error % ยังสูงโดยเฉพาะแบรนด์/ปริมาณน้อย,
+  อาหารจานเดียวทั่วไปแม่นกว่ามาก) รอวีตัดสินใจ threshold/scope ก่อนเปิด flag
 - v1.20 (2026-08-19): BL-11 ครบทั้ง 4 ข้อ + deploy แล้ว — batch translation (10/ครั้ง) แทนแปลทั้งหมด
   upfront (data: 9.5s→เหลือเสี้ยวเดียวสำหรับ batch แรก), FatSecret toggle
   (`profiles.fatsecret_search_enabled`), "ดูทั้งหมด" บน custom/dish. P4a คงเหลือแค่ D-023 (รอผลรีวิว

@@ -1,8 +1,18 @@
 #!/usr/bin/env node
 // D-023 / FR-FOOD-7 condition 2: ground-truth diff before AI Import opens to friends.
 // Pulls วี's already-verified custom_foods (public read per D-012) as ground truth, calls
-// getNutritionEstimate() with the same name+quantity (no photo), and reports % error per
-// macro so วีcan set a real threshold instead of guessing one.
+// getNutritionEstimate() with the same name+quantity (no photo), and reports absolute
+// error per macro (kcal / g) so วีcan set a real threshold instead of guessing one.
+//
+// (2026-08-19, round 2) Switched from % error to absolute error as the primary metric —
+// % error is dominated by items with a tiny actual value (e.g. 0.8g protein), where being
+// off by 1.4g reads as "275%" and drowns out everything else. Absolute error is what a
+// user actually experiences when editing the pre-filled form, and it has no divide-by-zero
+// edge case (an item with actual fat=0g and an estimate of 16g is simply "16g off").
+//
+// Branded/packaged vs home-cooked grouping is NOT done in this script — see the report
+// step's printed per-item list; a human sorts that by eye (more reliable than a keyword
+// heuristic that could misclassify silently).
 //
 // Usage: node server/scripts/validate-ai-import.mjs
 // Needs server/.env (same file the proxy itself uses).
@@ -30,8 +40,13 @@ async function loadEnv() {
 
 const MACROS = ["kcal", "protein_g", "carbs_g", "fat_g"];
 
+function absError(estimate, actual) {
+  return Math.abs(estimate - actual);
+}
+
+// secondary/annotation only — not used for summary stats anymore, see file header
 function pctError(estimate, actual) {
-  if (actual === 0) return estimate === 0 ? 0 : null; // undefined % error against a zero baseline
+  if (actual === 0) return estimate === 0 ? 0 : null;
   return (Math.abs(estimate - actual) / actual) * 100;
 }
 
@@ -51,7 +66,7 @@ async function main() {
 
   console.log("== Step 1: fetching verified custom_foods as ground truth ==");
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/custom_foods?is_verified=eq.true&select=name,serving_label,serving_size_g,kcal,protein_g,carbs_g,fat_g&limit=20`,
+    `${SUPABASE_URL}/rest/v1/custom_foods?is_verified=eq.true&select=name,serving_label,serving_size_g,kcal,protein_g,carbs_g,fat_g&limit=50`,
     { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } },
   );
   if (!res.ok) {
@@ -74,12 +89,13 @@ async function main() {
     process.stdout.write(`[${i + 1}/${groundTruth.length}] ${food.name} (${quantity})... `);
     try {
       const estimate = await getNutritionEstimate(food.name, quantity, null, undefined);
-      const errors = Object.fromEntries(MACROS.map((m) => [m, pctError(estimate[m], food[m])]));
-      results.push({ name: food.name, quantity, actual: food, estimate, errors });
+      const abs = Object.fromEntries(MACROS.map((m) => [m, absError(estimate[m], food[m])]));
+      const pct = Object.fromEntries(MACROS.map((m) => [m, pctError(estimate[m], food[m])]));
+      results.push({ name: food.name, quantity, actual: food, estimate, abs, pct });
       console.log("ok");
     } catch (err) {
       console.log(`FAILED: ${err.message}`);
-      results.push({ name: food.name, quantity, actual: food, estimate: null, errors: null, failed: true });
+      results.push({ name: food.name, quantity, actual: food, estimate: null, abs: null, pct: null, failed: true });
     }
     // small delay — polite to Anthropic's API, this isn't a latency benchmark
     await new Promise((r) => setTimeout(r, 500));
@@ -90,43 +106,37 @@ async function main() {
   const ok = results.filter((r) => !r.failed);
   console.log(`${ok.length}/${results.length} estimates succeeded.\n`);
 
-  console.log("Per-item:");
+  console.log("Per-item (absolute error, unit per macro: kcal/g/g/g — % shown for reference only):");
   for (const r of results) {
     if (r.failed) {
       console.log(`  ${r.name} (${r.quantity}): FAILED`);
       continue;
     }
     const parts = MACROS.map((m) => {
-      const e = r.errors[m];
-      const label = e === null ? "n/a (actual=0)" : `${e.toFixed(0)}%`;
-      return `${m}=${label} (actual ${r.actual[m]}, est ${r.estimate[m]})`;
+      const pctLabel = r.pct[m] === null ? "n/a%" : `${r.pct[m].toFixed(0)}%`;
+      return `${m}=${r.abs[m].toFixed(1)} (${pctLabel}) [actual ${r.actual[m]}, est ${r.estimate[m]}]`;
     });
     console.log(`  ${r.name} (${r.quantity}): ${parts.join(", ")}`);
   }
   console.log();
 
-  console.log("Summary per macro (over items where actual != 0):");
+  console.log("Summary per macro — ABSOLUTE error (primary metric, 2026-08-19 round 2):");
   for (const m of MACROS) {
-    const errs = ok.map((r) => r.errors[m]).filter((e) => e !== null).sort((a, b) => a - b);
-    if (errs.length === 0) {
-      console.log(`  ${m}: no comparable data`);
-      continue;
-    }
+    const errs = ok.map((r) => r.abs[m]).sort((a, b) => a - b);
     const avg = errs.reduce((s, e) => s + e, 0) / errs.length;
+    const unit = m === "kcal" ? "kcal" : "g";
     console.log(
-      `  ${m}: avg=${avg.toFixed(1)}% median=${percentile(errs, 50).toFixed(1)}% p90=${percentile(errs, 90).toFixed(1)}% (n=${errs.length})`,
+      `  ${m}: avg=${avg.toFixed(1)}${unit} median=${percentile(errs, 50).toFixed(1)}${unit} p90=${percentile(errs, 90).toFixed(1)}${unit} (n=${errs.length})`,
     );
   }
   console.log();
 
-  console.log("Worst 3 items by max macro error:");
-  const ranked = ok
-    .filter((r) => Object.values(r.errors).some((e) => e !== null))
-    .map((r) => ({ ...r, worst: Math.max(...Object.values(r.errors).map((e) => e ?? 0)) }))
-    .sort((a, b) => b.worst - a.worst)
-    .slice(0, 3);
+  console.log("Worst 3 items by kcal absolute error:");
+  const ranked = [...ok].sort((a, b) => b.abs.kcal - a.abs.kcal).slice(0, 3);
   for (const r of ranked) {
-    console.log(`  ${r.name}: worst macro error ${r.worst.toFixed(0)}%`);
+    console.log(
+      `  ${r.name}: kcal off by ${r.abs.kcal.toFixed(0)} (actual ${r.actual.kcal}, est ${r.estimate.kcal}) — protein ${r.abs.protein_g.toFixed(1)}g, carbs ${r.abs.carbs_g.toFixed(1)}g, fat ${r.abs.fat_g.toFixed(1)}g off`,
+    );
   }
 }
 

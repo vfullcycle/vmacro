@@ -1,4 +1,4 @@
-# PROJECT_BIBLE — Vmacro v1.18
+# PROJECT_BIBLE — Vmacro v1.19
 
 > Single source of truth ของโปรเจกต์ ถ้าไฟล์อื่นขัดกับไฟล์นี้ ให้ยึดไฟล์นี้แล้วแจ้งวีเพื่อ sync
 
@@ -152,6 +152,9 @@ D-013 (Research Gate) — ห้ามเริ่มโค้ดจนกว่
 
 ## Changelog
 
+- v1.19 (2026-08-19): FR-CALC-4 (day-type target, D-019) เขียนโค้ดเสร็จ + deploy แล้ว — migration
+  `20260819010000_day_type_target.sql` รันแล้ว, unit test cascading floor logic ผ่านครบ (24 tests).
+  P4a งานถัดไปคือ D-023 (AI Import, research doc มีแล้วรอวีอนุมัติ) ตาม SCOPE.md v1.4
 - v1.18 (2026-08-19): แก้ D-019 → implement เป็น FR-CALC-4 พร้อมกติกา floor แบบไล่ลำดับชั้น (protein
   คงที่ → carb floor → fat floor → ไม่บังคับสมการ) ตามที่วีอนุมัติ, ดู REQUIREMENTS.md สำหรับ AC เต็ม.
   บันทึก timestamp การเปลี่ยน `DEFAULT_MAX_RESULTS` 10→50 ใน BL-11 (แยกข้อมูล latency ก่อน/หลัง) +

@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { translateBatch } from "./anthropic.mjs";
+import { getNutritionEstimate, translateBatch } from "./anthropic.mjs";
 import { getAuthedUser } from "./auth.mjs";
 import { getFood, searchFoods } from "./fatsecret.mjs";
 import { getDailyTotalsForToken } from "./healthToken.mjs";
@@ -11,9 +11,16 @@ import { checkRateLimit } from "./rateLimit.mjs";
 const PORT = process.env.PORT || 3000;
 const HOST = "127.0.0.1";
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "https://vfullcycle.github.io";
-const MAX_BODY_BYTES = 64 * 1024;
+// Raised from 64KB (2026-08-19, FR-FOOD-7/D-023) — /ai-import can carry a base64 food
+// photo, which blows past 64KB even after client-side resize. Other routes' bodies are
+// tiny (a JSON array of strings at most), so this is effectively only a ceiling change
+// for the one route that needs it.
+const MAX_BODY_BYTES = 2 * 1024 * 1024;
 const TRANSLATE_RATE_LIMIT = { max: 20, windowMs: 60_000 };
 const HEALTH_SUMMARY_RATE_LIMIT = { max: 30, windowMs: 60_000 };
+// Lower than translate's 20/min — vision calls are slower/pricier, and this is a
+// deliberate one-at-a-time "fill in this form" action, not a batch operation.
+const AI_IMPORT_RATE_LIMIT = { max: 10, windowMs: 60_000 };
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -190,6 +197,51 @@ const server = createServer(async (req, res) => {
     } catch (err) {
       console.error(err);
       sendJson(res, 502, { error: "translation request failed" });
+    }
+    return;
+  }
+
+  if (req.method === "POST" && url.pathname === "/ai-import") {
+    // FR-FOOD-7 / D-023: same cost-ownership + auth rules as /translate — spends วี's
+    // Anthropic credit, so it requires a logged-in user and a (tighter) rate limit.
+    const user = await getAuthedUser(req);
+    if (!user) {
+      sendJson(res, 401, { error: "unauthorized" });
+      return;
+    }
+    if (!checkRateLimit(user.id, AI_IMPORT_RATE_LIMIT)) {
+      sendJson(res, 429, { error: "rate limited" });
+      return;
+    }
+
+    let body;
+    try {
+      body = await readJsonBody(req);
+    } catch (err) {
+      sendJson(res, 400, { error: err.message });
+      return;
+    }
+
+    const { name, quantity, photoBase64, photoMediaType } = body;
+    if (typeof name !== "string" || !name.trim()) {
+      sendJson(res, 400, { error: "name must be a non-empty string" });
+      return;
+    }
+    if (typeof quantity !== "string" || !quantity.trim()) {
+      sendJson(res, 400, { error: "quantity must be a non-empty string" });
+      return;
+    }
+    if (photoBase64 != null && typeof photoBase64 !== "string") {
+      sendJson(res, 400, { error: "photoBase64 must be a string" });
+      return;
+    }
+
+    try {
+      const estimate = await getNutritionEstimate(name, quantity, photoBase64 || null, photoMediaType);
+      sendJson(res, 200, estimate);
+    } catch (err) {
+      console.error(err);
+      sendJson(res, 502, { error: "AI import request failed" });
     }
     return;
   }

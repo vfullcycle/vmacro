@@ -1,4 +1,4 @@
-# REQUIREMENTS — Vmacro (FROZEN v1.6, 2026-08-19)
+# REQUIREMENTS — Vmacro (FROZEN v1.7, 2026-08-19)
 
 > แก้ไขได้เฉพาะเมื่อวีสั่ง + bump version + บันทึก changelog ท้ายไฟล์
 > ทุก FR ระบุ phase ที่ implement ตาม SCOPE.md
@@ -95,6 +95,19 @@ attribution แสดงเฉพาะเมื่อ source เป็น FatSe
 กด "บันทึก" แล้วเข้ามื้ออาหารที่เลือกไว้ทันทีในคลิกเดียว (ไม่เด้งไปหน้า detail อีกที); ปุ่มนี้แสดงเฉพาะตอนเปิดจากช่องทาง
 เพิ่มอาหารเข้ามื้อ (forDiary) เท่านั้น เพราะไม่มี food record ให้ผูกกับ dish/favorites ในโหมดอื่น*
 
+**FR-FOOD-7 (P4a)** AI Import (D-023) — user ทุกคน (ไม่ใช่แค่ admin) กรอกชื่ออาหาร + ปริมาณ (free text) +
+แนบภาพได้ (optional) → proxy เรียก Claude (key เดียวกับ D-015) คืน JSON ตาม schema เดียวกับ admin
+bulk-import เป๊ะ (`name`, `serving_label`, `serving_size_g`, `kcal`, `protein_g`, `carbs_g`, `fat_g` เป็น
+required, `nutrients` เป็น object เสริม — ตัด field ที่ไม่มั่นใจออกจาก `nutrients` แทนการเดา 0) → หน้า
+preview แสดงทุกค่าให้แก้ไขได้ก่อน save พร้อมข้อความกำกับ "ค่าประมาณจากค่ากลาง โปรดตรวจสอบ/ปรับตามของจริง"
+→ save ผ่านเส้นทาง create custom food ปกติ (creator = user เอง, ผ่าน admin verification ปกติทีหลังตาม
+D-017) — LLM ไม่มีสิทธิ์เขียน DB ตรงในทุกกรณี (governance เดียวกับที่บันทึกไว้ใน D-023)
+*AC: กรอกชื่อ+ปริมาณ (ไม่มีรูปก็ได้) แล้วได้ผล pre-fill ในหน้า preview ภายในเวลาที่ใช้งานได้จริง (~ไม่กี่
+วินาที ไม่นับรูป); ทุก field ในหน้า preview แก้ไขได้ก่อน save เสมอ ไม่มี field ไหน read-only; save แล้ว
+เห็นใน "ของฉัน" section ของ FoodSearch เหมือน custom food ที่กรอกมือ; หน้า preview ต้องมีข้อความเตือนเรื่อง
+ความแม่นยำแสดงตลอดเวลา ไม่ใช่แค่ตอน error; ปิดการเข้าถึงไว้หลัง config flag จนกว่า validation (ground-truth
+diff กับ custom food ที่ verify แล้ว ≥15-20 รายการ) จะผ่านและวีสั่งเปิด*
+
 ## FR-DIARY — Daily Logging (P2)
 
 **FR-DIARY-1** บันทึกอาหารรายมื้อ (เช้า/กลางวัน/เย็น/ว่าง) ระบุ quantity — หน้าสรุปวันแสดงยอดรวม f/c/p/kcal
@@ -148,6 +161,9 @@ RLS: diary/health/profile/weight เห็นเฉพาะเจ้าขอ�
 
 ## Changelog
 
+- v1.7 (2026-08-19): เพิ่ม FR-FOOD-7 (AI Import, D-023, คำสั่งวี) — user ทุกคนกรอกชื่อ+ปริมาณ+ภาพ (optional)
+  ให้ Claude pre-fill custom food, ทุก field แก้ได้ก่อน save เสมอ, ปิดหลัง config flag จนกว่า ground-truth
+  validation จะผ่าน — เข้าคิว P4a
 - v1.6 (2026-08-19): เพิ่ม FR-CALC-4 (day-type energy target, D-019, คำสั่งวี) — baseline TDEE + allowance
   ต่อ day type (rest/light/hard), macro split ไล่ลำดับชั้น protein คงที่ → carb floor → fat floor →
   ไม่บังคับสมการถ้าชนทุก floor พร้อม UI แจ้งเตือน — เข้าคิว P4a ตาม SCOPE.md v1.4. (แก้ header version

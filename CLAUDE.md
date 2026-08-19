@@ -23,6 +23,9 @@
 - ทุก feature ต้อง trace กลับไปที่ FR ID ได้ ถ้าไม่มี FR รองรับ = out of scope จนกว่าวีจะสั่งเพิ่ม
 - Requirement ขัดกับ decision → decision ชนะ, decision ขัดกันเอง → ถามวี
 - เจอปัญหา technical ที่ต้องเปลี่ยน architecture → หยุด, เสนอทางเลือกพร้อม trade-off, รอวีตัดสิน แล้วบันทึกเป็น decision ใหม่ใน PROJECT_BIBLE
+- **งานที่ยังไม่มี FR รองรับ (เช่น task ใหม่ในแต่ละ phase ตั้งแต่ P4):** ร่าง FR + Acceptance Criteria
+  ส่งวีอนุมัติก่อนเสมอ → bump `docs/REQUIREMENTS.md` (เฉพาะวีสั่ง) → แล้วค่อยเขียนโค้ด — ทำทีละ FR
+  ห้ามรวบหลายรายการร่างพร้อมกันทีเดียว (2026-08-19)
 
 ## Research Gate (D-013)
 
@@ -59,8 +62,12 @@ Feature ที่เข้า gate: ห้ามเริ่มโค้ดจ�
   - `fix(calc): rounding drift in macro split (FR-CALC-3)`
   - `docs:` / `chore:` / `test:` ตามชนิดงาน
 - **Tag:** semver ผูกกับ phase gate — annotated tag พร้อมข้อความอ้าง phase
-  - `v0.1.0` = จบ P0, `v0.2.0` = จบ P1, `v1.0.0` = จบ P2 (core ครบ), `v1.1.0` = จบ P3, `v1.2.0` = จบ P4, `v1.3.0` = จบ P5
+  - `v0.1.0` = จบ P0, `v0.2.0` = จบ P1, `v1.0.0` = จบ P2 (core ครบ), `v1.1.0` = จบ P3, `v1.2.0` = จบ P4a,
+    `v1.3.0` = จบ P4b, `v1.4.0` = จบ P5
   - ตัวอย่าง: `git tag -a v0.1.0 -m "P0 complete: infra spike, R-01/R-02 closed"`
+- **Commit/tag message:** สั้น อ้างอิง decision ID (Dxxx) หรือ FR ID แทนการอธิบายเหตุผลยาวในข้อความ —
+  เหตุผลเต็มอยู่ใน PROJECT_BIBLE Decision Log เสมอ อยู่แล้ว ไม่ต้องพูดซ้ำ (2026-08-19: message ยาวเกินไป
+  เคยโดน auto-mode permission classifier บล็อกจริงด้วย)
 - **Push:** จบ task ที่ผ่าน DoD แล้วให้ commit ทันที — อย่าสะสมงานหลาย task ใน commit เดียว
 
 ## Server deploy (D-015 amendment, 2026-08-13)
@@ -74,6 +81,15 @@ Feature ที่เข้า gate: ห้ามเริ่มโค้ดจ�
   ```
 - Deploy script (`server/deploy/deploy.sh`) ทำให้ครบในคำสั่งเดียว: `git pull` → `npm install` เฉพาะตอน `package-lock.json` เปลี่ยน → เขียน `server/deploy/version.json` → restart `vmacro-proxy` → self-check `GET /version`
 - **ตรวจ drift ได้ทุกเมื่อ** โดยเทียบ `curl https://vmacro.persiq.net/version` (commit ที่รันจริงบน VPS) กับ `git log --oneline -1` (commit ล่าสุดบน `main`) — ต้องตรงกันเสมอหลัง deploy
+- **เลี่ยงช่วงเวลากินข้าว** (07:00–09:00, 11:00–13:00, 17:00–20:00 เวลาไทย) สำหรับ deploy ที่มี downtime
+  จริง (VPS restart) และ push ที่ trigger web deploy — เพื่อนใช้งานจริงแล้ว (2026-08-19: 3 users รวมวี)
+  อาจกำลังบันทึกอาหารอยู่ช่วงนั้น — docs-only commit ไม่ trigger deploy ผ่านได้ทุกเวลา
+
+## Migration safety (เพิ่ม 2026-08-19)
+
+มีเพื่อนใช้งานจริงแล้ว — migration ที่แก้ schema ของตารางที่มีข้อมูล user อยู่แล้ว (ไม่ใช่ตารางเปล่า/สร้างใหม่)
+ต้อง backup ก่อนรันเสมอ: `pg_dump` เฉพาะตารางนั้นผ่าน `psql` (ใช้ connection string ของ Supabase, รันจาก
+VPS หรือเครื่อง local ก็ได้ที่ต่อถึง) เก็บไฟล์ไว้ก่อน — ไม่ต้องระบบ backup ใหญ่ แค่ dump ไฟล์เก็บพอ
 
 ## Tech constraints (สรุปจาก PROJECT_BIBLE — ที่นั่นคือ source of truth)
 

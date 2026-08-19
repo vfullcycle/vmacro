@@ -1,4 +1,4 @@
-# REQUIREMENTS — Vmacro (FROZEN v1.4, 2026-08-13)
+# REQUIREMENTS — Vmacro (FROZEN v1.6, 2026-08-19)
 
 > แก้ไขได้เฉพาะเมื่อวีสั่ง + bump version + บันทึก changelog ท้ายไฟล์
 > ทุก FR ระบุ phase ที่ implement ตาม SCOPE.md
@@ -32,6 +32,27 @@ body fat % (optional — จำเป็นเฉพาะเมื่อเล�
 **FR-CALC-3** แตกเป้าเป็น macro ตามลำดับ: protein ตาม g/kg น้ำหนักตัว (default: ลด 2.0, รักษา 1.6, เพิ่ม 1.8 — override ได้)
 → fat ขั้นต่ำ 25% ของ kcal (override ได้) → carb = kcal ที่เหลือ ÷ 4
 *AC: ผลรวม kcal จาก f×9 + c×4 + p×4 ต้องเท่าเป้า kcal (±5 kcal จากการปัดเศษ)*
+
+**FR-CALC-4 (P4a)** Day-type energy target (D-019) — แก้ปัญหา TDEE เดียวทั้งสัปดาห์ไม่ตรงการใช้พลังงานจริง
+รายวัน: Profile activity level ตีความใหม่เป็น baseline ที่ไม่รวม exercise (เช่น sedentary/lightly active
+จากงานประจำเท่านั้น) → diary เพิ่มตัวเลือก day type ต่อวัน: rest/light/hard (เลือกได้ 1 tap ต่อวัน,
+ไม่เลือก = ใช้ default ที่ตั้งไว้ล่วงหน้าใน Settings หรือ rest ถ้าไม่เคยตั้ง) → เป้า kcal ของวันนั้น =
+baseline TDEE + allowance ตาม type (allowance ตั้งค่าได้ใน Settings → System ต่อ type, มี default แนะนำ)
+→ macro split ของวันนั้นคำนวณใหม่ตามลำดับชั้น: (1) protein คงที่ตาม g/kg น้ำหนักตัวเสมอตาม FR-CALC-3
+ไม่ลดในทุกกรณี (2) carb รับส่วนต่างจาก allowance ก่อน จนถึง floor `max(50g, 10% ของเป้า kcal)`
+(3) ถ้ายังไม่พอ fat ขยับลงรับส่วนต่างต่อ จนถึง floor `max(0.5g/kg น้ำหนักตัว, 20% ของเป้า kcal)`
+(4) ชนทุก floor แล้วยังไม่พอ (เช่น allowance ติดลบมากจาก rest day) → ไม่บังคับสมการ f×9+c×4+p×4 = เป้า
+kcal อีกต่อไป — เป้า kcal ของวันนั้นกลายเป็นผลรวมจริงของ floors ทั้งหมด (ต่ำกว่าที่ baseline+allowance
+คำนวณไว้) และ UI ต้องแจ้งเตือน user ว่า allowance ต่ำเกินไป ให้ปรับ allowance หรือ protein target —
+floor ทั้งสอง (carb, fat) ตั้งค่า override ได้ใน Settings → System (ค่า default ตามที่ระบุข้างต้น).
+Schema เผื่อ P4b: มี field พร้อมรับ active energy จริงจาก Apple Watch (FR-HLTH-3) มา override/ปรับ
+allowance อัตโนมัติในอนาคต โดยไม่ต้องรื้อโครงตอนนั้น (FR นี้ยังไม่ implement ส่วน auto-override)
+*AC: เลือก day type ในหน้า diary ของวันนั้น (1 tap) แล้วเป้า kcal/macro ของวันนั้นอัปเดตทันที ไม่กระทบ
+วันอื่น; ไม่เลือกเลย → ใช้ default ที่ตั้งไว้ล่วงหน้าใน Settings (หรือ rest ถ้าไม่เคยตั้ง); แก้ allowance
+หรือ floor ใน Settings → System แล้วเป้าของวันปัจจุบัน/อนาคตคำนวณใหม่ตามค่าที่แก้ทันที; ผลรวม kcal จาก
+f×9+c×4+p×4 ต้องเท่าเป้า kcal ของวันนั้น (±5 kcal จากการปัดเศษ) ยกเว้นกรณีชนทุก floor ตามข้อ (4) ซึ่งต้อง
+มี UI แจ้งเตือนชัดเจน; unit test ครอบคลุมทุก macro ≥ floor ที่กำหนดและ ≥ 0 เสมอในทุก input รวม edge case
+allowance ติดลบมากๆ*
 
 ## FR-SET — Settings (P1)
 
@@ -127,6 +148,10 @@ RLS: diary/health/profile/weight เห็นเฉพาะเจ้าขอ�
 
 ## Changelog
 
+- v1.6 (2026-08-19): เพิ่ม FR-CALC-4 (day-type energy target, D-019, คำสั่งวี) — baseline TDEE + allowance
+  ต่อ day type (rest/light/hard), macro split ไล่ลำดับชั้น protein คงที่ → carb floor → fat floor →
+  ไม่บังคับสมการถ้าชนทุก floor พร้อม UI แจ้งเตือน — เข้าคิว P4a ตาม SCOPE.md v1.4. (แก้ header version
+  ที่ค้าง v1.4 ทั้งที่ changelog มี v1.5 อยู่แล้ว — stale จากรอบก่อน ไม่ได้อัปเดต header ตอนนั้น)
 - v1.5 (2026-08-14): ขยาย FR-HLTH-1 (คำสั่งวี) — เพิ่ม extended nutrients แบบ best-effort (cholesterol,
   sodium, fiber, sugar, potassium, calcium, iron, vitamin C/D, saturated/mono/poly fat) นอกเหนือจาก core 4
   เดิม, ระบุชัดว่าไม่เขียน trans fat (ข้อจำกัด Apple HealthKit) และไม่เขียน magnesium/zinc/B6/B12/folate/

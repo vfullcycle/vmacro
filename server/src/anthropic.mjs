@@ -79,13 +79,36 @@ export async function translateBatch(texts, targetLang) {
 // client-side preview must carry an explicit "estimated, please verify" disclaimer.
 const NUTRITION_MODEL = "claude-haiku-4-5-20251001";
 
-export async function getNutritionEstimate(name, quantity, photoBase64, photoMediaType) {
+// mode "estimate" (default): guess from category-average knowledge, name+quantity primary,
+// photo (if any) is supporting context only — see docs/research/ai-import.md §4 ceiling.
+// mode "read_label" (D-023 round 2, 2026-08-19): a fundamentally different, more reliable
+// task — transcribe the printed values off a nutrition label photo instead of estimating.
+// Photo is required by the caller for this mode (enforced in index.mjs); read_label calls
+// without a photo would just be a worse "estimate" call with a misleading name.
+export async function getNutritionEstimate(name, quantity, photoBase64, photoMediaType, mode = "estimate") {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     throw new Error("ANTHROPIC_API_KEY not set");
   }
 
-  const promptText = `Estimate nutrition facts for a food-tracking app, the way a knowledgeable person would look up category-average nutrition data for a dish (e.g. from a food composition database) based on its name and stated quantity — NOT guessing one specific restaurant's exact recipe.
+  const promptText =
+    mode === "read_label"
+      ? `Read the nutrition facts label in the attached photo for a food-tracking app — TRANSCRIBE the
+printed values, do not estimate or guess. If a value is not legible or not printed on the label, omit
+that field entirely rather than guessing a number for it.
+
+Product name (as the user typed it): ${name}
+How much the user says they're eating: ${quantity}
+
+The label states values per serving or per 100g (or both) and usually the total package size — use
+those printed figures to calculate the values for what the user says they're eating. kcal, protein_g,
+carbs_g, fat_g must always be present (these are always printed on a real nutrition label) — give them
+as a narrow low-high range reflecting only your uncertainty about reading/scaling the label, NOT product
+variance (you're reading real numbers, not guessing a category average — the range should usually be
+much narrower than a name-only estimate would need). For every other nutrient field, only include it if
+the label actually printed it. Respond in Thai for name/serving_label. Respond using the
+submit_nutrition_estimate tool.`
+      : `Estimate nutrition facts for a food-tracking app, the way a knowledgeable person would look up category-average nutrition data for a dish (e.g. from a food composition database) based on its name and stated quantity — NOT guessing one specific restaurant's exact recipe.
 
 Food name: ${name}
 Quantity: ${quantity}

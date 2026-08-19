@@ -222,7 +222,7 @@ const server = createServer(async (req, res) => {
       return;
     }
 
-    const { name, quantity, photoBase64, photoMediaType } = body;
+    const { name, quantity, photoBase64, photoMediaType, mode } = body;
     if (typeof name !== "string" || !name.trim()) {
       sendJson(res, 400, { error: "name must be a non-empty string" });
       return;
@@ -235,9 +235,20 @@ const server = createServer(async (req, res) => {
       sendJson(res, 400, { error: "photoBase64 must be a string" });
       return;
     }
+    if (mode != null && mode !== "estimate" && mode !== "read_label") {
+      sendJson(res, 400, { error: "mode must be 'estimate' or 'read_label'" });
+      return;
+    }
+    // read_label is a photo-transcription task by definition — without a photo it's just
+    // a worse estimate call under a misleading name, so reject rather than silently fall
+    // back (D-023 round 2 design).
+    if (mode === "read_label" && !photoBase64) {
+      sendJson(res, 400, { error: "read_label mode requires photoBase64" });
+      return;
+    }
 
     try {
-      const estimate = await getNutritionEstimate(name, quantity, photoBase64 || null, photoMediaType);
+      const estimate = await getNutritionEstimate(name, quantity, photoBase64 || null, photoMediaType, mode || "estimate");
       sendJson(res, 200, estimate);
     } catch (err) {
       console.error(err);

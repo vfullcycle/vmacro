@@ -1,4 +1,4 @@
-# PROJECT_BIBLE — Vmacro v1.16
+# PROJECT_BIBLE — Vmacro v1.17
 
 > Single source of truth ของโปรเจกต์ ถ้าไฟล์อื่นขัดกับไฟล์นี้ ให้ยึดไฟล์นี้แล้วแจ้งวีเพื่อ sync
 
@@ -135,7 +135,7 @@ D-013 (Research Gate) — ห้ามเริ่มโค้ดจนกว่
 | BL-08 | P4a | | Dashboard tab แทน Weight tab: today-at-a-glance (kcal ring + P/C/F + day type), weight card + sparkline (หน้า weight เดิมย้ายมาอยู่ใต้), streak/สรุปสัปดาห์, โซน analytics tier 1 (FR-ANLT-1) — เป็นบ้านของ P4 analytics |
 | BL-09 | หลัง P4b — ตัดสินตอนปิด P4b ว่าเข้าก่อน/คู่ P5 (2026-08-19: วีตัดสินใจ เหตุผล — Friends มีค่าเมื่อมีเพื่อนใช้จริง ซึ่ง D-023 AI Import ใน P4a คือตัวปลดล็อกพฤติกรรมนั้น ต้องเห็นพฤติกรรมเพื่อนก่อนออกแบบ) | | Friends tab: streak leaderboard, contribution board (สร้าง/verify custom food), opt-in activity feed — หลักการ: แข่งที่พฤติกรรม ห้ามมี leaderboard น้ำหนัก/kcal, diary ยัง private ตาม RLS เดิม. Toolbar ใหม่เมื่อทั้งสองมา: Dashboard·Diary·Search·Friends·Settings — ลำดับสุดท้ายตัดสินจาก dogfood |
 | BL-10 | P4b (งานแรกของ P4b, ทำได้ทันทีที่ D-019+BL-08 จาก P4a จบ) | | Per-meal targets + meal-time reminders — Profile: จำนวนมื้อ/วัน (1–6) + เวลาแต่ละมื้อ + สัดส่วน % ต่อมื้อ (default หารเท่า ปรับได้ รวม 100%). Engine กระจาย daily target (ที่ผ่าน day-type แล้ว) เป็น target ต่อมื้อ + โหมด remaining-based ("ก่อนมื้อนี้เหลือให้กินอีก X" คำนวณจากที่กินจริงไปแล้ว ไม่ยึดตัวเลขตายตัว) แสดงผลใน diary/dashboard เป็นระยะแรก (ไม่พึ่ง push). Reminder ตามเวลามื้อ: ทางหลัก = iOS Shortcuts Automation ยิง VPS endpoint (pattern เดียวกับ P3 health token) เพราะ reliability สูงกว่า Web Push บน iOS PWA — Web Push เป็นทางเลือกรอง, ข้อจำกัด iOS นี้บันทึกไว้เป็น risk |
-| BL-11 | P4a (งานแรกของ P4a) | | Search UX เร็วขึ้น+อ่านง่ายขึ้น — ปรับ UI/พฤติกรรมของ FR-FOOD-1 ที่มีอยู่แล้ว ไม่ใช่ FR ใหม่: (1) วัดก่อนทำ — instrument latency จริงว่าหายไปที่ Supabase/FatSecret/Haiku translation ช่วงไหน รายงานตัวเลขก่อนตัดสินใจ implement (2) progressive results — ผลจาก Supabase (custom food/จาน/template/recent) แสดงทันทีที่ได้ ไม่รอ FatSecret, FatSecret+คำแปลไหลมาต่อท้ายพร้อม loading indicator (3) Settings: switch เปิด/ปิด FatSecret ต่อ user (default เปิด) (4) จัดกลุ่มผลค้นหาเป็น section (ของฉัน/จาน/recent/FatSecret) แต่ละกลุ่มแสดงจำกัด+"ดูทั้งหมด", ใช้ load-more/infinite scroll แทน pagination ตัวเลข (mobile-first) — เสนอรูปแบบสุดท้ายพร้อม mock สั้นๆ ก่อนทำจริง |
+| BL-11 | P4a (งานแรกของ P4a) | | Search UX เร็วขึ้น+อ่านง่ายขึ้น — ปรับ UI/พฤติกรรมของ FR-FOOD-1 ที่มีอยู่แล้ว ไม่ใช่ FR ใหม่: (1) วัดก่อนทำ — instrument latency จริงว่าหายไปที่ Supabase/FatSecret/Haiku translation ช่วงไหน รายงานตัวเลขก่อนตัดสินใจ implement (2) progressive results — ผลจาก Supabase (custom food/จาน/template/recent) แสดงทันทีที่ได้ ไม่รอ FatSecret, FatSecret+คำแปลไหลมาต่อท้ายพร้อม loading indicator (3) Settings: switch เปิด/ปิด FatSecret ต่อ user (default เปิด) (4) จัดกลุ่มผลค้นหาเป็น section (ของฉัน/จาน/recent/FatSecret) แต่ละกลุ่มแสดงจำกัด+"ดูทั้งหมด", ใช้ load-more/infinite scroll แทน pagination ตัวเลข (mobile-first) — เสนอรูปแบบสุดท้ายพร้อม mock สั้นๆ ก่อนทำจริง — **(อัปเดต 2026-08-19)** ขั้น (1) instrumentation deploy แล้ว: ตาราง `search_latency_log` (Supabase, write-only จาก client, ดู migration `20260819000000_search_latency_log.sql`) + `console.debug` ฝั่ง client อยู่หลัง feature flag `SEARCH_LATENCY_LOGGING` (`web/src/config.ts`) — เป็นเครื่องมือชั่วคราว ปิด flag + drop ตารางเมื่อ implement เสร็จ. แผน: สะสมข้อมูล 3-5 วัน แล้วรายงานตัวเลขพร้อมข้อเสนอ — **ห้ามแก้ search logic จริง (2)-(4) ก่อนเห็นตัวเลข** |
 
 ## 8. Naming (ยุติแล้ว — D-010)
 
@@ -147,6 +147,9 @@ D-013 (Research Gate) — ห้ามเริ่มโค้ดจนกว่
 
 ## Changelog
 
+- v1.17 (2026-08-19): BL-11 ขั้น (1) instrumentation shipped — `search_latency_log` table + client
+  timing behind `SEARCH_LATENCY_LOGGING` flag, deployed to prod. เก็บข้อมูล 3-5 วันก่อนรายงานตัวเลข +
+  ข้อเสนอ implement ให้วี
 - v1.16 (2026-08-19): วีอนุมัติแผน P4a/P4b (ดู SCOPE.md v1.3) — อัปเดต phase ของ BL-02/05/08/10 เป็น
   P4a/P4b ตามลำดับ, ย้าย BL-09 (Friends tab) เป็น "หลัง P4b — ตัดสินตอนปิด P4b" เพราะ Friends มีค่าเมื่อ
   มีเพื่อนใช้จริง ซึ่ง D-023 AI Import คือตัวปลดล็อกพฤติกรรมนั้น — context เปลี่ยน: มีเพื่อนเริ่มใช้จริง

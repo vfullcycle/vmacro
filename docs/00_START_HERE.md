@@ -40,8 +40,13 @@ vmacro/
 
 ## สถานะปัจจุบัน
 
-- **Docs version:** v1.7 (2026-08-19)
-- **Phase ปัจจุบัน:** P2 จบแล้ว, tag `v1.0.0` — FR ทุกตัวเขียนโค้ดเสร็จ (FR-FOOD-1..6, FR-DIARY-1..3)
+- **Docs version:** v1.8 (2026-08-20)
+- **Phase ปัจจุบัน:** P4a เขียนโค้ดครบทุกข้อแล้ว (2026-08-20), รอวี dogfood 2-3 วันตาม Phase Gate Rule ก่อน
+  ตี tag `v1.2.0`: BL-11 (search UX, ปิดสมบูรณ์รวมถอด instrumentation), D-019/FR-CALC-4 (day-type energy
+  target), D-023/AI Import (**ยกเลิกถาวรหลังวัดผลจริง** — แทนที่ด้วย BL-12 ยังไม่กำหนด phase), BL-08/
+  FR-DASH-1 (Dashboard tab แทน Weight tab, ใช้ shared hook `useTodayTarget()` ร่วมกับ Diary) — ดู
+  `docs/SCOPE.md` §P4a และ `docs/PROJECT_BIBLE.md` §Decision Log (D-019, D-023) สำหรับรายละเอียดเต็ม
+- **P2 จบแล้ว, tag `v1.0.0`** — FR ทุกตัวเขียนโค้ดเสร็จ (FR-FOOD-1..6, FR-DIARY-1..3)
   รวม FR-DIARY-3 (copy จากวันก่อนหน้า ทั้งวัน/รายมื้อ, รายการโปรด, รายการล่าสุด) **ปิดโดย exception ของ
   Phase Gate Rule (D-024, 2026-08-19)** — ไม่รอ manual dogfood ครบ 2-3 วันตามเกณฑ์ปกติ เพราะเป็น
   shortcut ลด friction ล้วน ความเสี่ยงต่ำกว่า feature ที่แตะ core data path โดยตรง บั๊กที่เจอภายหลัง
@@ -71,6 +76,8 @@ Vision → Boundary → Requirement → Decision → Freeze → Working Rules
 
 ## Changelog
 
+- v1.8 (2026-08-20): อัปเดตสถานะ P4a (เคย stale ค้างว่า "รอเสนอวี" ทั้งที่ตัดสินใจและเขียนโค้ดไปแล้วทั้งช่วง)
+  — BL-11/D-019/D-023/BL-08 เขียนโค้ดครบ, D-023 (AI Import) ยกเลิกถาวร, รอ dogfood ก่อนตี tag `v1.2.0`
 - v1.7 (2026-08-19): ปิด P2 (tag `v1.0.0`) และ P3 core (tag `v1.1.0`) — วีอนุมัติ exception ของ Phase
   Gate Rule ไม่รอ FR-DIARY-3 dogfood ครบ 2-3 วัน (D-024) เพราะความเสี่ยงต่ำ, บั๊กที่เจอทีหลังจะแก้เป็น
   patch แทน ดู `docs/PROJECT_BIBLE.md` D-024 สำหรับเหตุผลเต็ม

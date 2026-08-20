@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.8
+# SCOPE — Vmacro v1.9
 
 ## In Scope
 
@@ -61,8 +61,10 @@
   เพิ่ม โดยไม่ได้ดีกว่า pipeline ChatGPT+ตรวจเอง+bulk import ที่ใช้อยู่ — ดู D-023 ใน PROJECT_BIBLE §5
   สำหรับตัวเลขเต็ม, โค้ดเก็บไว้เฉยๆ หลัง flag ปิดถาวร ไม่ลบ — แทนที่ด้วย **BL-12** (ขออาหารใหม่ในแอป,
   แก้ปัญหาการประสานงานแทนที่จะพยายามแทนที่ความรู้วี — ดู §7 Backlog) ยังไม่กำหนด phase
-- BL-08: Dashboard tab แทน Weight tab (ต้องมี D-019 จบก่อน เพราะ ring ต้องโชว์ day-type) — **งานถัดไปของ
-  P4a** (2026-08-20)
+- BL-08: Dashboard tab แทน Weight tab (ต้องมี D-019 จบก่อน เพราะ ring ต้องโชว์ day-type) — **FR-DASH-1
+  code-complete (2026-08-20), รอ dogfood ตาม Phase Gate Rule ก่อนตี tag** — kcal ring + P/C/F ผ่าน shared
+  hook `useTodayTarget()` (ใช้ร่วมกับ Diary เพื่อกันตัวเลขเพี้ยน), weight card+sparkline, สรุป "X/7 วัน"
+  — P4a งานเขียนโค้ดครบทุกข้อแล้ว รอวี dogfood 2-3 วันตาม Phase Gate Rule ก่อนตี tag `v1.2.0`
 
 ### P4b — Data-dependent → tag `v1.3.0`
 - BL-10 (งานแรก, ทำได้ทันทีที่ D-019+BL-08 จาก P4a จบ): Per-meal targets + meal-time reminders
@@ -87,6 +89,8 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.9 (2026-08-20): BL-08 (FR-DASH-1, Dashboard tab) code-complete — P4a เขียนโค้ดครบทุกข้อแล้ว (BL-11,
+  D-019, D-023 ยกเลิก, BL-08) เหลือแค่วี dogfood 2-3 วันตาม Phase Gate Rule ก่อนตี tag `v1.2.0`
 - v1.8 (2026-08-20): BL-11 ปิดสมบูรณ์ (ถอด instrumentation) — P4a เหลือ BL-08 เป็นงานสุดท้ายก่อนตี tag
   `v1.2.0`
 - v1.7 (2026-08-20): D-023 (AI Import) ยกเลิกถาวรหลังวัดผลจริง — แทนที่ด้วย BL-12 (ขออาหารใหม่ในแอป,

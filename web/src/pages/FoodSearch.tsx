@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import FatSecretAttribution from "../components/FatSecretAttribution";
 import QuickAddFoodModal from "../components/QuickAddFoodModal";
 import VerifiedBadge from "../components/VerifiedBadge";
-import { AI_IMPORT_ENABLED, API_BASE_URL, SEARCH_LATENCY_LOGGING } from "../config";
+import { AI_IMPORT_ENABLED, API_BASE_URL } from "../config";
 import { useAuth } from "../lib/auth-context";
 import { entryDisplayName, entryQuantityLabel, MEAL_LABELS, type DiaryEntryRow, type Meal } from "../lib/diary";
 import { parseSearchResults, type FatSecretSearchResult } from "../lib/fatsecret";
@@ -45,8 +45,8 @@ const RECENT_PER_MEAL_LIMIT = 8;
 const CUSTOM_RESULTS_LIMIT = 3;
 const DISH_RESULTS_LIMIT = 3;
 // BL-11: translate FatSecret results in batches instead of all-at-once — translation time
-// scales with item count (search_latency_log data: ~9.5s for 50 items vs ~2s for 10), so
-// only the visible batch gets translated up front; "load more" translates the next one.
+// scales with item count (measured ~9.5s for 50 items vs ~2s for 10), so only the visible
+// batch gets translated up front; "load more" translates the next one.
 const FATSECRET_BATCH_SIZE = 10;
 
 const DIARY_ENTRY_COLUMNS =
@@ -59,39 +59,6 @@ function foodIdentityKey(entry: DiaryEntryRow): string {
   return `dish:${entry.dish_id}`;
 }
 
-// BL-11 temp instrumentation (2026-08-19) — measures where FoodSearch latency actually
-// goes before deciding whether/how to rebuild it (progressive results, FatSecret toggle,
-// etc). Remove this block + the logSearchLatency call sites + search_latency_log table
-// once that decision is made (see PROJECT_BIBLE §7 BL-11, SCOPE.md P4a).
-// Supabase query builders are thenable but not real Promises, hence PromiseLike here.
-async function timed<T>(promiseLike: PromiseLike<T>): Promise<[T, number]> {
-  const start = performance.now();
-  const result = await promiseLike;
-  return [result, performance.now() - start];
-}
-
-const MAX_SEARCH_LATENCY_LOGS = 300; // runaway-loop guard, not real sampling — 3 users won't hit this
-let searchLatencyLogCount = 0;
-
-function logSearchLatency(payload: {
-  user_id: string | null;
-  query_had_thai: boolean;
-  timings_ms: Record<string, number | null>;
-  result_counts: { fatsecret: number; custom: number; dish: number };
-  result_translate_hits: number | null;
-  result_translate_misses: number | null;
-}) {
-  if (!SEARCH_LATENCY_LOGGING) return;
-  if (searchLatencyLogCount >= MAX_SEARCH_LATENCY_LOGS) return;
-  searchLatencyLogCount++;
-  console.debug("[search-latency]", payload);
-  // best-effort — logging must never affect the user's actual search
-  supabase.from("search_latency_log").insert(payload).then(
-    () => {},
-    () => {},
-  );
-}
-
 async function translateQueryToEnglish(query: string): Promise<string> {
   try {
     const [english] = await translateTexts([query], "en");
@@ -102,18 +69,17 @@ async function translateQueryToEnglish(query: string): Promise<string> {
 }
 
 // Awaited (not fired in the background) so results only ever appear already in Thai —
-// no flash of the raw English name while translation is still in flight (DF7).
-async function attachThaiNames(
-  results: FatSecretSearchResult[],
-): Promise<{ results: FatSecretResultWithThai[]; hits: number; misses: number }> {
-  if (results.length === 0) return { results: [], hits: 0, misses: 0 };
+// no flash of the raw English name while translation is still in flight (DF7). Only
+// called on a bounded batch (FATSECRET_BATCH_SIZE) at a time, not the full fetched set —
+// see the search effect below.
+async function attachThaiNames(results: FatSecretSearchResult[]): Promise<FatSecretResultWithThai[]> {
+  if (results.length === 0) return [];
 
   const ids = results.map((r) => r.food_id);
   const { data: cached } = await supabase.from("food_translations").select("fatsecret_food_id, thai_name").in("fatsecret_food_id", ids);
 
   const cache = new Map((cached ?? []).map((row) => [row.fatsecret_food_id, row.thai_name]));
   const uncached = results.filter((r) => !cache.has(r.food_id));
-  const hits = results.length - uncached.length;
 
   if (uncached.length > 0) {
     try {
@@ -130,7 +96,7 @@ async function attachThaiNames(
     }
   }
 
-  return { results: results.map((r) => ({ ...r, thai_name: cache.get(r.food_id) })), hits, misses: uncached.length };
+  return results.map((r) => ({ ...r, thai_name: cache.get(r.food_id) }));
 }
 
 async function attachCreatorNames<T extends { creator_id: string }>(results: T[]): Promise<(T & { creator_name?: string })[]> {
@@ -289,7 +255,6 @@ export default function FoodSearch() {
     const timeout = setTimeout(async () => {
       const thisSearchId = ++searchIdRef.current;
       const isStale = () => thisSearchId !== searchIdRef.current;
-      const searchStart = performance.now(); // BL-11 temp instrumentation
 
       setLoading(true);
       setError(null);
@@ -310,7 +275,7 @@ export default function FoodSearch() {
 
         // Dishes can't be nested inside another dish, so skip this query entirely when
         // picking an ingredient for a dish under construction (forDish).
-        const dishesPromise: PromiseLike<{ data: DishResult[] | null }> = forDish
+        const dishesPromise = forDish
           ? Promise.resolve({ data: [] as DishResult[] })
           : supabase.from("dishes").select("id, name, kcal, creator_id").ilike("name", `%${trimmed}%`).limit(20);
 
@@ -322,10 +287,10 @@ export default function FoodSearch() {
         // than a broken search, per discussion with วี. Already fully resolved (came straight
         // from cache) so it goes directly into fatsecretShown — no raw/batch state needed.
         if (!user && containsThai(trimmed)) {
-          const [[cachedRows, cacheMs], [customRes, customMs], [dishRes, dishMs]] = await Promise.all([
-            timed(supabase.from("food_translations").select("fatsecret_food_id, thai_name").ilike("thai_name", `%${trimmed}%`).limit(10)),
-            timed(customFoodsPromise),
-            timed(dishesPromise),
+          const [cachedRows, customRes, dishRes] = await Promise.all([
+            supabase.from("food_translations").select("fatsecret_food_id, thai_name").ilike("thai_name", `%${trimmed}%`).limit(10),
+            customFoodsPromise,
+            dishesPromise,
           ]);
           if (isStale()) return;
 
@@ -341,23 +306,6 @@ export default function FoodSearch() {
             thai_name: row.thai_name,
           }));
           setFatsecretShown(cached);
-
-          logSearchLatency({
-            user_id: null,
-            query_had_thai: true,
-            timings_ms: {
-              query_translate_ms: null,
-              fatsecret_ms: null,
-              guest_cache_lookup_ms: Math.round(cacheMs),
-              supabase_custom_ms: Math.round(customMs),
-              supabase_dish_ms: Math.round(dishMs),
-              result_translate_ms: null,
-              total_ms: Math.round(performance.now() - searchStart),
-            },
-            result_counts: { fatsecret: cached.length, custom: customSorted.length, dish: dishWithNames.length },
-            result_translate_hits: null,
-            result_translate_misses: null,
-          });
           return;
         }
 
@@ -365,21 +313,15 @@ export default function FoodSearch() {
         // (they have no profile to read the toggle from); logged-in users can turn it off.
         const shouldFetchFatsecret = !user || fatsecretEnabled;
 
-        const queryTranslateStart = performance.now();
         const fatsecretQuery =
           shouldFetchFatsecret && containsThai(trimmed) ? await translateQueryToEnglish(trimmed) : trimmed;
-        const queryTranslateMs = shouldFetchFatsecret && containsThai(trimmed) ? performance.now() - queryTranslateStart : null;
         if (isStale()) return;
 
         const fatsecretFetchPromise: PromiseLike<unknown> = shouldFetchFatsecret
           ? fetch(`${API_BASE_URL}/food/search?q=${encodeURIComponent(fatsecretQuery)}`).then((r) => r.json())
           : Promise.resolve(null);
 
-        const [[fsRaw, fatsecretMs], [customRes, customMs], [dishRes, dishMs]] = await Promise.all([
-          timed(fatsecretFetchPromise),
-          timed(customFoodsPromise),
-          timed(dishesPromise),
-        ]);
+        const [fsRaw, customRes, dishRes] = await Promise.all([fatsecretFetchPromise, customFoodsPromise, dishesPromise]);
         if (isStale()) return;
 
         const customWithNames = await attachCreatorNames(customRes.data ?? []);
@@ -402,29 +344,10 @@ export default function FoodSearch() {
         setFatsecretVisibleCount(firstBatchCount);
         setFatsecretTranslating(firstBatchCount > 0);
 
-        const [{ results: withThai, hits: translateHits, misses: translateMisses }, resultTranslateMs] = await timed(
-          attachThaiNames(parsed.slice(0, firstBatchCount)),
-        );
+        const withThai = await attachThaiNames(parsed.slice(0, firstBatchCount));
         if (isStale()) return;
         setFatsecretShown(withThai);
         setFatsecretTranslating(false);
-
-        logSearchLatency({
-          user_id: user?.id ?? null,
-          query_had_thai: containsThai(trimmed),
-          timings_ms: {
-            query_translate_ms: queryTranslateMs !== null ? Math.round(queryTranslateMs) : null,
-            fatsecret_ms: shouldFetchFatsecret ? Math.round(fatsecretMs) : null,
-            guest_cache_lookup_ms: null,
-            supabase_custom_ms: Math.round(customMs),
-            supabase_dish_ms: Math.round(dishMs),
-            result_translate_ms: firstBatchCount > 0 ? Math.round(resultTranslateMs) : null,
-            total_ms: Math.round(performance.now() - searchStart),
-          },
-          result_counts: { fatsecret: parsed.length, custom: customSorted.length, dish: dishWithNames.length },
-          result_translate_hits: translateHits,
-          result_translate_misses: translateMisses,
-        });
       } catch (err) {
         if (!isStale()) setError(String(err));
       } finally {
@@ -447,7 +370,7 @@ export default function FoodSearch() {
     setFatsecretVisibleCount(nextCount);
     if (nextCount <= alreadyShown) return;
     setFatsecretTranslating(true);
-    const { results: translated } = await attachThaiNames(fatsecretRaw.slice(alreadyShown, nextCount));
+    const translated = await attachThaiNames(fatsecretRaw.slice(alreadyShown, nextCount));
     if (searchIdRef.current !== loadMoreSearchId) return; // query changed while this batch translated
     setFatsecretShown((prev) => [...prev, ...translated]);
     setFatsecretTranslating(false);

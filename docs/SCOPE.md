@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.7
+# SCOPE — Vmacro v1.8
 
 ## In Scope
 
@@ -54,8 +54,8 @@
 
 ### P4a — Daily-use impact → tag `v1.2.0`
 (แบ่งจาก P4 เดิมเป็นสองครึ่ง มี tag คั่นกลาง — บทเรียนจาก P2 ที่ phase ไม่มีหมุดกลางทางไหลยาว)
-- BL-11: Search UX เร็วขึ้น+อ่านง่ายขึ้น — **เสร็จแล้ว** (batch translation, FatSecret toggle, "ดูทั้งหมด"
-  บน custom/dish, deploy 2026-08-19) — instrumentation ยังเก็บข้อมูลต่อเบื้องหลัง
+- BL-11: Search UX เร็วขึ้น+อ่านง่ายขึ้น — **ปิดสมบูรณ์** (batch translation, FatSecret toggle, "ดูทั้งหมด"
+  บน custom/dish, deploy 2026-08-19) — instrumentation ถอดออกแล้ว (2026-08-20, วีสั่งหยุดรอข้อมูลเพิ่ม)
 - D-019: Day-type energy target — **เสร็จแล้ว** (FR-CALC-4, deploy 2026-08-19)
 - D-023: AI Import — **ยกเลิก (2026-08-20)** วัดผลจริงแล้วไม่แก้ปัญหาที่ตั้งใจ + มีต้นทุน API credit
   เพิ่ม โดยไม่ได้ดีกว่า pipeline ChatGPT+ตรวจเอง+bulk import ที่ใช้อยู่ — ดู D-023 ใน PROJECT_BIBLE §5
@@ -87,6 +87,8 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.8 (2026-08-20): BL-11 ปิดสมบูรณ์ (ถอด instrumentation) — P4a เหลือ BL-08 เป็นงานสุดท้ายก่อนตี tag
+  `v1.2.0`
 - v1.7 (2026-08-20): D-023 (AI Import) ยกเลิกถาวรหลังวัดผลจริง — แทนที่ด้วย BL-12 (ขออาหารใหม่ในแอป,
   ยังไม่กำหนด phase) — P4a เหลือ BL-08 เป็นงานถัดไป
 - v1.6 (2026-08-19): BL-11 เสร็จ + deploy แล้ว — P4a เหลือแค่ D-023 (รอผลรีวิว research doc)

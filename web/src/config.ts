@@ -1,10 +1,5 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://vmacro.persiq.net";
 
-// BL-11 temp instrumentation (2026-08-19) — flip to false (or delete the call site +
-// the search_latency_log table/migration) once the search UX decision is made.
-// See PROJECT_BIBLE §7 BL-11.
-export const SEARCH_LATENCY_LOGGING = true;
-
 // FR-FOOD-7 / D-023 (2026-08-19) — off until the ground-truth validation (docs/research/
 // ai-import.md §5) is reported to วีand he explicitly says to open it. Flip to true +
 // redeploy when that happens; no other code changes needed.

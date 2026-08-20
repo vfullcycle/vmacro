@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.6
+# SCOPE — Vmacro v1.7
 
 ## In Scope
 
@@ -57,10 +57,12 @@
 - BL-11: Search UX เร็วขึ้น+อ่านง่ายขึ้น — **เสร็จแล้ว** (batch translation, FatSecret toggle, "ดูทั้งหมด"
   บน custom/dish, deploy 2026-08-19) — instrumentation ยังเก็บข้อมูลต่อเบื้องหลัง
 - D-019: Day-type energy target — **เสร็จแล้ว** (FR-CALC-4, deploy 2026-08-19)
-- D-023: AI Import — เริ่ม research doc (gate แบบเบา) คู่ขนานกับ D-019 ตั้งแต่ตอนนี้, เริ่มโค้ดทันทีที่
-  D-019 จบ (2026-08-19: เลื่อนขึ้นก่อน BL-08 เพราะเพื่อนที่ใช้จริงติดขัดตรงหาไม่เจอแล้วให้วี import ให้ —
-  วีกลายเป็นคอขวด, AI Import คือตัวแก้ตรงจุดนั้น)
-- BL-08: Dashboard tab แทน Weight tab (ต้องมี D-019 จบก่อน เพราะ ring ต้องโชว์ day-type)
+- D-023: AI Import — **ยกเลิก (2026-08-20)** วัดผลจริงแล้วไม่แก้ปัญหาที่ตั้งใจ + มีต้นทุน API credit
+  เพิ่ม โดยไม่ได้ดีกว่า pipeline ChatGPT+ตรวจเอง+bulk import ที่ใช้อยู่ — ดู D-023 ใน PROJECT_BIBLE §5
+  สำหรับตัวเลขเต็ม, โค้ดเก็บไว้เฉยๆ หลัง flag ปิดถาวร ไม่ลบ — แทนที่ด้วย **BL-12** (ขออาหารใหม่ในแอป,
+  แก้ปัญหาการประสานงานแทนที่จะพยายามแทนที่ความรู้วี — ดู §7 Backlog) ยังไม่กำหนด phase
+- BL-08: Dashboard tab แทน Weight tab (ต้องมี D-019 จบก่อน เพราะ ring ต้องโชว์ day-type) — **งานถัดไปของ
+  P4a** (2026-08-20)
 
 ### P4b — Data-dependent → tag `v1.3.0`
 - BL-10 (งานแรก, ทำได้ทันทีที่ D-019+BL-08 จาก P4a จบ): Per-meal targets + meal-time reminders
@@ -85,6 +87,8 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.7 (2026-08-20): D-023 (AI Import) ยกเลิกถาวรหลังวัดผลจริง — แทนที่ด้วย BL-12 (ขออาหารใหม่ในแอป,
+  ยังไม่กำหนด phase) — P4a เหลือ BL-08 เป็นงานถัดไป
 - v1.6 (2026-08-19): BL-11 เสร็จ + deploy แล้ว — P4a เหลือแค่ D-023 (รอผลรีวิว research doc)
 - v1.5 (2026-08-19): D-019 (day-type target, FR-CALC-4) เสร็จ + deploy แล้ว — P4a งานถัดไปคือ D-023
 - v1.4 (2026-08-19): ปรับลำดับ P4a เป็น D-019 → D-023 → BL-08 (เดิม D-019 → BL-08 → D-023) — feedback

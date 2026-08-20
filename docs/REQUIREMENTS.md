@@ -1,4 +1,4 @@
-# REQUIREMENTS — Vmacro (FROZEN v1.8, 2026-08-19)
+# REQUIREMENTS — Vmacro (FROZEN v1.9, 2026-08-20)
 
 > แก้ไขได้เฉพาะเมื่อวีสั่ง + bump version + บันทึก changelog ท้ายไฟล์
 > ทุก FR ระบุ phase ที่ implement ตาม SCOPE.md
@@ -95,7 +95,8 @@ attribution แสดงเฉพาะเมื่อ source เป็น FatSe
 กด "บันทึก" แล้วเข้ามื้ออาหารที่เลือกไว้ทันทีในคลิกเดียว (ไม่เด้งไปหน้า detail อีกที); ปุ่มนี้แสดงเฉพาะตอนเปิดจากช่องทาง
 เพิ่มอาหารเข้ามื้อ (forDiary) เท่านั้น เพราะไม่มี food record ให้ผูกกับ dish/favorites ในโหมดอื่น*
 
-**FR-FOOD-7 (P4a)** AI Import (D-023) — user ทุกคน (ไม่ใช่แค่ admin) กรอกชื่ออาหาร + ปริมาณ (free text) +
+**FR-FOOD-7 (P4a)** **[ยกเลิก 2026-08-20 — ดู D-023 ใน PROJECT_BIBLE §5 สำหรับเหตุผล+ตัวเลข, โค้ดยังอยู่
+หลัง flag `AI_IMPORT_ENABLED=false` ถาวร ไม่มีแผนเปิด]** AI Import (D-023) — user ทุกคน (ไม่ใช่แค่ admin) กรอกชื่ออาหาร + ปริมาณ (free text) +
 แนบภาพได้ (optional) → proxy เรียก Claude (key เดียวกับ D-015) คืน JSON ตาม schema เดียวกับ admin
 bulk-import เป๊ะ (`name`, `serving_label`, `serving_size_g`, `kcal`, `protein_g`, `carbs_g`, `fat_g` เป็น
 required, `nutrients` เป็น object เสริม — ตัด field ที่ไม่มั่นใจออกจาก `nutrients` แทนการเดา 0) → หน้า
@@ -170,6 +171,8 @@ RLS: diary/health/profile/weight เห็นเฉพาะเจ้าขอ�
 
 ## Changelog
 
+- v1.9 (2026-08-20): FR-FOOD-7 (AI Import) ยกเลิกถาวรหลังวัดผลจริง 3 รอบ (คำสั่งวี) — ดู D-023 ใน
+  PROJECT_BIBLE §5 สำหรับเหตุผลเต็ม, โค้ดเก็บไว้หลัง flag ปิดถาวร ไม่ลบ
 - v1.8 (2026-08-19): เพิ่ม FR-FOOD-8 (Admin custom food list, คำสั่งวี) — หน้า admin แยกต่างหาก รวม
   Import อาหาร (เดิมอยู่แทรกใน Settings list ตรง ๆ) กับ list custom food ที่กรอง unverified เป็นค่าเริ่มต้น
   ให้ admin verify ได้จากจุดเดียว ไม่ต้องค้นหาทีละรายการผ่าน FoodSearch/FoodDetail เหมือนก่อนหน้า — ไม่มี

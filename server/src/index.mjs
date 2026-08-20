@@ -222,7 +222,7 @@ const server = createServer(async (req, res) => {
       return;
     }
 
-    const { name, quantity, photoBase64, photoMediaType, mode } = body;
+    const { name, quantity, photoBase64, photoMediaType, mode, cookingMethod } = body;
     if (typeof name !== "string" || !name.trim()) {
       sendJson(res, 400, { error: "name must be a non-empty string" });
       return;
@@ -246,9 +246,13 @@ const server = createServer(async (req, res) => {
       sendJson(res, 400, { error: "read_label mode requires photoBase64" });
       return;
     }
+    if (cookingMethod != null && typeof cookingMethod !== "string") {
+      sendJson(res, 400, { error: "cookingMethod must be a string" });
+      return;
+    }
 
     try {
-      const estimate = await getNutritionEstimate(name, quantity, photoBase64 || null, photoMediaType, mode || "estimate");
+      const estimate = await getNutritionEstimate(name, quantity, photoBase64 || null, photoMediaType, mode || "estimate", cookingMethod || null);
       sendJson(res, 200, estimate);
     } catch (err) {
       console.error(err);

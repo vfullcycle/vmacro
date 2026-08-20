@@ -85,11 +85,20 @@ const NUTRITION_MODEL = "claude-haiku-4-5-20251001";
 // task — transcribe the printed values off a nutrition label photo instead of estimating.
 // Photo is required by the caller for this mode (enforced in index.mjs); read_label calls
 // without a photo would just be a worse "estimate" call with a misleading name.
-export async function getNutritionEstimate(name, quantity, photoBase64, photoMediaType, mode = "estimate") {
+export async function getNutritionEstimate(name, quantity, photoBase64, photoMediaType, mode = "estimate", cookingMethod = null) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     throw new Error("ANTHROPIC_API_KEY not set");
   }
+
+  // Oil absorption is invisible in a dish name but weighs ~9 kcal/g — a deep-fried vs
+  // dry-grilled version of "the same" dish name can differ by 100+ kcal (docs/research/
+  // ai-import.md §4). Only meaningful in "estimate" mode — read_label is transcribing a
+  // printed label, cooking method doesn't change what's written on it.
+  const cookingMethodLine =
+    mode === "estimate" && cookingMethod
+      ? `\nCooking method as stated by the user: ${cookingMethod} — factor this into oil/fat content specifically: deep-frying absorbs substantially more oil than pan-frying, stir-frying, dry-grilling, baking, or boiling/steaming, and this is usually NOT reflected in the dish name alone.`
+      : "";
 
   const promptText =
     mode === "read_label"
@@ -112,7 +121,7 @@ submit_nutrition_estimate tool.`
 
 Food name: ${name}
 Quantity: ${quantity}
-${photoBase64 ? "A photo is attached for extra context (e.g. to help identify ambiguous ingredients) — use it as supporting context only, not as your primary source for portion size; the stated quantity above is the primary source." : ""}
+${photoBase64 ? "A photo is attached for extra context (e.g. to help identify ambiguous ingredients) — use it as supporting context only, not as your primary source for portion size; the stated quantity above is the primary source." : ""}${cookingMethodLine}
 
 For kcal, protein_g, carbs_g, fat_g: give a realistic low-high range for the stated quantity that you're
 roughly 80% confident contains the true value — never omit these four. This is NOT an extreme min/max

@@ -10,6 +10,19 @@
 // user actually experiences when editing the pre-filled form, and it has no divide-by-zero
 // edge case (an item with actual fat=0g and an estimate of 16g is simply "16g off").
 //
+// (2026-08-19, round 3) Absolute error alone has its own blind spot the other direction —
+// it scales with dish size (a 500kcal dish naturally has more room for absolute miss than
+// a 50kcal one), so items with explicit large gram servings looked artificially "worse"
+// than small ones even at similar real accuracy. Added a size-normalized companion metric:
+// each macro's absolute error converted to its kcal-equivalent (protein/carbs x4, fat x9)
+// then expressed as % of that item's own actual kcal — comparable across items regardless
+// of dish size, and never blows up the way %-of-that-macro's-own-actual did for
+// near-zero-gram macros (kcal is essentially never near zero for a real dish).
+//
+// Also added: range coverage (does actual fall inside the model's [low, high]?) and mean
+// range width per macro — a model that's "right" 100% of the time by giving an absurdly
+// wide range is not useful; coverage and width must be read together.
+//
 // Branded/packaged vs home-cooked grouping is NOT done in this script — see the report
 // step's printed per-item list; a human sorts that by eye (more reliable than a keyword
 // heuristic that could misclassify silently).
@@ -39,6 +52,7 @@ async function loadEnv() {
 }
 
 const MACROS = ["kcal", "protein_g", "carbs_g", "fat_g"];
+const KCAL_FACTOR = { kcal: 1, protein_g: 4, carbs_g: 4, fat_g: 9 };
 
 function absError(estimate, actual) {
   return Math.abs(estimate - actual);
@@ -48,6 +62,14 @@ function absError(estimate, actual) {
 function pctError(estimate, actual) {
   if (actual === 0) return estimate === 0 ? 0 : null;
   return (Math.abs(estimate - actual) / actual) * 100;
+}
+
+// this macro's absolute error, converted to kcal and expressed as % of the item's own
+// actual total kcal — size-normalized, comparable across items and across macros
+function relToDishKcal(estimate, actual, macro, actualKcal) {
+  if (actualKcal === 0) return null;
+  const kcalEquivError = Math.abs(estimate - actual) * KCAL_FACTOR[macro];
+  return (kcalEquivError / actualKcal) * 100;
 }
 
 function percentile(sorted, p) {
@@ -91,11 +113,27 @@ async function main() {
       const estimate = await getNutritionEstimate(food.name, quantity, null, undefined);
       const abs = Object.fromEntries(MACROS.map((m) => [m, absError(estimate[m], food[m])]));
       const pct = Object.fromEntries(MACROS.map((m) => [m, pctError(estimate[m], food[m])]));
-      results.push({ name: food.name, quantity, actual: food, estimate, abs, pct });
+      const relKcal = Object.fromEntries(MACROS.map((m) => [m, relToDishKcal(estimate[m], food[m], m, food.kcal)]));
+      const covered = Object.fromEntries(
+        MACROS.map((m) => [m, estimate.ranges ? food[m] >= estimate.ranges[m][0] && food[m] <= estimate.ranges[m][1] : null]),
+      );
+      const width = Object.fromEntries(MACROS.map((m) => [m, estimate.ranges ? estimate.ranges[m][1] - estimate.ranges[m][0] : null]));
+      results.push({ name: food.name, quantity, actual: food, estimate, abs, pct, relKcal, covered, width });
       console.log("ok");
     } catch (err) {
       console.log(`FAILED: ${err.message}`);
-      results.push({ name: food.name, quantity, actual: food, estimate: null, abs: null, pct: null, failed: true });
+      results.push({
+        name: food.name,
+        quantity,
+        actual: food,
+        estimate: null,
+        abs: null,
+        pct: null,
+        relKcal: null,
+        covered: null,
+        width: null,
+        failed: true,
+      });
     }
     // small delay — polite to Anthropic's API, this isn't a latency benchmark
     await new Promise((r) => setTimeout(r, 500));
@@ -106,7 +144,7 @@ async function main() {
   const ok = results.filter((r) => !r.failed);
   console.log(`${ok.length}/${results.length} estimates succeeded.\n`);
 
-  console.log("Per-item (absolute error, unit per macro: kcal/g/g/g — % shown for reference only):");
+  console.log("Per-item (absolute error, unit per macro: kcal/g/g/g — %-of-that-macro and %-of-dish-kcal shown for reference):");
   for (const r of results) {
     if (r.failed) {
       console.log(`  ${r.name} (${r.quantity}): FAILED`);
@@ -114,13 +152,15 @@ async function main() {
     }
     const parts = MACROS.map((m) => {
       const pctLabel = r.pct[m] === null ? "n/a%" : `${r.pct[m].toFixed(0)}%`;
-      return `${m}=${r.abs[m].toFixed(1)} (${pctLabel}) [actual ${r.actual[m]}, est ${r.estimate[m]}]`;
+      const relLabel = r.relKcal[m] === null ? "n/a%dish" : `${r.relKcal[m].toFixed(1)}%dish`;
+      const covLabel = r.covered[m] === null ? "" : r.covered[m] ? " [covered]" : " [MISSED]";
+      return `${m}=${r.abs[m].toFixed(1)} (${pctLabel}, ${relLabel})${covLabel} [actual ${r.actual[m]}, est ${r.estimate[m]}]`;
     });
     console.log(`  ${r.name} (${r.quantity}): ${parts.join(", ")}`);
   }
   console.log();
 
-  console.log("Summary per macro — ABSOLUTE error (primary metric, 2026-08-19 round 2):");
+  console.log("Summary per macro — ABSOLUTE error:");
   for (const m of MACROS) {
     const errs = ok.map((r) => r.abs[m]).sort((a, b) => a - b);
     const avg = errs.reduce((s, e) => s + e, 0) / errs.length;
@@ -131,11 +171,35 @@ async function main() {
   }
   console.log();
 
+  console.log("Summary per macro — error as % of that item's own dish kcal (size-normalized, round 3):");
+  for (const m of MACROS) {
+    const errs = ok.map((r) => r.relKcal[m]).filter((v) => v !== null).sort((a, b) => a - b);
+    const avg = errs.reduce((s, e) => s + e, 0) / errs.length;
+    console.log(
+      `  ${m}: avg=${avg.toFixed(1)}% median=${percentile(errs, 50).toFixed(1)}% p90=${percentile(errs, 90).toFixed(1)}% (n=${errs.length})`,
+    );
+  }
+  console.log();
+
+  console.log("Summary per macro — range coverage + mean width (round 3):");
+  for (const m of MACROS) {
+    const withRanges = ok.filter((r) => r.covered[m] !== null);
+    if (withRanges.length === 0) {
+      console.log(`  ${m}: no range data`);
+      continue;
+    }
+    const coverageRate = (withRanges.filter((r) => r.covered[m]).length / withRanges.length) * 100;
+    const avgWidth = withRanges.reduce((s, r) => s + r.width[m], 0) / withRanges.length;
+    const unit = m === "kcal" ? "kcal" : "g";
+    console.log(`  ${m}: coverage=${coverageRate.toFixed(0)}% (actual within [low,high]) avg width=${avgWidth.toFixed(1)}${unit} (n=${withRanges.length})`);
+  }
+  console.log();
+
   console.log("Worst 3 items by kcal absolute error:");
   const ranked = [...ok].sort((a, b) => b.abs.kcal - a.abs.kcal).slice(0, 3);
   for (const r of ranked) {
     console.log(
-      `  ${r.name}: kcal off by ${r.abs.kcal.toFixed(0)} (actual ${r.actual.kcal}, est ${r.estimate.kcal}) — protein ${r.abs.protein_g.toFixed(1)}g, carbs ${r.abs.carbs_g.toFixed(1)}g, fat ${r.abs.fat_g.toFixed(1)}g off`,
+      `  ${r.name}: kcal off by ${r.abs.kcal.toFixed(0)} (actual ${r.actual.kcal}, est ${r.estimate.kcal}, ${r.relKcal.kcal.toFixed(1)}% of dish) — protein ${r.abs.protein_g.toFixed(1)}g, carbs ${r.abs.carbs_g.toFixed(1)}g, fat ${r.abs.fat_g.toFixed(1)}g off`,
     );
   }
 }

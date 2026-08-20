@@ -21,6 +21,13 @@ const HEALTH_SUMMARY_RATE_LIMIT = { max: 30, windowMs: 60_000 };
 // Lower than translate's 20/min — vision calls are slower/pricier, and this is a
 // deliberate one-at-a-time "fill in this form" action, not a batch operation.
 const AI_IMPORT_RATE_LIMIT = { max: 10, windowMs: 60_000 };
+// D-023 cancelled permanently 2026-08-20 (see PROJECT_BIBLE §5) — validated 3 rounds,
+// didn't solve the actual problem and added Anthropic API cost. Route code stays (mirrors
+// the client's AI_IMPORT_ENABLED flag in web/src/config.ts, same "keep code, don't
+// delete" call) but is hard-disabled server-side too — the repo is public, so the route
+// staying reachable by direct HTTP call (bypassing the client-only flag) would still cost
+// วีmoney even with zero UI pointing at it.
+const AI_IMPORT_ENABLED = false;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -202,6 +209,12 @@ const server = createServer(async (req, res) => {
   }
 
   if (req.method === "POST" && url.pathname === "/ai-import") {
+    // D-023 cancelled permanently — pretend the route doesn't exist rather than 403, no
+    // reason to confirm to a caller that it's just disabled vs never having existed.
+    if (!AI_IMPORT_ENABLED) {
+      sendJson(res, 404, { error: "not found" });
+      return;
+    }
     // FR-FOOD-7 / D-023: same cost-ownership + auth rules as /translate — spends วี's
     // Anthropic credit, so it requires a logged-in user and a (tighter) rate limit.
     const user = await getAuthedUser(req);

@@ -1,23 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { computeWeightComposition, sumOtherNutrients } from "./nutrientComposition";
+import { computeNutrientComposition, sumOtherNutrients } from "./nutrientComposition";
 
-describe("computeWeightComposition", () => {
-  it("returns null when no entry has a known serving weight", () => {
-    expect(computeWeightComposition([{ quantity: 1, serving_size_g: null, protein_g: 20, carbs_g: 30, fat_g: 10 }])).toBeNull();
+describe("computeNutrientComposition", () => {
+  it("returns null when there is no macro or other-nutrient data at all", () => {
+    expect(computeNutrientComposition([], [])).toBeNull();
   });
 
-  it("computes protein/carb/fat/other from weighed entries only", () => {
-    const result = computeWeightComposition([
-      { quantity: 1, serving_size_g: 200, protein_g: 30, carbs_g: 20, fat_g: 10 }, // 60g accounted, 140g other
-      { quantity: 2, serving_size_g: 50, protein_g: 5, carbs_g: 5, fat_g: 0 }, // 100g total, 10g accounted, 90g other
-      { quantity: 1, serving_size_g: null, protein_g: 999, carbs_g: 999, fat_g: 999 }, // excluded — no known weight
-    ]);
-    expect(result).toEqual({ protein_g: 35, carbs_g: 25, fat_g: 10, other_g: 230, total_g: 300 });
+  it("sums protein/carb/fat across all entries regardless of serving weight", () => {
+    const result = computeNutrientComposition(
+      [
+        { protein_g: 18, carbs_g: 63, fat_g: 16 },
+        { protein_g: 5, carbs_g: 5, fat_g: 0 },
+      ],
+      [],
+    );
+    expect(result).toEqual({ protein_g: 23, carbs_g: 68, fat_g: 16, other_g: 0 });
   });
 
-  it("clamps other_g at 0 instead of going negative on rounding edge cases", () => {
-    const result = computeWeightComposition([{ quantity: 1, serving_size_g: 10, protein_g: 6, carbs_g: 3, fat_g: 3 }]);
-    expect(result?.other_g).toBe(0);
+  it("uses the already-converted other-nutrient total as the OTH slice, not a weight subtraction", () => {
+    const result = computeNutrientComposition(
+      [{ protein_g: 18, carbs_g: 63, fat_g: 16 }],
+      [
+        { key: "sodium_mg", label: "โซเดียม", grams: 0.85 },
+        { key: "potassium_mg", label: "โพแทสเซียม", grams: 0.43 },
+      ],
+    );
+    expect(result).toEqual({ protein_g: 18, carbs_g: 63, fat_g: 16, other_g: 1.28 });
   });
 });
 

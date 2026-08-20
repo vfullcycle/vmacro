@@ -6,7 +6,7 @@ import ProgressBar from "../components/ProgressBar";
 import WeightChart from "../components/WeightChart";
 import { useAuth } from "../lib/auth-context";
 import { addDays, todayLocalDate } from "../lib/diary";
-import { computeWeightComposition, sumOtherNutrients } from "../lib/nutrientComposition";
+import { computeNutrientComposition, sumOtherNutrients } from "../lib/nutrientComposition";
 import type { NutrientPanel } from "../lib/scaling";
 import { supabase } from "../lib/supabase";
 import { useTodayTarget } from "../lib/useTodayTarget";
@@ -26,8 +26,6 @@ interface EntryRow {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
-  quantity: number;
-  serving_size_g: number | null;
   nutrients: NutrientPanel | null;
 }
 
@@ -84,7 +82,7 @@ export default function Dashboard() {
     if (!user) return;
     supabase
       .from("diary_entries")
-      .select("kcal, protein_g, carbs_g, fat_g, quantity, serving_size_g, nutrients")
+      .select("kcal, protein_g, carbs_g, fat_g, nutrients")
       .eq("user_id", user.id)
       .eq("entry_date", date)
       .then(({ data }) => setEntries((data as EntryRow[]) ?? []));
@@ -132,8 +130,8 @@ export default function Dashboard() {
     [entries],
   );
 
-  const weightComposition = useMemo(() => computeWeightComposition(entries), [entries]);
   const otherNutrients = useMemo(() => sumOtherNutrients(entries.map((e) => e.nutrients)), [entries]);
+  const nutrientComposition = useMemo(() => computeNutrientComposition(entries, otherNutrients), [entries, otherNutrients]);
 
   const latestWeight = weightLogs.length > 0 ? weightLogs[weightLogs.length - 1] : null;
   const recentWeightLogs = useMemo(() => weightLogs.slice(-14), [weightLogs]);
@@ -171,19 +169,18 @@ export default function Dashboard() {
       </div>
 
       <div className="dash-card">
-        <h2>สัดส่วนที่กินจริง (โดยน้ำหนัก)</h2>
-        {weightComposition ? (
+        <h2>สัดส่วนสารอาหารที่กินวันนี้</h2>
+        {nutrientComposition ? (
           <DonutRing
             segments={[
-              { key: "protein", label: "โปรตีน", value: weightComposition.protein_g, color: PROTEIN_COLOR },
-              { key: "carb", label: "คาร์บ", value: weightComposition.carbs_g, color: CARB_COLOR },
-              { key: "fat", label: "ไขมัน", value: weightComposition.fat_g, color: FAT_COLOR },
-              { key: "other", label: "อื่นๆ", value: weightComposition.other_g, color: OTHER_COLOR },
+              { key: "protein", label: "โปรตีน", value: nutrientComposition.protein_g, color: PROTEIN_COLOR },
+              { key: "carb", label: "คาร์บ", value: nutrientComposition.carbs_g, color: CARB_COLOR },
+              { key: "fat", label: "ไขมัน", value: nutrientComposition.fat_g, color: FAT_COLOR },
+              { key: "other", label: "อื่นๆ", value: nutrientComposition.other_g, color: OTHER_COLOR },
             ]}
-            centerLabel={`${Math.round(weightComposition.total_g)} g`}
           />
         ) : (
-          <p className="dash-summary-missing">ไม่มีรายการที่รู้น้ำหนักจริงในวันนี้</p>
+          <p className="dash-summary-missing">ยังไม่มีข้อมูลอาหารวันนี้</p>
         )}
       </div>
 

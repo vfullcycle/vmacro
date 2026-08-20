@@ -1,44 +1,36 @@
 import type { NutrientPanel } from "./scaling";
 
-export interface WeightedEntry {
-  quantity: number;
-  serving_size_g: number | null;
+export interface MacroEntry {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
 }
 
-export interface WeightComposition {
+export interface NutrientComposition {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
   other_g: number;
-  total_g: number;
 }
 
-// Only entries with a known real serving weight count — quick-add and any other
-// source without serving_size_g has no basis for a physical weight, so mixing them in
-// would make other_g meaningless (could go negative or overstate composition) —
-// FR-DASH-1 amendment, 2026-08-20.
-export function computeWeightComposition(entries: WeightedEntry[]): WeightComposition | null {
-  const weighed = entries.filter((e) => e.serving_size_g != null);
-  if (weighed.length === 0) return null;
-
-  const totals = weighed.reduce(
-    (acc, e) => {
-      const grams = e.quantity * (e.serving_size_g as number);
-      return {
-        total_g: acc.total_g + grams,
-        protein_g: acc.protein_g + e.protein_g,
-        carbs_g: acc.carbs_g + e.carbs_g,
-        fat_g: acc.fat_g + e.fat_g,
-      };
-    },
-    { total_g: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+// Deliberately does NOT use serving_size_g / total dish weight as the base — for
+// custom foods (most Thai dishes in this app), the stated serving weight and the
+// kcal/macro figures are typed in as two separate, independently-sourced numbers with
+// no guarantee they were measured from the same sample. Subtracting macros from that
+// weight (an earlier version of this function) conflated real water/fiber/mineral mass
+// with plain data-entry inconsistency, with no way to tell the two apart (found during
+// FR-DASH-1 dogfood, 2026-08-20). Instead, the ring's 100% is the sum of only what's
+// actually measured: protein_g + carbs_g + fat_g + otherTotal (sodium/cholesterol/etc,
+// already converted to grams by sumOtherNutrients) — self-consistent by construction,
+// and no longer needs entries to have a known serving weight at all.
+export function computeNutrientComposition(entries: MacroEntry[], otherTotal: OtherNutrientTotal[]): NutrientComposition | null {
+  const macros = entries.reduce(
+    (acc, e) => ({ protein_g: acc.protein_g + e.protein_g, carbs_g: acc.carbs_g + e.carbs_g, fat_g: acc.fat_g + e.fat_g }),
+    { protein_g: 0, carbs_g: 0, fat_g: 0 },
   );
-
-  const other_g = Math.max(0, totals.total_g - totals.protein_g - totals.carbs_g - totals.fat_g);
-  return { protein_g: totals.protein_g, carbs_g: totals.carbs_g, fat_g: totals.fat_g, other_g, total_g: totals.total_g };
+  const other_g = otherTotal.reduce((sum, o) => sum + o.grams, 0);
+  if (macros.protein_g + macros.carbs_g + macros.fat_g + other_g <= 0) return null;
+  return { ...macros, other_g };
 }
 
 interface OtherNutrientField {

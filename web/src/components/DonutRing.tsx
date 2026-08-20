@@ -6,6 +6,10 @@ export interface DonutSegment {
   label: string;
   value: number;
   color: string;
+  /** Formatted quantity shown next to the %, e.g. "0.85 g" — caller formats since the
+   * right precision/unit depends on the ring (whole grams for macros, 2dp for trace
+   * nutrients that are otherwise indistinguishable from 0 when rounded). */
+  valueLabel?: string;
 }
 
 // Composition donut (not a target-progress ring) — segment sizes are proportions of
@@ -36,7 +40,7 @@ export default function DonutRing({ segments, centerLabel }: { segments: DonutSe
         {present.map((seg) => (
           <li key={seg.key}>
             <span className="donut-ring-swatch" style={{ background: seg.color }} />
-            {seg.label} {Math.round((seg.value / total) * 100)}%
+            {seg.label} {seg.valueLabel ? `${seg.valueLabel} ` : ""}({Math.round((seg.value / total) * 100)}%)
           </li>
         ))}
       </ul>

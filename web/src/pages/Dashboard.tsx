@@ -173,10 +173,34 @@ export default function Dashboard() {
         {nutrientComposition ? (
           <DonutRing
             segments={[
-              { key: "protein", label: "โปรตีน", value: nutrientComposition.protein_g, color: PROTEIN_COLOR },
-              { key: "carb", label: "คาร์บ", value: nutrientComposition.carbs_g, color: CARB_COLOR },
-              { key: "fat", label: "ไขมัน", value: nutrientComposition.fat_g, color: FAT_COLOR },
-              { key: "other", label: "อื่นๆ", value: nutrientComposition.other_g, color: OTHER_COLOR },
+              {
+                key: "protein",
+                label: "โปรตีน",
+                value: nutrientComposition.protein_g,
+                valueLabel: `${Math.round(nutrientComposition.protein_g)} g`,
+                color: PROTEIN_COLOR,
+              },
+              {
+                key: "carb",
+                label: "คาร์บ",
+                value: nutrientComposition.carbs_g,
+                valueLabel: `${Math.round(nutrientComposition.carbs_g)} g`,
+                color: CARB_COLOR,
+              },
+              {
+                key: "fat",
+                label: "ไขมัน",
+                value: nutrientComposition.fat_g,
+                valueLabel: `${Math.round(nutrientComposition.fat_g)} g`,
+                color: FAT_COLOR,
+              },
+              {
+                key: "other",
+                label: "อื่นๆ",
+                value: nutrientComposition.other_g,
+                valueLabel: `${nutrientComposition.other_g.toFixed(2)} g`,
+                color: OTHER_COLOR,
+              },
             ]}
           />
         ) : (
@@ -192,6 +216,7 @@ export default function Dashboard() {
               key: n.key,
               label: n.label,
               value: n.grams,
+              valueLabel: `${n.grams.toFixed(2)} g`,
               color: OTHER_BREAKOUT_COLORS[i % OTHER_BREAKOUT_COLORS.length],
             }))}
           />

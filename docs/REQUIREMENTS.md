@@ -1,4 +1,4 @@
-# REQUIREMENTS — Vmacro (FROZEN v1.10, 2026-08-20)
+# REQUIREMENTS — Vmacro (FROZEN v1.11, 2026-08-20)
 
 > แก้ไขได้เฉพาะเมื่อวีสั่ง + bump version + บันทึก changelog ท้ายไฟล์
 > ทุก FR ระบุ phase ที่ implement ตาม SCOPE.md
@@ -150,6 +150,23 @@ tab bar เหลือ 4 ปุ่มเหมือนเดิม (Diary, Sea
 entry เลย (เช่นเปิดตอนเช้า) ต้องแสดงสถานะเริ่มต้นที่ดูดี — ring 0% พร้อมเป้าของวันแสดงครบ ไม่ error/หน้าโล่ง;
 `/weight-log` ยังเข้าได้ตรงผ่านลิงก์จาก Dashboard เหมือนเดิมทุกอย่าง ไม่มี regression*
 
+**[แก้ไข 2026-08-20, ระหว่าง dogfood — ยังไม่ตี tag v1.2.0]** เพิ่ม 3 ส่วนต่อจากของเดิมข้างบน (ไม่แทนที่
+kcal ring + P/C/F progress bar เดิม): **(5)** composition ring แยกต่างหาก แสดงสัดส่วน "น้ำหนักที่กินจริง
+วันนี้" (ไม่ใช่ progress เทียบเป้า) แบ่ง 4 ส่วน protein_g/carbs_g/fat_g/other_g รวม 100% — คำนวณจากเฉพาะ
+entry ที่รู้น้ำหนักจริง (`serving_size_g` ไม่ null) เท่านั้น กันน้ำหนักรวมเพี้ยนจาก entry ที่ไม่มีน้ำหนัก
+(เช่น quick-add); ไม่มี entry ไหนรู้น้ำหนักจริงเลย → ซ่อน ring พร้อมข้อความอธิบาย **(6)** breakout ring
+ที่สองแสดงสัดส่วนภายในชิ้น OTH ของ ring (5) เอง จำกัดเฉพาะ nutrient ที่ไม่ซ้อนกับ P/F/C อยู่แล้ว (sodium,
+cholesterol, potassium, calcium, iron, vitamin C, vitamin D — แปลง mg/mcg เป็น g ให้หน่วยตรงกันก่อนเทียบ
+สัดส่วน) — **ไม่รวม fiber/sugar/saturated-trans-poly-mono fat เพราะนับซ้อนอยู่ใน carbs_g/fat_g แล้ว**;
+field ไหนไม่มีข้อมูลข้ามไปเงียบๆ ไม่โชว์ 0; ไม่มี field ไหนมีข้อมูลเลย → ซ่อน ring พร้อมข้อความ **(7)**
+เลือกวันอื่นได้ผ่าน date-nav แบบเดียวกับ Diary (`?date=` + ลูกศรก่อนหน้า/ถัดไป + date picker) — kcal ring,
+P/C/F bars, ring (5)/(6), day-type badge, "X/7 วัน" (นับ 7 วันย้อนจากวันที่เลือก) เปลี่ยนตามวันที่เลือกหมด
+**ยกเว้น weight card ที่ยังโชว์น้ำหนักล่าสุดจริงเสมอ ไม่ผูกกับวันที่เลือก**
+*AC เพิ่ม: สัดส่วนใน ring (5)/(6) รวมกัน = 100% ±rounding และไม่ติดลบ, อัปเดตทันทีเมื่อ entry เปลี่ยน;
+entry ไม่มีน้ำหนักจริงไม่ถูกนับเข้าฐาน (5); ไม่มี entry/field ที่ใช้ได้เลย → ซ่อน ring พร้อมข้อความ ไม่
+error/NaN; ring (6) ไม่รวม field ที่นับซ้อนกับ P/F/C; เปลี่ยนวันที่แล้วทุกส่วนอัปเดตตามวันที่เลือกถูกต้อง
+ยกเว้น weight card*
+
 ## FR-HLTH — Apple Health Integration (P3–P4)
 
 **FR-HLTH-1 (P3)** เขียนยอดวันลง Apple Health อย่างน้อย: dietary energy, fat (total/saturated/mono/poly),
@@ -190,6 +207,9 @@ RLS: diary/health/profile/weight เห็นเฉพาะเจ้าขอ�
 
 ## Changelog
 
+- v1.11 (2026-08-20): แก้ FR-DASH-1 ระหว่าง dogfood (คำสั่งวี, ยังไม่ตี tag v1.2.0) — เพิ่ม composition
+  ring (P/F/C/OTH โดยน้ำหนักจริง), breakout ring ของ OTH (เฉพาะ nutrient ที่ไม่ซ้อนกับ P/F/C — sodium/
+  cholesterol/potassium/calcium/iron/vitamin C/D), และ date-nav เลือกวันอื่นได้ (weight card ไม่ผูกวันที่)
 - v1.10 (2026-08-20): เพิ่ม FR-DASH-1 (Dashboard tab, BL-08, คำสั่งวี) — kcal ring + P/C/F ผ่าน shared
   hook `useTodayTarget()`, day-type badge read-only, weight card+sparkline, สรุป "X/7 วัน" เป็นตัวหลัก
   (streak เป็นตัวรอง/ไม่บังคับ — วีปรับจากร่างเดิมเพราะ streak รีเซ็ตเป็น 0 สร้างแรงกดดันทางลบ), ตัด

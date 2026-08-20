@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import DateNav from "../components/DateNav";
+import DonutRing from "../components/DonutRing";
 import ProgressBar from "../components/ProgressBar";
 import WeightChart from "../components/WeightChart";
 import { useAuth } from "../lib/auth-context";
 import { addDays, todayLocalDate } from "../lib/diary";
+import { computeWeightComposition, sumOtherNutrients } from "../lib/nutrientComposition";
+import type { NutrientPanel } from "../lib/scaling";
 import { supabase } from "../lib/supabase";
 import { useTodayTarget } from "../lib/useTodayTarget";
 import "./Dashboard.css";
@@ -11,11 +15,20 @@ import "./Dashboard.css";
 const DAY_TYPE_LABELS = { rest: "Rest", light: "Light", hard: "Hard" };
 const WEEK_DAYS = 7;
 
-interface EntryTotals {
+const PROTEIN_COLOR = "#6366f1";
+const CARB_COLOR = "#f59e0b";
+const FAT_COLOR = "#ef4444";
+const OTHER_COLOR = "#9ca3af";
+const OTHER_BREAKOUT_COLORS = ["#0ea5e9", "#10b981", "#f97316", "#a855f7", "#eab308", "#ec4899", "#14b8a6"];
+
+interface EntryRow {
   kcal: number;
   protein_g: number;
   carbs_g: number;
   fat_g: number;
+  quantity: number;
+  serving_size_g: number | null;
+  nutrients: NutrientPanel | null;
 }
 
 interface WeightLogPoint {
@@ -53,36 +66,28 @@ function KcalRing({ value, target }: { value: number; target: number }) {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const date = todayLocalDate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const date = searchParams.get("date") ?? todayLocalDate();
 
   const { dayType, target } = useTodayTarget(date);
 
-  const [totals, setTotals] = useState<EntryTotals>({ kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 });
+  const [entries, setEntries] = useState<EntryRow[]>([]);
   const [loggedDates, setLoggedDates] = useState<string[]>([]);
   const [weightLogs, setWeightLogs] = useState<WeightLogPoint[]>([]);
   const [loading, setLoading] = useState(true);
+
+  function goToDate(d: string) {
+    setSearchParams({ date: d });
+  }
 
   useEffect(() => {
     if (!user) return;
     supabase
       .from("diary_entries")
-      .select("kcal, protein_g, carbs_g, fat_g")
+      .select("kcal, protein_g, carbs_g, fat_g, quantity, serving_size_g, nutrients")
       .eq("user_id", user.id)
       .eq("entry_date", date)
-      .then(({ data }) => {
-        const rows = (data as EntryTotals[]) ?? [];
-        setTotals(
-          rows.reduce(
-            (acc, e) => ({
-              kcal: acc.kcal + e.kcal,
-              protein_g: acc.protein_g + e.protein_g,
-              carbs_g: acc.carbs_g + e.carbs_g,
-              fat_g: acc.fat_g + e.fat_g,
-            }),
-            { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
-          ),
-        );
-      });
+      .then(({ data }) => setEntries((data as EntryRow[]) ?? []));
   }, [user, date]);
 
   useEffect(() => {
@@ -113,6 +118,23 @@ export default function Dashboard() {
       });
   }, [user]);
 
+  const totals = useMemo(
+    () =>
+      entries.reduce(
+        (acc, e) => ({
+          kcal: acc.kcal + e.kcal,
+          protein_g: acc.protein_g + e.protein_g,
+          carbs_g: acc.carbs_g + e.carbs_g,
+          fat_g: acc.fat_g + e.fat_g,
+        }),
+        { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+      ),
+    [entries],
+  );
+
+  const weightComposition = useMemo(() => computeWeightComposition(entries), [entries]);
+  const otherNutrients = useMemo(() => sumOtherNutrients(entries.map((e) => e.nutrients)), [entries]);
+
   const latestWeight = weightLogs.length > 0 ? weightLogs[weightLogs.length - 1] : null;
   const recentWeightLogs = useMemo(() => weightLogs.slice(-14), [weightLogs]);
 
@@ -120,9 +142,11 @@ export default function Dashboard() {
     <section className="dashboard-page">
       <h1>Dashboard</h1>
 
+      <DateNav date={date} onChange={goToDate} />
+
       <div className="dash-card">
         <div className="dash-today-header">
-          <span className="dash-today-label">วันนี้</span>
+          <span className="dash-today-label">เป้าวันนี้</span>
           {dayType && <span className="dash-day-type-badge">{DAY_TYPE_LABELS[dayType]}</span>}
         </div>
 
@@ -145,6 +169,37 @@ export default function Dashboard() {
           ไปที่ Diary วันนี้
         </Link>
       </div>
+
+      <div className="dash-card">
+        <h2>สัดส่วนที่กินจริง (โดยน้ำหนัก)</h2>
+        {weightComposition ? (
+          <DonutRing
+            segments={[
+              { key: "protein", label: "โปรตีน", value: weightComposition.protein_g, color: PROTEIN_COLOR },
+              { key: "carb", label: "คาร์บ", value: weightComposition.carbs_g, color: CARB_COLOR },
+              { key: "fat", label: "ไขมัน", value: weightComposition.fat_g, color: FAT_COLOR },
+              { key: "other", label: "อื่นๆ", value: weightComposition.other_g, color: OTHER_COLOR },
+            ]}
+            centerLabel={`${Math.round(weightComposition.total_g)} g`}
+          />
+        ) : (
+          <p className="dash-summary-missing">ไม่มีรายการที่รู้น้ำหนักจริงในวันนี้</p>
+        )}
+      </div>
+
+      {otherNutrients.length > 0 && (
+        <div className="dash-card">
+          <h2>องค์ประกอบของ "อื่นๆ"</h2>
+          <DonutRing
+            segments={otherNutrients.map((n, i) => ({
+              key: n.key,
+              label: n.label,
+              value: n.grams,
+              color: OTHER_BREAKOUT_COLORS[i % OTHER_BREAKOUT_COLORS.length],
+            }))}
+          />
+        </div>
+      )}
 
       <div className="dash-card">
         <h2>น้ำหนัก</h2>

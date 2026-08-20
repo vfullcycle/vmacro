@@ -8,6 +8,7 @@ import AdminHome from "./pages/AdminHome";
 import AiFoodImport from "./pages/AiFoodImport";
 import Calculator from "./pages/Calculator";
 import CustomFoodForm from "./pages/CustomFoodForm";
+import Dashboard from "./pages/Dashboard";
 import Diary from "./pages/Diary";
 import DishBuilder from "./pages/DishBuilder";
 import FoodDetail from "./pages/FoodDetail";
@@ -45,6 +46,7 @@ function App() {
           >
             <Route path="/" element={<Navigate to="/diary" replace />} />
             <Route path="/diary" element={<Diary />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/settings" element={<SettingsHome />} />
             <Route path="/settings/profile" element={<SettingsProfile />} />
             <Route path="/settings/system" element={<SettingsSystem />} />

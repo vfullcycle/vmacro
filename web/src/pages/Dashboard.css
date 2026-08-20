@@ -1,0 +1,137 @@
+.dashboard-page {
+  max-width: 26rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+}
+
+.dash-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.dash-card h2 {
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+}
+
+.dash-today-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.dash-today-label {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.dash-day-type-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.dash-ring {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 1rem;
+}
+
+.dash-ring-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.dash-ring-track {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 10;
+}
+
+.dash-ring-fill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+.dash-ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.dash-ring-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.dash-ring-target {
+  font-size: 0.75rem;
+  color: var(--text);
+}
+
+.dash-macros {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.dash-summary-missing {
+  font-size: 0.875rem;
+  color: var(--text);
+}
+
+.dash-diary-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.dash-weight-latest {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0;
+}
+
+.dash-weight-date {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.dash-card .weight-chart {
+  width: 100%;
+  height: auto;
+  margin: 0.75rem 0;
+}
+
+.dash-card .weight-chart-empty {
+  font-size: 0.875rem;
+  color: var(--text);
+  margin: 0.75rem 0;
+}
+
+.dash-week-summary {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 0;
+}

@@ -1,4 +1,4 @@
-# REQUIREMENTS — Vmacro (FROZEN v1.9, 2026-08-20)
+# REQUIREMENTS — Vmacro (FROZEN v1.10, 2026-08-20)
 
 > แก้ไขได้เฉพาะเมื่อวีสั่ง + bump version + บันทึก changelog ท้ายไฟล์
 > ทุก FR ระบุ phase ที่ implement ตาม SCOPE.md
@@ -131,6 +131,25 @@ scale nutrient ตามสัดส่วนจาก serving ต้นทา�
 **FR-DIARY-3** ทางลัดลดการทำซ้ำ: (a) copy ทั้งวัน/ทั้งมื้อจากเมื่อวาน (b) รายการ recent (c) favorites
 *AC: บันทึกมื้อที่กินประจำได้ภายใน ≤3 taps จากหน้า diary*
 
+## FR-DASH — Dashboard (P4a)
+
+**FR-DASH-1 (P4a)** Dashboard tab (BL-08) แทนที่ตำแหน่ง "Weight" เดิมใน tab bar ล่าง — หน้า `/weight-log`
+เดิมยังอยู่ครบ ไม่ลบ ย้ายออกจาก tab bar ไปเข้าถึงผ่านลิงก์ในหน้า Dashboard แทน องค์ประกอบ:
+(1) kcal ring + P/C/F วันนี้ — ใช้ target-computation logic เดียวกับ Diary.tsx เป๊ะผ่าน shared hook
+ใหม่ `useTodayTarget()` (ห้ามคำนวณซ้ำเอง กันเป้าเพี้ยนจากหน้า Diary) (2) day-type วันนี้แสดงเป็น badge
+อย่างเดียว (read-only, ไม่มี selector ซ้ำ) กดแล้วพาไปหน้า Diary ถ้าต้องการเปลี่ยน (3) weight card +
+sparkline ย่อ (reuse `WeightChart` component เดิม) + ลิงก์ "ดูทั้งหมด" ไปหน้า `/weight-log` (4) สรุปสัปดาห์
+"บันทึกแล้ว X/7 วัน" (นับวันที่มี diary entry อย่างน้อย 1 รายการ) เป็นตัวหลัก — streak (วันติดต่อกัน) เป็น
+ตัวรองหรือไม่แสดงเลยก็ได้ เพราะ streak ที่รีเซ็ตเป็น 0 เมื่อขาดวันเดียวสร้างแรงกดดันทางลบในบริบทแอปอาหาร
+ส่วน X/7 ให้อภัยการขาดวันและวัดความสม่ำเสมอจริงได้ดีกว่า — **ไม่มี placeholder zone สำหรับ FR-ANLT-1**
+(P4b) ในเวอร์ชันนี้ ใส่ตอน FR-ANLT-1 พร้อมของจริงแทน
+*AC: ตัวเลข kcal/macro บน Dashboard ตรงกับที่หน้า Diary คำนวณเป๊ะเสมอ (ใช้ hook เดียวกัน); day-type badge
+อัปเดตทันทีถ้าเปลี่ยนจากหน้า Diary โดยไม่ต้อง refresh; weight card แสดงสถานะ "ยังไม่มีข้อมูล" ได้ถ้ายังไม่
+เคย log น้ำหนักเลย ไม่ error; X/7 นับถูกต้องรวมกรณี timezone ท้องถิ่น (ใช้ pattern `todayLocalDate()` เดิม);
+tab bar เหลือ 4 ปุ่มเหมือนเดิม (Diary, Search, Dashboard, Settings); เปิด Dashboard วันที่ยังไม่มี diary
+entry เลย (เช่นเปิดตอนเช้า) ต้องแสดงสถานะเริ่มต้นที่ดูดี — ring 0% พร้อมเป้าของวันแสดงครบ ไม่ error/หน้าโล่ง;
+`/weight-log` ยังเข้าได้ตรงผ่านลิงก์จาก Dashboard เหมือนเดิมทุกอย่าง ไม่มี regression*
+
 ## FR-HLTH — Apple Health Integration (P3–P4)
 
 **FR-HLTH-1 (P3)** เขียนยอดวันลง Apple Health อย่างน้อย: dietary energy, fat (total/saturated/mono/poly),
@@ -171,6 +190,11 @@ RLS: diary/health/profile/weight เห็นเฉพาะเจ้าขอ�
 
 ## Changelog
 
+- v1.10 (2026-08-20): เพิ่ม FR-DASH-1 (Dashboard tab, BL-08, คำสั่งวี) — kcal ring + P/C/F ผ่าน shared
+  hook `useTodayTarget()`, day-type badge read-only, weight card+sparkline, สรุป "X/7 วัน" เป็นตัวหลัก
+  (streak เป็นตัวรอง/ไม่บังคับ — วีปรับจากร่างเดิมเพราะ streak รีเซ็ตเป็น 0 สร้างแรงกดดันทางลบ), ตัด
+  placeholder zone สำหรับ FR-ANLT-1 ออก (ใส่ทีหลังพร้อมของจริง), เพิ่ม AC วันที่ยังไม่มี diary entry
+  ต้องแสดง ring 0% ไม่ error — เข้าคิว P4a แทนที่ tab "Weight" เดิม
 - v1.9 (2026-08-20): FR-FOOD-7 (AI Import) ยกเลิกถาวรหลังวัดผลจริง 3 รอบ (คำสั่งวี) — ดู D-023 ใน
   PROJECT_BIBLE §5 สำหรับเหตุผลเต็ม, โค้ดเก็บไว้หลัง flag ปิดถาวร ไม่ลบ
 - v1.8 (2026-08-19): เพิ่ม FR-FOOD-8 (Admin custom food list, คำสั่งวี) — หน้า admin แยกต่างหาก รวม

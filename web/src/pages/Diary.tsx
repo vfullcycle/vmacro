@@ -1,44 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import MealTemplatePickerModal from "../components/MealTemplatePickerModal";
+import ProgressBar from "../components/ProgressBar";
 import RecentFavoritesModal from "../components/RecentFavoritesModal";
 import { useAuth } from "../lib/auth-context";
 import { addDays, entryDisplayName, entryQuantityLabel, MEAL_LABELS, MEALS, todayLocalDate, type DiaryEntryRow, type Meal } from "../lib/diary";
-import { computeDayTypePreview } from "../lib/preview";
 import { scaleNutrients } from "../lib/scaling";
 import { supabase } from "../lib/supabase";
 import type { DayType } from "../lib/tdee";
+import { useTodayTarget } from "../lib/useTodayTarget";
 import "./Diary.css";
-
-interface ProfileForTarget {
-  sex: "male" | "female" | null;
-  birth_date: string | null;
-  height_cm: number | null;
-  current_weight_kg: number | null;
-  body_fat_pct: number | null;
-  activity_level: "sedentary" | "light" | "moderate" | "active" | "extra_active" | null;
-  goal: "lose" | "maintain" | "gain" | null;
-  formula_choice: "mifflin" | "katch_mcardle" | "harris_benedict";
-  default_protein_g_per_kg: number | null;
-  default_fat_pct: number | null;
-  health_shortcut_name: string | null;
-  default_day_type: DayType | null;
-  day_type_allowance_rest_kcal: number | null;
-  day_type_allowance_light_kcal: number | null;
-  day_type_allowance_hard_kcal: number | null;
-  carb_floor_g: number | null;
-  carb_floor_pct: number | null;
-  fat_floor_g_per_kg: number | null;
-  fat_floor_pct: number | null;
-}
-
-interface Target {
-  kcal: number;
-  protein_g: number;
-  carb_g: number;
-  fat_g: number;
-  hit_floor: boolean;
-}
 
 const DAY_TYPE_LABELS: Record<DayType, string> = { rest: "Rest", light: "Light", hard: "Hard" };
 const DAY_TYPES: DayType[] = ["rest", "light", "hard"];
@@ -50,23 +21,6 @@ const DAY_TYPES: DayType[] = ["rest", "light", "hard"];
 const DEFAULT_HEALTH_SYNC_SHORTCUT_NAME = "Vmacro: Sync to Health";
 const IS_IOS = typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
 
-function ProgressBar({ label, value, target }: { label: string; value: number; target: number }) {
-  const pct = target > 0 ? Math.min(100, Math.round((value / target) * 100)) : 0;
-  return (
-    <div className="diary-progress">
-      <div className="diary-progress-label">
-        <span>{label}</span>
-        <span>
-          {Math.round(value)} / {Math.round(target)}
-        </span>
-      </div>
-      <div className="diary-progress-track">
-        <div className="diary-progress-fill" style={{ width: `${pct}%` }} />
-      </div>
-    </div>
-  );
-}
-
 export default function Diary() {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -76,9 +30,7 @@ export default function Diary() {
   const [entries, setEntries] = useState<DiaryEntryRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [profile, setProfile] = useState<ProfileForTarget | null>(null);
-  const [dayType, setDayType] = useState<DayType | null>(null);
-  const [dayTypeSaving, setDayTypeSaving] = useState(false);
+  const { profile, dayType, dayTypeSaving, selectDayType, target, error: targetError } = useTodayTarget(date);
   const [shortcutName, setShortcutName] = useState(DEFAULT_HEALTH_SYNC_SHORTCUT_NAME);
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -113,83 +65,12 @@ export default function Diary() {
   }, [user, date]);
 
   useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("profiles")
-      .select(
-        "sex, birth_date, height_cm, current_weight_kg, body_fat_pct, activity_level, goal, formula_choice, default_protein_g_per_kg, default_fat_pct, health_shortcut_name, default_day_type, day_type_allowance_rest_kcal, day_type_allowance_light_kcal, day_type_allowance_hard_kcal, carb_floor_g, carb_floor_pct, fat_floor_g_per_kg, fat_floor_pct",
-      )
-      .eq("id", user.id)
-      .single()
-      .then(({ data }) => {
-        const p = data as ProfileForTarget | null;
-        if (p?.health_shortcut_name) setShortcutName(p.health_shortcut_name);
-        setProfile(p);
-      });
-  }, [user]);
+    if (profile?.health_shortcut_name) setShortcutName(profile.health_shortcut_name);
+  }, [profile]);
 
-  // Day-type is per (user, date) — separate from the profile fetch above so switching
-  // dates doesn't need to re-fetch the whole profile (D-019, FR-CALC-4).
   useEffect(() => {
-    if (!user) return;
-    setDayType(null); // brief loading gap while this date's row is fetched
-    supabase
-      .from("diary_days")
-      .select("day_type")
-      .eq("user_id", user.id)
-      .eq("entry_date", date)
-      .maybeSingle()
-      .then(({ data }) => {
-        setDayType((data as { day_type: DayType } | null)?.day_type ?? profile?.default_day_type ?? "rest");
-      });
-  }, [user, date, profile?.default_day_type]);
-
-  async function selectDayType(newType: DayType) {
-    if (!user || dayType === newType) return;
-    setDayTypeSaving(true);
-    setDayType(newType);
-    const { error: upsertError } = await supabase
-      .from("diary_days")
-      .upsert({ user_id: user.id, entry_date: date, day_type: newType }, { onConflict: "user_id,entry_date" });
-    setDayTypeSaving(false);
-    if (upsertError) setError(upsertError.message);
-  }
-
-  const target: Target | null = useMemo(() => {
-    const p = profile;
-    if (!p || !dayType || !p.sex || !p.birth_date || !p.height_cm || !p.current_weight_kg || !p.activity_level || !p.goal) {
-      return null;
-    }
-    const preview = computeDayTypePreview({
-      formula: p.formula_choice,
-      sex: p.sex,
-      birth_date: p.birth_date,
-      height_cm: p.height_cm,
-      weight_kg: p.current_weight_kg,
-      body_fat_pct: p.body_fat_pct,
-      activity_level: p.activity_level,
-      goal: p.goal,
-      protein_g_per_kg: p.default_protein_g_per_kg,
-      fat_pct: p.default_fat_pct,
-      day_type: dayType,
-      day_type_allowance_kcal: {
-        rest: p.day_type_allowance_rest_kcal ?? undefined,
-        light: p.day_type_allowance_light_kcal ?? undefined,
-        hard: p.day_type_allowance_hard_kcal ?? undefined,
-      },
-      carb_floor_g: p.carb_floor_g,
-      carb_floor_pct: p.carb_floor_pct,
-      fat_floor_g_per_kg: p.fat_floor_g_per_kg,
-      fat_floor_pct: p.fat_floor_pct,
-    });
-    return {
-      kcal: preview.dayTypeMacros.total_kcal,
-      protein_g: preview.dayTypeMacros.protein_g,
-      carb_g: preview.dayTypeMacros.carb_g,
-      fat_g: preview.dayTypeMacros.fat_g,
-      hit_floor: preview.dayTypeMacros.hit_floor,
-    };
-  }, [profile, dayType]);
+    if (targetError) setError(targetError);
+  }, [targetError]);
 
   const totals = useMemo(
     () =>

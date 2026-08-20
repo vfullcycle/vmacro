@@ -1,0 +1,177 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import ProgressBar from "../components/ProgressBar";
+import WeightChart from "../components/WeightChart";
+import { useAuth } from "../lib/auth-context";
+import { addDays, todayLocalDate } from "../lib/diary";
+import { supabase } from "../lib/supabase";
+import { useTodayTarget } from "../lib/useTodayTarget";
+import "./Dashboard.css";
+
+const DAY_TYPE_LABELS = { rest: "Rest", light: "Light", hard: "Hard" };
+const WEEK_DAYS = 7;
+
+interface EntryTotals {
+  kcal: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+}
+
+interface WeightLogPoint {
+  id: string;
+  weight_kg: number;
+  logged_at: string;
+}
+
+function KcalRing({ value, target }: { value: number; target: number }) {
+  const pct = target > 0 ? Math.min(100, Math.round((value / target) * 100)) : 0;
+  const radius = 54;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - pct / 100);
+  return (
+    <div className="dash-ring">
+      <svg viewBox="0 0 120 120" className="dash-ring-svg">
+        <circle cx="60" cy="60" r={radius} className="dash-ring-track" />
+        <circle
+          cx="60"
+          cy="60"
+          r={radius}
+          className="dash-ring-fill"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          transform="rotate(-90 60 60)"
+        />
+      </svg>
+      <div className="dash-ring-label">
+        <span className="dash-ring-value">{Math.round(value)}</span>
+        <span className="dash-ring-target">/ {Math.round(target)} kcal</span>
+      </div>
+    </div>
+  );
+}
+
+export default function Dashboard() {
+  const { user } = useAuth();
+  const date = todayLocalDate();
+
+  const { dayType, target } = useTodayTarget(date);
+
+  const [totals, setTotals] = useState<EntryTotals>({ kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 });
+  const [loggedDates, setLoggedDates] = useState<string[]>([]);
+  const [weightLogs, setWeightLogs] = useState<WeightLogPoint[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("diary_entries")
+      .select("kcal, protein_g, carbs_g, fat_g")
+      .eq("user_id", user.id)
+      .eq("entry_date", date)
+      .then(({ data }) => {
+        const rows = (data as EntryTotals[]) ?? [];
+        setTotals(
+          rows.reduce(
+            (acc, e) => ({
+              kcal: acc.kcal + e.kcal,
+              protein_g: acc.protein_g + e.protein_g,
+              carbs_g: acc.carbs_g + e.carbs_g,
+              fat_g: acc.fat_g + e.fat_g,
+            }),
+            { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+          ),
+        );
+      });
+  }, [user, date]);
+
+  useEffect(() => {
+    if (!user) return;
+    const weekStart = addDays(date, -(WEEK_DAYS - 1));
+    supabase
+      .from("diary_entries")
+      .select("entry_date")
+      .eq("user_id", user.id)
+      .gte("entry_date", weekStart)
+      .lte("entry_date", date)
+      .then(({ data }) => {
+        const rows = (data as { entry_date: string }[]) ?? [];
+        setLoggedDates([...new Set(rows.map((r) => r.entry_date))]);
+      });
+  }, [user, date]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("weight_logs")
+      .select("id, weight_kg, logged_at")
+      .eq("user_id", user.id)
+      .order("logged_at", { ascending: true })
+      .then(({ data }) => {
+        setWeightLogs(data ?? []);
+        setLoading(false);
+      });
+  }, [user]);
+
+  const latestWeight = weightLogs.length > 0 ? weightLogs[weightLogs.length - 1] : null;
+  const recentWeightLogs = useMemo(() => weightLogs.slice(-14), [weightLogs]);
+
+  return (
+    <section className="dashboard-page">
+      <h1>Dashboard</h1>
+
+      <div className="dash-card">
+        <div className="dash-today-header">
+          <span className="dash-today-label">วันนี้</span>
+          {dayType && <span className="dash-day-type-badge">{DAY_TYPE_LABELS[dayType]}</span>}
+        </div>
+
+        {target ? (
+          <>
+            <KcalRing value={totals.kcal} target={target.kcal} />
+            <div className="dash-macros">
+              <ProgressBar label="โปรตีน" value={totals.protein_g} target={target.protein_g} />
+              <ProgressBar label="คาร์บ" value={totals.carbs_g} target={target.carb_g} />
+              <ProgressBar label="ไขมัน" value={totals.fat_g} target={target.fat_g} />
+            </div>
+          </>
+        ) : (
+          <p className="dash-summary-missing">
+            ยังตั้งค่า Settings → Profile ไม่ครบ — <Link to="/settings/profile">ตั้งค่าเพื่อดู target</Link>
+          </p>
+        )}
+
+        <Link className="dash-diary-link" to={`/diary?date=${date}`}>
+          ไปที่ Diary วันนี้
+        </Link>
+      </div>
+
+      <div className="dash-card">
+        <h2>น้ำหนัก</h2>
+        {loading ? (
+          <p>กำลังโหลด...</p>
+        ) : latestWeight ? (
+          <>
+            <p className="dash-weight-latest">
+              {latestWeight.weight_kg} kg
+              <span className="dash-weight-date"> · {new Date(latestWeight.logged_at).toLocaleDateString("th-TH")}</span>
+            </p>
+            <WeightChart data={recentWeightLogs} />
+          </>
+        ) : (
+          <p className="dash-summary-missing">ยังไม่มีข้อมูลน้ำหนัก</p>
+        )}
+        <Link className="dash-diary-link" to="/weight-log">
+          ดูทั้งหมด / บันทึกน้ำหนัก
+        </Link>
+      </div>
+
+      <div className="dash-card">
+        <h2>สรุปสัปดาห์</h2>
+        <p className="dash-week-summary">
+          บันทึกแล้ว {loggedDates.length}/{WEEK_DAYS} วัน
+        </p>
+      </div>
+    </section>
+  );
+}

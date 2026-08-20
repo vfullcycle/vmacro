@@ -2,7 +2,15 @@ import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import CustomFoodFieldsForm from "../components/CustomFoodFieldsForm";
 import { AI_IMPORT_ENABLED } from "../config";
-import { getAiNutritionEstimate, resizeImageToBase64, type AiImportMode, type AiNutritionEstimate } from "../lib/aiImport";
+import {
+  COOKING_METHODS,
+  getAiNutritionEstimate,
+  looksFriedOrStirFried,
+  resizeImageToBase64,
+  type AiImportMode,
+  type AiNutritionEstimate,
+  type CookingMethod,
+} from "../lib/aiImport";
 import { useAuth } from "../lib/auth-context";
 import { buildNutrients, EMPTY_CORE, flattenNutrients, type CoreFormState, type ExtraFormState } from "../lib/customFoodNutrients";
 import type { NutrientPanel } from "../lib/scaling";
@@ -18,6 +26,7 @@ export default function AiFoodImport() {
   const [mode, setMode] = useState<AiImportMode>("estimate");
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [cookingMethod, setCookingMethod] = useState<CookingMethod | "">("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [estimating, setEstimating] = useState(false);
   const [estimateError, setEstimateError] = useState<string | null>(null);
@@ -40,7 +49,7 @@ export default function AiFoodImport() {
       // Label text is small — keep more resolution than the default estimate-mode resize
       // (context-only photo) so it's actually legible to the model.
       const photo = photoFile ? await resizeImageToBase64(photoFile, mode === "read_label" ? 1600 : 1024) : undefined;
-      const estimate = await getAiNutritionEstimate(name.trim(), quantity.trim(), photo, mode);
+      const estimate = await getAiNutritionEstimate(name.trim(), quantity.trim(), photo, mode, cookingMethod || undefined);
       setCore({
         name: estimate.name,
         serving_label: estimate.serving_label ?? "",
@@ -112,6 +121,21 @@ export default function AiFoodImport() {
             ชื่ออาหาร
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="เช่น แกงเขียวหวานไก่" required />
           </label>
+
+          {mode === "estimate" && looksFriedOrStirFried(name) && (
+            <label>
+              วิธีปรุง (ไม่บังคับ แต่ช่วยให้ประมาณน้ำมัน/ไขมันแม่นขึ้นมาก)
+              <select value={cookingMethod} onChange={(e) => setCookingMethod(e.target.value as CookingMethod | "")}>
+                <option value="">ไม่แน่ใจ / ข้าม</option>
+                {COOKING_METHODS.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
           <label>
             {mode === "read_label" ? "กินเท่าไหร่" : "ปริมาณ"}
             <input

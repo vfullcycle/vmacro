@@ -24,11 +24,30 @@ export interface AiNutritionEstimate {
 
 export type AiImportMode = "estimate" | "read_label";
 
+// Oil absorption is invisible in a dish name but weighs ~9 kcal/g — deep-fried vs
+// dry-grilled versions of "the same" dish can differ by 100+ kcal (docs/research/
+// ai-import.md §4, added after the n=50 validation run found frying/stir-frying dishes
+// among the worst absolute-error outliers). Options are the specific techniques วีwants
+// distinguished, not a generic "how was this cooked" open text field.
+export const COOKING_METHODS = ["ทอดน้ำมันท่วม", "ทอดน้ำมันน้อย", "ผัด", "ปิ้ง/จี่ ไม่ใช้น้ำมัน", "อบ", "ต้ม/นึ่ง"] as const;
+export type CookingMethod = (typeof COOKING_METHODS)[number];
+
+// Keyword match is intentionally loose (catches false positives like non-fried dishes
+// with "ผัด" in a compound word) rather than tight (missing dishes like "เทมปุระ" that
+// don't contain any literal keyword) — the question this gates is optional, so a false
+// positive just shows an extra skippable field, while a false negative silently loses
+// the chance to ask at all.
+const FRIED_OR_STIRFRIED_KEYWORDS = ["ทอด", "ผัด", "เจียว", "จี่"];
+export function looksFriedOrStirFried(name: string): boolean {
+  return FRIED_OR_STIRFRIED_KEYWORDS.some((kw) => name.includes(kw));
+}
+
 export async function getAiNutritionEstimate(
   name: string,
   quantity: string,
   photo?: { base64: string; mediaType: string },
   mode: AiImportMode = "estimate",
+  cookingMethod?: CookingMethod,
 ): Promise<AiNutritionEstimate> {
   const {
     data: { session },
@@ -48,6 +67,7 @@ export async function getAiNutritionEstimate(
       photoBase64: photo?.base64,
       photoMediaType: photo?.mediaType,
       mode,
+      cookingMethod,
     }),
   });
   if (!res.ok) {

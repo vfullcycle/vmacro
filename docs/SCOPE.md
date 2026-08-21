@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.11
+# SCOPE — Vmacro v1.12
 
 ## In Scope
 
@@ -69,7 +69,11 @@
 ### P4b — Data-dependent → tag `v1.3.0`
 - **FR-HLTH-3 (งานแรก, 2026-08-21)**: VPS ingest endpoint + Shortcut #2 (workout/HR/active energy) —
   Apple Health READ — สลับมาทำก่อน BL-10 (เดิมกำหนดให้ BL-10 ทำก่อน) เพราะเวลาสะสมข้อมูลเร่งไม่ได้ ยิ่ง
-  เริ่ม ingest เร็ว ยิ่งมีข้อมูลพอสำหรับ FR-ANLT-1 เร็ว (วีอนุมัติ 2026-08-21)
+  เริ่ม ingest เร็ว ยิ่งมีข้อมูลพอสำหรับ FR-ANLT-1 เร็ว (วีอนุมัติ 2026-08-21) — **backend เสร็จ+deploy+
+  migration รันแล้ว (2026-08-21)**: endpoint `/health/ingest`, ตาราง `health_workouts`/
+  `health_daily_stats`, RPC `ingest_health_data_for_token()` — เหลือต่อ Shortcut #2 จริงบนเครื่อง (คู่มือ
+  API contract พร้อมที่ `docs/shortcuts/shortcut-2-read.md`, action-by-action รอ verify ทีละตัวแบบ
+  Shortcut #1) ก่อนถือว่า FR นี้ปิดตาม Phase Gate Rule
 - BL-10 (ขนาน/ตามหลัง FR-HLTH-3 ได้ทันที ไม่ต้องรอข้อมูลสะสม): Per-meal targets + visual cue ในแอป
   ("มื้อนี้เหลือกินอีกเท่าไหร่") — reminder ตามเวลาจริง (push) เลื่อนไปทำหลัง FR-HLTH-3 เพราะจะได้ใช้ iOS
   Shortcuts Automation ยิง endpoint ที่มีอยู่แล้วแทน Web Push บน iOS PWA ที่ไม่น่าเชื่อถือ
@@ -94,6 +98,7 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.12 (2026-08-21): FR-HLTH-3 backend เสร็จ+deploy+migration รันแล้ว — เหลือต่อ Shortcut #2 จริงก่อนปิด FR
 - v1.11 (2026-08-21): สลับลำดับ P4b (คำสั่งวี) — FR-HLTH-3 ทำก่อน BL-10/FR-ANLT-1 เพราะเวลาสะสมข้อมูล
   เร่งไม่ได้; BL-10 ตัดขอบเขต reminder ตามเวลา (push) ออกไปทำทีหลัง FR-HLTH-3, เหลือแค่ visual cue ในเฟสนี้
 - v1.10 (2026-08-21): ปิด P4a (tag `v1.2.0`) — วี dogfood ผ่านครบทุกข้อ, เริ่ม P4b

@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.17
+# SCOPE — Vmacro v1.18
 
 ## In Scope
 
@@ -79,15 +79,16 @@
 - BL-09 (Friends tab): เลื่อนอีกครั้ง (2026-08-21) — เกณฑ์ตัดสินผูกกับผลใช้งานจริงของ BL-12 (ดูด้านล่าง)
   แทนการกำหนด phase ตายตัว ดู PROJECT_BIBLE §7 BL-09 สำหรับเกณฑ์เต็ม
 
-### P4c — Community + data collection → tag `v1.4.0`
-- **BL-12/FR-FOOD-9 — code-complete+deploy+migration รันแล้ว (2026-08-21)**: ขออาหารใหม่ในแอป — แทนที่
-  D-023/AI Import ที่ยกเลิก, แก้ปัญหาประสานงานเพื่อนที่เกิดขึ้นจริง (ไม่ใช่ของที่ "น่าจะดี" เหมือนรายการอื่น
-  ใน backlog) — status 3 แบบ (pending/fulfilled/declined) + โน้ต admin ส่งกลับ requester, ไม่มี push
-  notification — **ถือเป็น prototype ของ BL-09 (Friends tab) ในตัว** เพราะเป็น interaction ระหว่าง user
-  ครั้งแรกของระบบ วัดผลใช้งานจริง 3-4 สัปดาห์หลัง ship แล้วค่อยตัดสิน BL-09
-- **BL-01/FR-DIARY-4 — code-complete+deploy+migration รันแล้ว (2026-08-21)**: ราคาต่อ diary entry
-  (optional) — ทำรวมรอบเดียวกับ BL-12 ตามคำสั่งวี, เพิ่งค้นพบว่าตกหล่นจาก P2 ตั้งแต่แรก (ดู CLAUDE.md
-  กติกาใหม่เรื่องเช็ค backlog ตอนวางแผน phase) — รอวี dogfood ตาม Phase Gate Rule ก่อนตี tag `v1.4.0`
+### P4c — Community + data collection → tag `v1.4.0` **(ปิดแล้ว 2026-08-21)**
+- **BL-12/FR-FOOD-9 — เสร็จแล้ว**: ขออาหารใหม่ในแอป — แทนที่ D-023/AI Import ที่ยกเลิก, แก้ปัญหาประสานงาน
+  เพื่อนที่เกิดขึ้นจริง — status 3 แบบ (pending/fulfilled/declined) + โน้ต admin ส่งกลับ requester, ไม่มี
+  push notification — **ถือเป็น prototype ของ BL-09 (Friends tab) ในตัว** — วี dogfood ผ่านครบ 8 ข้อ
+  (รวม RLS verification + end-to-end role-play) ไม่มี DF เหลือ
+- **BL-01/FR-DIARY-4 — เสร็จแล้ว**: ราคาต่อ diary entry (optional) — ทำรวมรอบเดียวกับ BL-12, เพิ่งค้นพบว่า
+  ตกหล่นจาก P2 ตั้งแต่แรก (ดู CLAUDE.md กติกาใหม่เรื่องเช็ค backlog ตอนวางแผน phase)
+- ระหว่าง dogfood ได้ปรับเพิ่ม: แยก Settings → System ส่วน day-type/meal-target ออกเป็น 2 หน้าใหม่ (ชื่อ
+  user เข้าใจง่าย: "เป้าตามประเภทวันฝึก", "เป้าต่อมื้ออาหาร"), แก้ spacing DF หลายจุด, จำกัด "ที่เคยกินมื้อนี้"
+  เหลือ 5 รายการ+โหลดเพิ่ม
 
 ### P5 — Insight tier 2 (LLM) → tag `v1.5.0`
 - LLM endpoint บน VPS สรุป pattern รายสัปดาห์เป็นภาษาไทย
@@ -105,6 +106,9 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.18 (2026-08-21): ปิด P4c (tag `v1.4.0`) — วี dogfood ผ่านครบ 8 ข้อ ไม่มี DF เหลือ, ยังไม่เริ่ม phase
+  ถัดไป — เพิ่ม backlog BL-14 (in-app notification badge), ปรับขอบเขต BL-09 เป็น 2 ส่วน (ดู PROJECT_BIBLE
+  §7)
 - v1.17 (2026-08-21): FR-FOOD-9 + FR-DIARY-4 code-complete+deploy+migration รันแล้ว — P4c รอวี dogfood
   ก่อนตี tag `v1.4.0`
 - v1.16 (2026-08-21): เพิ่ม P4c (tag `v1.4.0`, คำสั่งวี) — BL-12/FR-FOOD-9 (ขออาหารใหม่ในแอป, งานแรก) +

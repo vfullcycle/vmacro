@@ -42,6 +42,7 @@ interface FatSecretResultWithThai extends Partial<Omit<FatSecretSearchResult, "f
 const DEBOUNCE_MS = 300;
 const MIN_QUERY_LENGTH = 2;
 const RECENT_PER_MEAL_LIMIT = 8;
+const RECENT_SHOWN_LIMIT = 5;
 const CUSTOM_RESULTS_LIMIT = 3;
 const DISH_RESULTS_LIMIT = 3;
 // BL-11: translate FatSecret results in batches instead of all-at-once — translation time
@@ -177,11 +178,13 @@ export default function FoodSearch() {
   const searchIdRef = useRef(0);
 
   const [recentEntries, setRecentEntries] = useState<DiaryEntryRow[]>([]);
+  const [recentExpanded, setRecentExpanded] = useState(false);
   const [quickAddingId, setQuickAddingId] = useState<string | null>(null);
 
   // History for this specific meal (breakfast/lunch/dinner/snack) — lets a repeat meal
   // be logged in ~2 taps instead of a full search (FR-DIARY-3-style shortcut).
   useEffect(() => {
+    setRecentExpanded(false);
     if (!forDiary || !diaryMeal || !user) {
       setRecentEntries([]);
       return;
@@ -403,7 +406,7 @@ export default function FoodSearch() {
         <section className="food-search-recent">
           <h2>ที่เคยกินมื้อนี้</h2>
           <ul className="food-result-list">
-            {recentEntries.map((entry) => (
+            {(recentExpanded ? recentEntries : recentEntries.slice(0, RECENT_SHOWN_LIMIT)).map((entry) => (
               <li key={entry.id}>
                 <button type="button" className="food-search-recent-item" onClick={() => quickAdd(entry)} disabled={quickAddingId === entry.id}>
                   <span className="food-name">{entryDisplayName(entry)}</span>
@@ -414,6 +417,11 @@ export default function FoodSearch() {
               </li>
             ))}
           </ul>
+          {!recentExpanded && recentEntries.length > RECENT_SHOWN_LIMIT && (
+            <button type="button" className="food-search-view-all" onClick={() => setRecentExpanded(true)}>
+              โหลดเพิ่ม ({recentEntries.length})
+            </button>
+          )}
         </section>
       )}
 

@@ -40,12 +40,15 @@ vmacro/
 
 ## สถานะปัจจุบัน
 
-- **Docs version:** v1.8 (2026-08-20)
-- **Phase ปัจจุบัน:** P4a เขียนโค้ดครบทุกข้อแล้ว (2026-08-20), รอวี dogfood 2-3 วันตาม Phase Gate Rule ก่อน
-  ตี tag `v1.2.0`: BL-11 (search UX, ปิดสมบูรณ์รวมถอด instrumentation), D-019/FR-CALC-4 (day-type energy
-  target), D-023/AI Import (**ยกเลิกถาวรหลังวัดผลจริง** — แทนที่ด้วย BL-12 ยังไม่กำหนด phase), BL-08/
-  FR-DASH-1 (Dashboard tab แทน Weight tab, ใช้ shared hook `useTodayTarget()` ร่วมกับ Diary) — ดู
-  `docs/SCOPE.md` §P4a และ `docs/PROJECT_BIBLE.md` §Decision Log (D-019, D-023) สำหรับรายละเอียดเต็ม
+- **Docs version:** v1.9 (2026-08-21)
+- **Phase ปัจจุบัน:** P4b เริ่มแล้ว (2026-08-21) — งานแรก FR-HLTH-3 (Apple Health READ)
+- **P4a จบแล้ว, tag `v1.2.0`** (2026-08-21) — วี dogfood ผ่านครบตาม Phase Gate Rule: BL-11 (search UX,
+  ปิดสมบูรณ์รวมถอด instrumentation), D-019/FR-CALC-4 (day-type energy target), D-023/AI Import
+  (**ยกเลิกถาวรหลังวัดผลจริง** — แทนที่ด้วย BL-12 ยังไม่กำหนด phase), BL-08/FR-DASH-1 (Dashboard tab แทน
+  Weight tab, ใช้ shared hook `useTodayTarget()` ร่วมกับ Diary, + amendment ระหว่าง dogfood: composition
+  ring P/F/C/OTH, breakout ring nutrient อื่น, date-nav — พบ+แก้บั๊กจริงระหว่าง dogfood ที่ ring ใช้
+  `serving_size_g` เป็นฐานผิด ดู REQUIREMENTS.md FR-DASH-1 §แก้ไขซ้ำ) — ดู `docs/SCOPE.md` §P4a และ
+  `docs/PROJECT_BIBLE.md` §Decision Log (D-019, D-023) สำหรับรายละเอียดเต็ม
 - **P2 จบแล้ว, tag `v1.0.0`** — FR ทุกตัวเขียนโค้ดเสร็จ (FR-FOOD-1..6, FR-DIARY-1..3)
   รวม FR-DIARY-3 (copy จากวันก่อนหน้า ทั้งวัน/รายมื้อ, รายการโปรด, รายการล่าสุด) **ปิดโดย exception ของ
   Phase Gate Rule (D-024, 2026-08-19)** — ไม่รอ manual dogfood ครบ 2-3 วันตามเกณฑ์ปกติ เพราะเป็น
@@ -76,6 +79,8 @@ Vision → Boundary → Requirement → Decision → Freeze → Working Rules
 
 ## Changelog
 
+- v1.9 (2026-08-21): ปิด P4a (tag `v1.2.0`) — วี dogfood ผ่านครบทุกข้อ (รวม amendment ring composition
+  ที่พบ+แก้บั๊กจริงระหว่างทาง), เริ่ม P4b: งานแรก FR-HLTH-3
 - v1.8 (2026-08-20): อัปเดตสถานะ P4a (เคย stale ค้างว่า "รอเสนอวี" ทั้งที่ตัดสินใจและเขียนโค้ดไปแล้วทั้งช่วง)
   — BL-11/D-019/D-023/BL-08 เขียนโค้ดครบ, D-023 (AI Import) ยกเลิกถาวร, รอ dogfood ก่อนตี tag `v1.2.0`
 - v1.7 (2026-08-19): ปิด P2 (tag `v1.0.0`) และ P3 core (tag `v1.1.0`) — วีอนุมัติ exception ของ Phase

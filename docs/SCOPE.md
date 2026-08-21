@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.9
+# SCOPE — Vmacro v1.10
 
 ## In Scope
 
@@ -52,7 +52,7 @@
 - VPS endpoint ให้ Shortcut ดึงยอด f/c/p/kcal ของวัน (auth ด้วย per-user token)
 - Shortcut #1 + iCloud share link + คู่มือติดตั้ง 1 หน้า
 
-### P4a — Daily-use impact → tag `v1.2.0`
+### P4a — Daily-use impact → tag `v1.2.0` **(ปิดแล้ว 2026-08-21)**
 (แบ่งจาก P4 เดิมเป็นสองครึ่ง มี tag คั่นกลาง — บทเรียนจาก P2 ที่ phase ไม่มีหมุดกลางทางไหลยาว)
 - BL-11: Search UX เร็วขึ้น+อ่านง่ายขึ้น — **ปิดสมบูรณ์** (batch translation, FatSecret toggle, "ดูทั้งหมด"
   บน custom/dish, deploy 2026-08-19) — instrumentation ถอดออกแล้ว (2026-08-20, วีสั่งหยุดรอข้อมูลเพิ่ม)
@@ -61,10 +61,10 @@
   เพิ่ม โดยไม่ได้ดีกว่า pipeline ChatGPT+ตรวจเอง+bulk import ที่ใช้อยู่ — ดู D-023 ใน PROJECT_BIBLE §5
   สำหรับตัวเลขเต็ม, โค้ดเก็บไว้เฉยๆ หลัง flag ปิดถาวร ไม่ลบ — แทนที่ด้วย **BL-12** (ขออาหารใหม่ในแอป,
   แก้ปัญหาการประสานงานแทนที่จะพยายามแทนที่ความรู้วี — ดู §7 Backlog) ยังไม่กำหนด phase
-- BL-08: Dashboard tab แทน Weight tab (ต้องมี D-019 จบก่อน เพราะ ring ต้องโชว์ day-type) — **FR-DASH-1
-  code-complete (2026-08-20), รอ dogfood ตาม Phase Gate Rule ก่อนตี tag** — kcal ring + P/C/F ผ่าน shared
-  hook `useTodayTarget()` (ใช้ร่วมกับ Diary เพื่อกันตัวเลขเพี้ยน), weight card+sparkline, สรุป "X/7 วัน"
-  — P4a งานเขียนโค้ดครบทุกข้อแล้ว รอวี dogfood 2-3 วันตาม Phase Gate Rule ก่อนตี tag `v1.2.0`
+- BL-08: Dashboard tab แทน Weight tab (ต้องมี D-019 จบก่อน เพราะ ring ต้องโชว์ day-type) — **เสร็จแล้ว**
+  (FR-DASH-1, kcal ring + P/C/F ผ่าน shared hook `useTodayTarget()`, weight card+sparkline, "X/7 วัน" +
+  amendment ระหว่าง dogfood: composition ring P/F/C/OTH, breakout ring, date-nav) — วี dogfood ผ่านครบ
+  10 ข้อ (2026-08-21)
 
 ### P4b — Data-dependent → tag `v1.3.0`
 - BL-10 (งานแรก, ทำได้ทันทีที่ D-019+BL-08 จาก P4a จบ): Per-meal targets + meal-time reminders
@@ -89,6 +89,7 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.10 (2026-08-21): ปิด P4a (tag `v1.2.0`) — วี dogfood ผ่านครบทุกข้อ, เริ่ม P4b
 - v1.9 (2026-08-20): BL-08 (FR-DASH-1, Dashboard tab) code-complete — P4a เขียนโค้ดครบทุกข้อแล้ว (BL-11,
   D-019, D-023 ยกเลิก, BL-08) เหลือแค่วี dogfood 2-3 วันตาม Phase Gate Rule ก่อนตี tag `v1.2.0`
 - v1.8 (2026-08-20): BL-11 ปิดสมบูรณ์ (ถอด instrumentation) — P4a เหลือ BL-08 เป็นงานสุดท้ายก่อนตี tag

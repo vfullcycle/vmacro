@@ -17,7 +17,9 @@ import FoodRequests from "./pages/FoodRequests";
 import FoodSearch from "./pages/FoodSearch";
 import HealthCheck from "./pages/HealthCheck";
 import Login from "./pages/Login";
+import SettingsDayType from "./pages/SettingsDayType";
 import SettingsHome from "./pages/SettingsHome";
+import SettingsMealTargets from "./pages/SettingsMealTargets";
 import SettingsMealTemplates from "./pages/SettingsMealTemplates";
 import SettingsProfile from "./pages/SettingsProfile";
 import SettingsSystem from "./pages/SettingsSystem";
@@ -52,6 +54,8 @@ function App() {
             <Route path="/settings" element={<SettingsHome />} />
             <Route path="/settings/profile" element={<SettingsProfile />} />
             <Route path="/settings/system" element={<SettingsSystem />} />
+            <Route path="/settings/day-type" element={<SettingsDayType />} />
+            <Route path="/settings/meal-targets" element={<SettingsMealTargets />} />
             <Route path="/settings/meal-templates" element={<SettingsMealTemplates />} />
             <Route path="/settings/admin" element={<AdminHome />} />
             <Route path="/settings/admin/food-import" element={<AdminFoodImport />} />

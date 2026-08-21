@@ -1,0 +1,64 @@
+.settings-day-type {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+}
+
+.settings-day-type > .note {
+  font-size: 0.8rem;
+  color: var(--text);
+  margin: 0.75rem 0 0;
+}
+
+.settings-day-type form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-top: 1.25rem;
+}
+
+.settings-day-type label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.settings-day-type input,
+.settings-day-type select {
+  width: 100%;
+  padding: 0.65rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.settings-day-type form .note {
+  font-size: 0.8rem;
+  color: var(--text);
+  margin: 0;
+}
+
+.settings-day-type .error {
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.settings-day-type .ok {
+  color: #16a34a;
+  font-size: 0.875rem;
+}
+
+.settings-day-type button[type="submit"] {
+  padding: 0.7rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font: inherit;
+  font-weight: 600;
+  min-height: 44px;
+  cursor: pointer;
+}

@@ -288,7 +288,7 @@ export default function Diary() {
           {target.hit_floor && (
             <p className="diary-day-type-warning">
               Allowance วันนี้ต่ำเกินไป — carb/fat ชน floor ที่ตั้งไว้แล้ว เป้า kcal ด้านบนจึงสูงกว่าที่ day
-              type ควรให้จริง ปรับ allowance หรือ protein target ใน Settings → System ถ้าต้องการเป้าที่เข้มกว่านี้
+              type ควรให้จริง ปรับ allowance ใน Settings → เป้าตามประเภทวัน หรือ protein target ใน Settings → System ถ้าต้องการเป้าที่เข้มกว่านี้
             </p>
           )}
         </div>

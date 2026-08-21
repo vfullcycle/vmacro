@@ -1,0 +1,104 @@
+.settings-meal-targets {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+}
+
+.settings-meal-targets > .note {
+  font-size: 0.8rem;
+  color: var(--text);
+  margin: 0.75rem 0 0;
+}
+
+.settings-meal-targets form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-top: 1.25rem;
+}
+
+.settings-meal-targets form > label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.settings-meal-targets input,
+.settings-meal-targets select {
+  width: 100%;
+  padding: 0.65rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.settings-meal-targets form .note {
+  font-size: 0.8rem;
+  color: var(--text);
+  margin: 0;
+}
+
+.settings-meal-targets .error {
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.settings-meal-targets .ok {
+  color: #16a34a;
+  font-size: 0.875rem;
+}
+
+.settings-meal-targets button[type="submit"] {
+  padding: 0.7rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font: inherit;
+  font-weight: 600;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.meal-window-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.meal-window-label {
+  flex: 0 0 4rem;
+  font-size: 0.85rem;
+}
+
+.meal-window-row input[type="time"] {
+  min-height: 40px;
+  flex: 1 1 auto;
+  width: auto;
+}
+
+.meal-window-reset {
+  min-height: 36px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+}
+
+.meal-pct-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.meal-pct-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  flex: 1 1 0;
+}

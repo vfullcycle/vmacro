@@ -1,0 +1,70 @@
+.friends-page {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+}
+
+.friends-empty {
+  font-size: 0.875rem;
+  color: var(--text);
+  margin-top: 1rem;
+}
+
+.friends-feed-list {
+  list-style: none;
+  padding: 0;
+  margin: 1.25rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.friends-feed-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.friends-feed-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.friends-feed-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.friends-feed-creator {
+  font-weight: 400;
+  color: var(--text);
+}
+
+.friends-feed-detail {
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.friends-feed-time {
+  font-size: 0.75rem;
+  color: var(--text);
+}
+
+.friends-feed-view-all {
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  min-height: 44px;
+  cursor: pointer;
+}

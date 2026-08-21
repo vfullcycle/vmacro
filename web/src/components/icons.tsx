@@ -22,6 +22,17 @@ export function UserIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function UsersIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5" />
+      <path d="M16 8.5a3 3 0 1 0 0-6" />
+      <path d="M15 14.2c2.7.5 4.5 2.4 4.5 5.8" />
+    </Icon>
+  );
+}
+
 export function GearIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <Icon {...props}>

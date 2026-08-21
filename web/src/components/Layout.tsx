@@ -1,12 +1,13 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useFeedBadge } from "../lib/useFeedBadge";
-import { DashboardIcon, DiaryIcon, GearIcon, SearchIcon } from "./icons";
+import { DashboardIcon, DiaryIcon, GearIcon, SearchIcon, UsersIcon } from "./icons";
 import "./Layout.css";
 
 const TABS = [
   { to: "/diary", label: "Diary", Icon: DiaryIcon },
   { to: "/food/search", label: "Search", Icon: SearchIcon },
   { to: "/dashboard", label: "Dashboard", Icon: DashboardIcon },
+  { to: "/friends", label: "Friends", Icon: UsersIcon },
   { to: "/settings", label: "Settings", Icon: GearIcon },
 ];
 
@@ -24,7 +25,7 @@ export default function Layout() {
           <NavLink key={to} to={to} className={({ isActive }) => (isActive ? "active" : "")}>
             <span className="tab-icon-wrap">
               <Icon className="tab-icon" />
-              {to === "/dashboard" && hasUnseenFeed && <span className="tab-badge-dot" />}
+              {to === "/friends" && hasUnseenFeed && <span className="tab-badge-dot" />}
             </span>
             <span>{label}</span>
           </NavLink>

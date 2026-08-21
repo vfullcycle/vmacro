@@ -15,6 +15,7 @@ import DishBuilder from "./pages/DishBuilder";
 import FoodDetail from "./pages/FoodDetail";
 import FoodRequests from "./pages/FoodRequests";
 import FoodSearch from "./pages/FoodSearch";
+import Friends from "./pages/Friends";
 import HealthCheck from "./pages/HealthCheck";
 import Login from "./pages/Login";
 import SettingsDayType from "./pages/SettingsDayType";
@@ -51,6 +52,7 @@ function App() {
             <Route path="/" element={<Navigate to="/diary" replace />} />
             <Route path="/diary" element={<Diary />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/friends" element={<Friends />} />
             <Route path="/settings" element={<SettingsHome />} />
             <Route path="/settings/profile" element={<SettingsProfile />} />
             <Route path="/settings/system" element={<SettingsSystem />} />

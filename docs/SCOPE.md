@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.16
+# SCOPE — Vmacro v1.17
 
 ## In Scope
 
@@ -80,13 +80,14 @@
   แทนการกำหนด phase ตายตัว ดู PROJECT_BIBLE §7 BL-09 สำหรับเกณฑ์เต็ม
 
 ### P4c — Community + data collection → tag `v1.4.0`
-- **BL-12/FR-FOOD-9 (งานแรก, 2026-08-21)**: ขออาหารใหม่ในแอป — แทนที่ D-023/AI Import ที่ยกเลิก, แก้ปัญหา
-  ประสานงานเพื่อนที่เกิดขึ้นจริง (ไม่ใช่ของที่ "น่าจะดี" เหมือนรายการอื่นใน backlog) — status 3 แบบ
-  (pending/fulfilled/declined) + โน้ต admin ส่งกลับ requester, ไม่มี push notification — **ถือเป็น
-  prototype ของ BL-09 (Friends tab) ในตัว** เพราะเป็น interaction ระหว่าง user ครั้งแรกของระบบ วัดผลใช้
-  งานจริง 3-4 สัปดาห์หลัง ship แล้วค่อยตัดสิน BL-09
-- BL-01/FR-DIARY-4: ราคาต่อ diary entry (optional) — ทำรวมรอบเดียวกับ BL-12 ตามคำสั่งวี, เพิ่งค้นพบว่า
-  ตกหล่นจาก P2 ตั้งแต่แรก (ดู CLAUDE.md กติกาใหม่เรื่องเช็ค backlog ตอนวางแผน phase)
+- **BL-12/FR-FOOD-9 — code-complete+deploy+migration รันแล้ว (2026-08-21)**: ขออาหารใหม่ในแอป — แทนที่
+  D-023/AI Import ที่ยกเลิก, แก้ปัญหาประสานงานเพื่อนที่เกิดขึ้นจริง (ไม่ใช่ของที่ "น่าจะดี" เหมือนรายการอื่น
+  ใน backlog) — status 3 แบบ (pending/fulfilled/declined) + โน้ต admin ส่งกลับ requester, ไม่มี push
+  notification — **ถือเป็น prototype ของ BL-09 (Friends tab) ในตัว** เพราะเป็น interaction ระหว่าง user
+  ครั้งแรกของระบบ วัดผลใช้งานจริง 3-4 สัปดาห์หลัง ship แล้วค่อยตัดสิน BL-09
+- **BL-01/FR-DIARY-4 — code-complete+deploy+migration รันแล้ว (2026-08-21)**: ราคาต่อ diary entry
+  (optional) — ทำรวมรอบเดียวกับ BL-12 ตามคำสั่งวี, เพิ่งค้นพบว่าตกหล่นจาก P2 ตั้งแต่แรก (ดู CLAUDE.md
+  กติกาใหม่เรื่องเช็ค backlog ตอนวางแผน phase) — รอวี dogfood ตาม Phase Gate Rule ก่อนตี tag `v1.4.0`
 
 ### P5 — Insight tier 2 (LLM) → tag `v1.5.0`
 - LLM endpoint บน VPS สรุป pattern รายสัปดาห์เป็นภาษาไทย
@@ -104,6 +105,8 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.17 (2026-08-21): FR-FOOD-9 + FR-DIARY-4 code-complete+deploy+migration รันแล้ว — P4c รอวี dogfood
+  ก่อนตี tag `v1.4.0`
 - v1.16 (2026-08-21): เพิ่ม P4c (tag `v1.4.0`, คำสั่งวี) — BL-12/FR-FOOD-9 (ขออาหารใหม่ในแอป, งานแรก) +
   BL-01/FR-DIARY-4 (ราคาต่อ entry) — เป็น feature ตาม semver ไม่ใช่ patch (ตาราง+หน้าใหม่ 2 หน้า) จึงใช้
   v1.4.0 แทน v1.3.1 ที่เสนอไว้ก่อนหน้า — P5 เลื่อนเป็น `v1.5.0`, BL-09 ผูกเกณฑ์ตัดสินกับผลใช้งาน BL-12

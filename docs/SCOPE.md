@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.10
+# SCOPE — Vmacro v1.11
 
 ## In Scope
 
@@ -67,10 +67,15 @@
   10 ข้อ (2026-08-21)
 
 ### P4b — Data-dependent → tag `v1.3.0`
-- BL-10 (งานแรก, ทำได้ทันทีที่ D-019+BL-08 จาก P4a จบ): Per-meal targets + meal-time reminders
-- FR-HLTH-3: VPS ingest endpoint + Shortcut #2 (workout/HR/active energy) — Apple Health READ
+- **FR-HLTH-3 (งานแรก, 2026-08-21)**: VPS ingest endpoint + Shortcut #2 (workout/HR/active energy) —
+  Apple Health READ — สลับมาทำก่อน BL-10 (เดิมกำหนดให้ BL-10 ทำก่อน) เพราะเวลาสะสมข้อมูลเร่งไม่ได้ ยิ่ง
+  เริ่ม ingest เร็ว ยิ่งมีข้อมูลพอสำหรับ FR-ANLT-1 เร็ว (วีอนุมัติ 2026-08-21)
+- BL-10 (ขนาน/ตามหลัง FR-HLTH-3 ได้ทันที ไม่ต้องรอข้อมูลสะสม): Per-meal targets + visual cue ในแอป
+  ("มื้อนี้เหลือกินอีกเท่าไหร่") — reminder ตามเวลาจริง (push) เลื่อนไปทำหลัง FR-HLTH-3 เพราะจะได้ใช้ iOS
+  Shortcuts Automation ยิง endpoint ที่มีอยู่แล้วแทน Web Push บน iOS PWA ที่ไม่น่าเชื่อถือ
 - FR-ANLT-1: Dashboard analytics tier 1 — correlation/trend พื้นฐาน (เช่น kcal balance vs weight trend,
-  protein vs training days) ต้องมีข้อมูล health+diary สะสมจาก FR-HLTH-3 ก่อนถึงมีอะไรวิเคราะห์
+  protein vs training days) ต้องมีข้อมูล health+diary สะสมจาก FR-HLTH-3 ก่อนถึงมีอะไรวิเคราะห์ — ทำหลังสุด
+  ใน P4b
 - ปิด P4b แล้วค่อยตัดสินใจ BL-09 (Friends tab) ว่าเข้าก่อน/คู่ P5
 
 ### P5 — Insight tier 2 (LLM) → tag `v1.4.0`
@@ -89,6 +94,8 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.11 (2026-08-21): สลับลำดับ P4b (คำสั่งวี) — FR-HLTH-3 ทำก่อน BL-10/FR-ANLT-1 เพราะเวลาสะสมข้อมูล
+  เร่งไม่ได้; BL-10 ตัดขอบเขต reminder ตามเวลา (push) ออกไปทำทีหลัง FR-HLTH-3, เหลือแค่ visual cue ในเฟสนี้
 - v1.10 (2026-08-21): ปิด P4a (tag `v1.2.0`) — วี dogfood ผ่านครบทุกข้อ, เริ่ม P4b
 - v1.9 (2026-08-20): BL-08 (FR-DASH-1, Dashboard tab) code-complete — P4a เขียนโค้ดครบทุกข้อแล้ว (BL-11,
   D-019, D-023 ยกเลิก, BL-08) เหลือแค่วี dogfood 2-3 วันตาม Phase Gate Rule ก่อนตี tag `v1.2.0`

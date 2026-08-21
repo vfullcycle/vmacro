@@ -27,15 +27,50 @@
 }
 
 .meal-target-row {
-  font-size: 0.8rem;
-  color: var(--text);
+  margin-top: 0.6rem;
+}
+
+.meal-target-row-top {
   display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  margin-top: 0.35rem;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
 }
 
 .meal-target-row-label {
   font-weight: 600;
   color: var(--text-h);
+  min-width: 0;
+}
+
+.meal-target-row-note {
+  font-weight: 400;
+  color: var(--text);
+}
+
+.meal-target-row-value {
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.meal-target-row-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.meal-target-row-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.meal-target-row-fill.under {
+  background: #16a34a;
+}
+
+.meal-target-row-fill.over {
+  background: #dc2626;
 }

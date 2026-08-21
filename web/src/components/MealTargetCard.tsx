@@ -5,21 +5,28 @@ import "./MealTargetCard.css";
 // Tone is load-bearing here (FR-CALC-5 AC): every line is a fact ("เหลืออีก"/"เกินไป"),
 // never a judgment ("ควร"/"มากไป"/"ดีแล้ว") — applies identically whether under or over
 // target, since the whole point of this card is to inform without making anyone feel
-// bad about what they ate.
-function RemainingRow({ label, target, logged, unit }: { label: string; target: number; logged: number; unit: string }) {
+// bad about what they ate. At exactly target (remaining = 0) there's no message at all.
+function MealProgressRow({ label, target, logged, unit }: { label: string; target: number; logged: number; unit: string }) {
   const remaining = target - logged;
+  const pct = target > 0 ? Math.min(100, Math.round((logged / target) * 100)) : 0;
+  const isOver = remaining < 0;
+  const note = remaining > 0 ? `เหลืออีก ${Math.round(remaining)}${unit}` : isOver ? `เกินเป้ามื้อนี้ไปแล้ว ${Math.round(-remaining)}${unit}` : null;
+
   return (
     <div className="meal-target-row">
-      <span className="meal-target-row-label">{label}</span>
-      <span className="meal-target-row-value">
-        เป้า {Math.round(target)}{unit} — กินไปแล้ว {Math.round(logged)}
-        {unit} —{" "}
-        {remaining >= 0 ? (
-          <>เหลืออีก {Math.round(remaining)}{unit}</>
-        ) : (
-          <>เกินเป้ามื้อนี้ไปแล้ว {Math.round(-remaining)}{unit}</>
-        )}
-      </span>
+      <div className="meal-target-row-top">
+        <span className="meal-target-row-label">
+          {label}
+          {note && <span className="meal-target-row-note"> ({note})</span>}
+        </span>
+        <span className="meal-target-row-value">
+          {Math.round(logged)}/{Math.round(target)}
+          {unit.trim() === "kcal" && " kcal"}
+        </span>
+      </div>
+      <div className="meal-target-row-track">
+        <div className={`meal-target-row-fill ${isOver ? "over" : "under"}`} style={{ width: `${pct}%` }} />
+      </div>
     </div>
   );
 }
@@ -49,10 +56,10 @@ export default function MealTargetCard({ view }: { view: MealTargetView }) {
           {window.start}–{window.end}
         </span>
       </div>
-      <RemainingRow label="แคลอรี่" target={target.kcal} logged={logged.kcal} unit=" kcal" />
-      <RemainingRow label="โปรตีน" target={target.protein_g} logged={logged.protein_g} unit="g" />
-      <RemainingRow label="คาร์บ" target={target.carbs_g} logged={logged.carbs_g} unit="g" />
-      <RemainingRow label="ไขมัน" target={target.fat_g} logged={logged.fat_g} unit="g" />
+      <MealProgressRow label="แคลอรี่" target={target.kcal} logged={logged.kcal} unit=" kcal" />
+      <MealProgressRow label="โปรตีน" target={target.protein_g} logged={logged.protein_g} unit="g" />
+      <MealProgressRow label="คาร์บ" target={target.carbs_g} logged={logged.carbs_g} unit="g" />
+      <MealProgressRow label="ไขมัน" target={target.fat_g} logged={logged.fat_g} unit="g" />
     </div>
   );
 }

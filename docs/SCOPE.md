@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.14
+# SCOPE — Vmacro v1.15
 
 ## In Scope
 
@@ -66,19 +66,17 @@
   amendment ระหว่าง dogfood: composition ring P/F/C/OTH, breakout ring, date-nav) — วี dogfood ผ่านครบ
   10 ข้อ (2026-08-21)
 
-### P4b — Data-dependent → tag `v1.3.0`
-- **BL-10 (งานหลักของ P4b) — FR-CALC-5 code-complete+deploy+migration รันแล้ว (2026-08-21)**: Per-meal
-  targets จากเวลาตื่นนอน/ชั่วโมงนอน (default คำนวณอัตโนมัติ override ได้เสมอไม่ถูกทับ), % ต่อมื้อปรับได้,
-  remaining-based display โทนข้อเท็จจริงล้วนใน Diary+Dashboard — reminder ตามเวลาจริง (push) ไม่อยู่ใน
-  ขอบเขตรอบนี้ (รอ Shortcut #2/BL-13 กลับมาทำก่อน เพราะจะได้ใช้ iOS Shortcuts Automation ยิง endpoint แทน
-  Web Push บน iOS PWA ที่ไม่น่าเชื่อถือ) — รอวี dogfood ตาม Phase Gate Rule ก่อนตี tag `v1.3.0`
+### P4b — Data-dependent → tag `v1.3.0` **(ปิดแล้ว 2026-08-21)**
+- **BL-10/FR-CALC-5 — เสร็จแล้ว**: Per-meal targets จากเวลาตื่นนอน/ชั่วโมงนอน (default คำนวณอัตโนมัติ
+  override ได้เสมอไม่ถูกทับ), % ต่อมื้อปรับได้, remaining-based display เป็น progress bar สี (แดง=เกินเป้า,
+  เขียว=ไม่เกิน) โทนข้อเท็จจริงล้วนใน Diary+Dashboard, แสดงเฉพาะวันนี้เท่านั้น — วี dogfood ผ่านครบ
+  (2026-08-21) — reminder ตามเวลาจริง (push) ไม่อยู่ในขอบเขตนี้ (รอ Shortcut #2/BL-13 กลับมาทำก่อน)
 - ~~FR-HLTH-3 (Shortcut #2 client) + FR-ANLT-1~~ — **เลื่อนออกจาก P4b 2026-08-21 (วีตัดสินใจ)** ไปเป็น
   backlog **BL-13** ยังไม่กำหนด phase — server ฝั่ง FR-HLTH-3 เสร็จ+deploy+migration แล้ว (endpoint
   `/health/ingest`, ตาราง `health_workouts`/`health_daily_stats`, RPC
   `ingest_health_data_for_token()`) คงไว้เฉยๆ ไม่มีต้นทุน maintain, API contract ยืนยันแล้วที่
   `docs/shortcuts/shortcut-2-read.md` หยิบต่อได้ทันทีเมื่อวีพร้อมลงเวลาต่อ Shortcut ทีละ action บนเครื่องจริง
-  — P4b ปิด (ตี tag `v1.3.0`) ได้เมื่อ BL-10 จบ dogfood โดยไม่ต้องรอ BL-13
-- ปิด P4b แล้วค่อยตัดสินใจ BL-09 (Friends tab) ว่าเข้าก่อน/คู่ P5
+- BL-09 (Friends tab): ยังไม่ตัดสินใจ ว่าเข้าก่อน/คู่ P5 หรือ phase ใหม่ — รอวีตัดสินใจร่วมกับที่ปรึกษา
 
 ### P5 — Insight tier 2 (LLM) → tag `v1.4.0`
 - LLM endpoint บน VPS สรุป pattern รายสัปดาห์เป็นภาษาไทย
@@ -96,6 +94,8 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.15 (2026-08-21): ปิด P4b (tag `v1.3.0`) — วี dogfood FR-CALC-5/BL-10 ผ่านครบ, BL-09 ยังไม่ตัดสินใจ
+  ลำดับ phase ถัดไป
 - v1.14 (2026-08-21): FR-CALC-5 (BL-10) code-complete+deploy+migration รันแล้ว — P4b รอวี dogfood ก่อน
   ตี tag `v1.3.0`
 - v1.13 (2026-08-21): เลื่อน FR-HLTH-3 client (Shortcut #2) + FR-ANLT-1 ออกจาก P4b เป็น backlog BL-13

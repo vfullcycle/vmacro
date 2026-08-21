@@ -40,8 +40,15 @@ vmacro/
 
 ## สถานะปัจจุบัน
 
-- **Docs version:** v1.9 (2026-08-21)
-- **Phase ปัจจุบัน:** P4b เริ่มแล้ว (2026-08-21) — งานแรก FR-HLTH-3 (Apple Health READ)
+- **Docs version:** v1.10 (2026-08-21)
+- **Phase ปัจจุบัน:** P4b จบแล้ว, ยังไม่เริ่ม phase ถัดไป — ดู `docs/PROJECT_BIBLE.md` §7 Backlog สำหรับ
+  รายการเต็มที่รอตัดสินใจ (BL-09/BL-11/BL-12/BL-13)
+- **P4b จบแล้ว, tag `v1.3.0`** (2026-08-21) — วี dogfood ผ่านครบ (5 ข้อ + 2 ข้อเพิ่มเอง): FR-CALC-5/BL-10
+  (per-meal targets จาก wake_time/sleep_hours_target, % ต่อมื้อปรับได้, remaining-based display เป็น
+  progress bar สี — โทนข้อเท็จจริงล้วนไม่มีคำตัดสิน, แสดงเฉพาะวันนี้เท่านั้น) — FR-HLTH-3 client
+  (Shortcut #2) และ FR-ANLT-1 ถูกเลื่อนออกจาก P4b ระหว่างทาง (2026-08-21, วีตัดสินใจ) ไปเป็น backlog BL-13
+  — server ฝั่ง FR-HLTH-3 เสร็จ+deploy+migration แล้ว คงไว้เฉยๆ พร้อมหยิบต่อได้ทันที (API contract ที่
+  `docs/shortcuts/shortcut-2-read.md`)
 - **P4a จบแล้ว, tag `v1.2.0`** (2026-08-21) — วี dogfood ผ่านครบตาม Phase Gate Rule: BL-11 (search UX,
   ปิดสมบูรณ์รวมถอด instrumentation), D-019/FR-CALC-4 (day-type energy target), D-023/AI Import
   (**ยกเลิกถาวรหลังวัดผลจริง** — แทนที่ด้วย BL-12 ยังไม่กำหนด phase), BL-08/FR-DASH-1 (Dashboard tab แทน
@@ -79,6 +86,8 @@ Vision → Boundary → Requirement → Decision → Freeze → Working Rules
 
 ## Changelog
 
+- v1.10 (2026-08-21): ปิด P4b (tag `v1.3.0`) — วี dogfood FR-CALC-5/BL-10 ผ่านครบ, ยังไม่เริ่ม phase ถัดไป
+  (รอวีตัดสินใจร่วมกับที่ปรึกษาว่าจะหยิบอะไรจาก backlog มาทำต่อ)
 - v1.9 (2026-08-21): ปิด P4a (tag `v1.2.0`) — วี dogfood ผ่านครบทุกข้อ (รวม amendment ring composition
   ที่พบ+แก้บั๊กจริงระหว่างทาง), เริ่ม P4b: งานแรก FR-HLTH-3
 - v1.8 (2026-08-20): อัปเดตสถานะ P4a (เคย stale ค้างว่า "รอเสนอวี" ทั้งที่ตัดสินใจและเขียนโค้ดไปแล้วทั้งช่วง)

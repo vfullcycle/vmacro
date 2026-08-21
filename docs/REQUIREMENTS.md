@@ -1,4 +1,4 @@
-# REQUIREMENTS — Vmacro (FROZEN v1.12, 2026-08-20)
+# REQUIREMENTS — Vmacro (FROZEN v1.13, 2026-08-21)
 
 > แก้ไขได้เฉพาะเมื่อวีสั่ง + bump version + บันทึก changelog ท้ายไฟล์
 > ทุก FR ระบุ phase ที่ implement ตาม SCOPE.md
@@ -191,15 +191,45 @@ best-effort ตามข้อมูลที่มีจริง)*
 ครั้งเดียวต่อเครื่อง ไม่ต้องแก้ไขข้างใน shortcut เอง (config ดึงจาก server)
 *AC: เพื่อนติดตั้งเองได้จากคู่มือโดยไม่ต้องถามวี*
 
-**FR-HLTH-3 (P4)** อ่านข้อมูลจาก Apple Health ผ่าน Shortcut #2 → POST เข้า VPS ingest endpoint อย่างน้อย:
-workouts (ชนิด/ระยะเวลา/พลังงาน), heart rate, active energy — เก็บใน Supabase ผูก user
-*AC: ข้อมูลซ้ำ (timestamp เดิม) ไม่ถูก insert ซ้ำ (idempotent)*
+**FR-HLTH-3 (P4b)** อ่านข้อมูลจาก Apple Health ผ่าน Shortcut #2 → POST เข้า VPS ingest endpoint ใหม่ (auth
+ด้วย per-user token เดียวกับที่ Shortcut #1 ใช้ตาม D-020 — ไม่สร้างระบบ auth ใหม่) เก็บใน Supabase ผูก user
+อย่างน้อย: **(1) workout ต่อ session** — ชนิดกิจกรรม (ตามที่ HealthKit ให้มา ไม่ filter เฉพาะบางชนิด),
+เวลาเริ่ม, ระยะเวลา, พลังงานที่เผาผลาญของ workout นั้น (kcal), average heart rate ของ workout นั้น
+**(2) resting heart rate** 1 ค่า/วัน **(3) active energy** ยอดรวมทั้งวัน หน่วย kcal (ไม่แยกช่วงเวลา —
+คนละตัวกับพลังงานต่อ workout ใน (1)) — **ไม่เก็บ** HRV หรือ raw heart rate sample ในเวอร์ชันนี้ (บันทึกเป็น
+backlog พิจารณาตอน P5, confounder เยอะเกินไปสำหรับ P4) โครงสร้างต้องแยก 2 พฤติกรรม: (1) เป็น event log
+กันซ้ำแบบ insert-once ด้วย unique(user, เวลาเริ่ม, ชนิด); (2)/(3) เป็นค่าต่อ (user, วันที่) ที่ต้อง **upsert
+ทับได้** ไม่ใช่กันซ้ำแบบปฏิเสธ เพราะ sync กลางวันแล้ว sync อีกทีตอนเย็นจะได้ active energy ที่สมบูรณ์กว่า
+ต้องทับค่าเดิม
+*AC: (1) workout event ที่มี (user, เวลาเริ่ม, ชนิด) ซ้ำกับที่มีอยู่แล้วไม่ insert ซ้ำ (idempotent);
+(2) sync resting HR/active energy รวมวันซ้ำในวันเดียวกันทับค่าเดิมด้วยค่าล่าสุด (upsert ไม่ใช่ reject);
+(3) workout ที่ไม่มี average HR (เช่น Watch ไม่ได้สวมตอนนั้น) insert ได้ปกติ field นั้นเป็น null ไม่ block
+ทั้ง record (best-effort เหมือน FR-HLTH-1); (4) endpoint auth ด้วย per-user token เดียวกับ Shortcut #1
+(D-020); (5) ไม่มี field เกี่ยวกับ HRV หรือ raw HR sample ถูกเก็บในเวอร์ชันนี้; (6) เจอข้อจำกัดของ
+Shortcuts ระหว่าง build ที่ทำให้อ่าน field ไหนไม่ได้จริง (ตาม pattern D-022) ต้องหยุดแจ้งวีพร้อมทางเลือก
+ไม่เงียบไปหาทางลัดเอง; (7) เก็บ `synced_at` (เวลา sync ล่าสุด) ต่อ (user, วันที่) คู่กับ daily stats ใน (2)/(3)
+— จำเป็นสำหรับ FR-ANLT-1 เพื่อรู้ว่าวันไหน sync ตอนบ่าย (active energy ต่ำกว่าจริง) vs sync ครบวันแล้ว
+กันเอาไปคำนวณ balance ปนกันโดยไม่มีใครรู้*
 
 ## FR-ANLT — Analysis (P4–P5, ตาม D-006)
 
-**FR-ANLT-1 (P4)** Dashboard สถิติพื้นฐาน: kcal balance รายวัน/สัปดาห์ (intake − TDEE ± active energy),
-trend น้ำหนักเทียบ balance สะสม, สรุป protein เทียบวันเทรน
-*AC: เลือกช่วงเวลาได้ (7/30/90 วัน)*
+**FR-ANLT-1 (P4b)** Dashboard สถิติพื้นฐาน 3 metric ใช้ข้อมูลจริงจาก FR-HLTH-3 (ไม่ใช่แผน/day-type ที่
+เลือกไว้ล่วงหน้า):
+**(1) kcal balance** = `intake − baseline_TDEE − active_energy_actual` — **`baseline_TDEE` ต้องเป็น BMR ×
+baseline activity multiplier ที่ไม่รวม exercise ตามนิยาม D-019 เท่านั้น ห้ามใช้ TDEE เดิมก่อนมี day-type**
+เพราะจะนับ activity ซ้ำสองรอบ (รอบแรกในตัว multiplier เดิม รอบสองใน active energy จริงที่มาบวกซ้ำ) ทำให้
+balance ติดลบเกินจริงทุกวัน — กับดักคลาสสิกเวลาผสม TDEE แบบเดิมกับข้อมูล wearable
+**(2) trend น้ำหนักเทียบ balance สะสม** — แสดงเป็น 2 เส้น/กราฟแยกกันแชร์ x-axis เดียวกัน (น้ำหนักจาก
+`weight_logs`, balance สะสมจาก metric 1) ไม่ทำ dual-axis chart ซับซ้อน
+**(3) สรุป protein เทียบวันเทรน** — "วันเทรน" นิยามจาก workout จริงที่ sync เข้ามา (มี record ใน
+`health_workouts` อย่างน้อย 1 รายการวันนั้น) ไม่ใช่ day-type ที่เลือกไว้ล่วงหน้า — เก็บค่า day-type ที่เลือก
+ไว้คู่กันด้วย (ยังไม่ต้องแสดงผลใน FR นี้) เผื่อเปรียบเทียบ "แผน vs จริง" ในอนาคต (บอกความแม่นของการวางแผน
++ เป็นฐานสำหรับ auto-set day-type จาก workout ในอนาคต)
+*AC: เลือกช่วงเวลาได้ (7/30/90 วัน); metric 1 แสดงตัวเลข/กราฟรายวันในช่วงที่เลือก + ผลรวมสะสม;
+`baseline_TDEE` ที่ใช้ต้องไม่รวม exercise multiplier ใดๆ (ตรวจสอบได้ว่าไม่ใช่ TDEE เดิม); metric 2 แสดง 2
+กราฟแยกกัน ไม่ทำ dual-axis; metric 3 = ค่าเฉลี่ย protein_g ของวันที่มี workout จริงเทียบวันที่ไม่มี ในช่วงที่
+เลือก, เก็บ day-type คู่กันไว้ในข้อมูล (ไม่แสดงผล); วันที่ไม่มีข้อมูล health (ยังไม่ sync) ไม่ทำให้ metric
+พังทั้งช่วง — ข้ามวันนั้นไปเงียบๆ*
 
 **FR-ANLT-2 (P5)** LLM insight รายสัปดาห์ (ผ่าน VPS): สรุป pattern อาหาร↔กิจกรรม↔น้ำหนักเป็นภาษาไทย
 พร้อมข้อสังเกต — ระบุชัดว่าเป็นข้อสังเกตจากข้อมูล ไม่ใช่คำแนะนำทางการแพทย์
@@ -215,6 +245,10 @@ RLS: diary/health/profile/weight เห็นเฉพาะเจ้าขอ�
 
 ## Changelog
 
+- v1.13 (2026-08-21): แก้ FR-HLTH-3 + FR-ANLT-1 เต็ม (คำสั่งวี, เริ่ม P4b) — FR-HLTH-3: scope field เต็ม
+  (workout event/resting HR/active energy รวมวัน), แยก dedup 2 พฤติกรรม (workout insert-once vs daily
+  stats upsert) + `synced_at`; FR-ANLT-1: balance ใช้ baseline_TDEE (ไม่รวม exercise) + active energy จริง
+  กันนับ activity ซ้ำสอง, วันเทรนนิยามจาก workout จริงไม่ใช่ day-type ที่เลือกไว้ (เก็บคู่กันไว้เทียบทีหลัง)
 - v1.12 (2026-08-20): แก้ FR-DASH-1 ring (5) ซ้ำ (คำสั่งวี, พบระหว่าง dogfood) — สูตรเดิมใช้ `serving_size_g`
   ลบด้วย macro ผิด เพราะ custom food ส่วนใหญ่กรอกน้ำหนัก/macro แยกกันคนละที่มา ไม่การันตีสอดคล้องกัน
   (กรณีทดสอบจริงให้ "อื่นๆ 68%" ตีความไม่ได้) — เปลี่ยนฐาน 100% เป็นผลรวมของสิ่งที่วัดได้จริงเท่านั้น

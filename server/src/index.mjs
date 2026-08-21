@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { getNutritionEstimate, translateBatch } from "./anthropic.mjs";
 import { getAuthedUser } from "./auth.mjs";
 import { getFood, searchFoods } from "./fatsecret.mjs";
+import { ingestHealthDataForToken } from "./healthIngest.mjs";
 import { getDailyTotalsForToken } from "./healthToken.mjs";
 import { checkRateLimit } from "./rateLimit.mjs";
 
@@ -18,6 +19,9 @@ const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "https://vfullcycle.github.
 const MAX_BODY_BYTES = 2 * 1024 * 1024;
 const TRANSLATE_RATE_LIMIT = { max: 20, windowMs: 60_000 };
 const HEALTH_SUMMARY_RATE_LIMIT = { max: 30, windowMs: 60_000 };
+// FR-HLTH-3: Shortcut #2 syncs a few times a day at most (not a tight polling loop like
+// the daily-summary read), so a lower ceiling still leaves headroom for manual re-runs.
+const HEALTH_INGEST_RATE_LIMIT = { max: 10, windowMs: 60_000 };
 // Lower than translate's 20/min — vision calls are slower/pricier, and this is a
 // deliberate one-at-a-time "fill in this form" action, not a batch operation.
 const AI_IMPORT_RATE_LIMIT = { max: 10, windowMs: 60_000 };
@@ -158,6 +162,74 @@ const server = createServer(async (req, res) => {
     } catch (err) {
       console.error(err);
       sendJson(res, 502, { error: "daily summary request failed" });
+    }
+    return;
+  }
+
+  if (req.method === "POST" && url.pathname === "/health/ingest") {
+    // FR-HLTH-3: Shortcut #2 posts here, same per-user token auth as the GET summary
+    // route above (D-020) — see healthIngest.mjs for why token resolution and the
+    // write happen in one Postgres RPC call.
+    const authHeader = req.headers["authorization"];
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    if (!token) {
+      sendJson(res, 401, { error: "unauthorized" });
+      return;
+    }
+    if (!checkRateLimit(token, HEALTH_INGEST_RATE_LIMIT)) {
+      sendJson(res, 429, { error: "rate limited" });
+      return;
+    }
+
+    let body;
+    try {
+      body = await readJsonBody(req);
+    } catch (err) {
+      sendJson(res, 400, { error: err.message });
+      return;
+    }
+
+    const { date, workouts, restingHeartRate, activeEnergyKcal } = body;
+    if (!date || !DATE_RE.test(date)) {
+      sendJson(res, 400, { error: "date must be a string in YYYY-MM-DD format" });
+      return;
+    }
+    if (workouts != null) {
+      if (!Array.isArray(workouts)) {
+        sendJson(res, 400, { error: "workouts must be an array" });
+        return;
+      }
+      const invalid = workouts.some(
+        (w) => typeof w.type !== "string" || !w.type.trim() || typeof w.started_at !== "string" || typeof w.duration_seconds !== "number",
+      );
+      if (invalid) {
+        sendJson(res, 400, { error: "each workout needs type (string), started_at (string), duration_seconds (number)" });
+        return;
+      }
+    }
+    if (restingHeartRate != null && typeof restingHeartRate !== "number") {
+      sendJson(res, 400, { error: "restingHeartRate must be a number" });
+      return;
+    }
+    if (activeEnergyKcal != null && typeof activeEnergyKcal !== "number") {
+      sendJson(res, 400, { error: "activeEnergyKcal must be a number" });
+      return;
+    }
+    if ((workouts == null || workouts.length === 0) && restingHeartRate == null && activeEnergyKcal == null) {
+      sendJson(res, 400, { error: "nothing to sync — provide workouts, restingHeartRate, or activeEnergyKcal" });
+      return;
+    }
+
+    try {
+      const result = await ingestHealthDataForToken(token, { date, workouts, restingHeartRate, activeEnergyKcal });
+      if (!result) {
+        sendJson(res, 401, { error: "unauthorized" });
+        return;
+      }
+      sendJson(res, 200, result);
+    } catch (err) {
+      console.error(err);
+      sendJson(res, 502, { error: "health ingest request failed" });
     }
     return;
   }

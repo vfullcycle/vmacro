@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.15
+# SCOPE — Vmacro v1.16
 
 ## In Scope
 
@@ -76,9 +76,19 @@
   `/health/ingest`, ตาราง `health_workouts`/`health_daily_stats`, RPC
   `ingest_health_data_for_token()`) คงไว้เฉยๆ ไม่มีต้นทุน maintain, API contract ยืนยันแล้วที่
   `docs/shortcuts/shortcut-2-read.md` หยิบต่อได้ทันทีเมื่อวีพร้อมลงเวลาต่อ Shortcut ทีละ action บนเครื่องจริง
-- BL-09 (Friends tab): ยังไม่ตัดสินใจ ว่าเข้าก่อน/คู่ P5 หรือ phase ใหม่ — รอวีตัดสินใจร่วมกับที่ปรึกษา
+- BL-09 (Friends tab): เลื่อนอีกครั้ง (2026-08-21) — เกณฑ์ตัดสินผูกกับผลใช้งานจริงของ BL-12 (ดูด้านล่าง)
+  แทนการกำหนด phase ตายตัว ดู PROJECT_BIBLE §7 BL-09 สำหรับเกณฑ์เต็ม
 
-### P5 — Insight tier 2 (LLM) → tag `v1.4.0`
+### P4c — Community + data collection → tag `v1.4.0`
+- **BL-12/FR-FOOD-9 (งานแรก, 2026-08-21)**: ขออาหารใหม่ในแอป — แทนที่ D-023/AI Import ที่ยกเลิก, แก้ปัญหา
+  ประสานงานเพื่อนที่เกิดขึ้นจริง (ไม่ใช่ของที่ "น่าจะดี" เหมือนรายการอื่นใน backlog) — status 3 แบบ
+  (pending/fulfilled/declined) + โน้ต admin ส่งกลับ requester, ไม่มี push notification — **ถือเป็น
+  prototype ของ BL-09 (Friends tab) ในตัว** เพราะเป็น interaction ระหว่าง user ครั้งแรกของระบบ วัดผลใช้
+  งานจริง 3-4 สัปดาห์หลัง ship แล้วค่อยตัดสิน BL-09
+- BL-01/FR-DIARY-4: ราคาต่อ diary entry (optional) — ทำรวมรอบเดียวกับ BL-12 ตามคำสั่งวี, เพิ่งค้นพบว่า
+  ตกหล่นจาก P2 ตั้งแต่แรก (ดู CLAUDE.md กติกาใหม่เรื่องเช็ค backlog ตอนวางแผน phase)
+
+### P5 — Insight tier 2 (LLM) → tag `v1.5.0`
 - LLM endpoint บน VPS สรุป pattern รายสัปดาห์เป็นภาษาไทย
 - (ประตูสู่อนาคต) เมื่อข้อมูล ≥3–6 เดือน ค่อยประเมิน ML tier 3 เป็นโปรเจกต์ย่อยแยก
 
@@ -94,6 +104,9 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.16 (2026-08-21): เพิ่ม P4c (tag `v1.4.0`, คำสั่งวี) — BL-12/FR-FOOD-9 (ขออาหารใหม่ในแอป, งานแรก) +
+  BL-01/FR-DIARY-4 (ราคาต่อ entry) — เป็น feature ตาม semver ไม่ใช่ patch (ตาราง+หน้าใหม่ 2 หน้า) จึงใช้
+  v1.4.0 แทน v1.3.1 ที่เสนอไว้ก่อนหน้า — P5 เลื่อนเป็น `v1.5.0`, BL-09 ผูกเกณฑ์ตัดสินกับผลใช้งาน BL-12
 - v1.15 (2026-08-21): ปิด P4b (tag `v1.3.0`) — วี dogfood FR-CALC-5/BL-10 ผ่านครบ, BL-09 ยังไม่ตัดสินใจ
   ลำดับ phase ถัดไป
 - v1.14 (2026-08-21): FR-CALC-5 (BL-10) code-complete+deploy+migration รันแล้ว — P4b รอวี dogfood ก่อน

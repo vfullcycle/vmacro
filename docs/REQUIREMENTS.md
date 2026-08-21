@@ -1,4 +1,4 @@
-# REQUIREMENTS — Vmacro (FROZEN v1.16, 2026-08-21)
+# REQUIREMENTS — Vmacro (FROZEN v1.17, 2026-08-21)
 
 > แก้ไขได้เฉพาะเมื่อวีสั่ง + bump version + บันทึก changelog ท้ายไฟล์
 > ทุก FR ระบุ phase ที่ implement ตาม SCOPE.md
@@ -152,6 +152,24 @@ verify เพื่อให้ admin ไล่ตรวจได้ไว — �
 verify แล้วสถานะอัปเดตทันทีในหน้า list โดยไม่ต้อง reload และ item หายจาก filter "ยังไม่ verify" ทันที;
 ยกเลิก verify ได้เหมือนใน FoodDetail (ขอ source ตอน verify, ล้าง source ตอน unverify)*
 
+**FR-FOOD-9 (P4c)** ขออาหารใหม่ในแอป (BL-12, ทดแทน D-023/AI Import ที่ยกเลิก) — user ทุกคนกดปุ่ม
+"ขอเพิ่มอาหาร" จากหน้า FoodSearch ได้เสมอ (แสดงเป็นลิงก์เล็กท้ายผลลัพธ์เมื่อมีผลค้นหา, เป็นปุ่มเด่นกลางจอ
+เมื่อไม่พบผลลัพธ์เลย — จังหวะที่ user ต้องการทางออกที่สุด) → กรอกฟอร์ม: ชื่ออาหาร (required), ปริมาณ/
+รายละเอียด (required, free text), แนบรูป (optional, resize+แปลง base64 ด้วย `resizeImageToBase64()` ที่มี
+อยู่แล้ว ไม่เขียนใหม่) → เข้าคิวตาราง `food_requests` ใหม่ ผูก requester, สถานะเริ่มที่ `pending`
+→ admin เห็น list คำขอทั้งหมดในหน้าใหม่ `/settings/admin/food-requests` (เข้าชุด D-017 admin gate) เปลี่ยน
+สถานะเป็น `fulfilled` (เพิ่มแล้ว) หรือ `declined` (ไม่ดำเนินการ — กันคำขอค้าง pending ตลอดกาล เช่น
+ซ้ำของเดิม/ข้อมูลไม่พอ) พร้อม **โน้ตข้อความ optional ส่งกลับให้ requester เห็น** (เช่น "มีอยู่แล้วชื่อ X"
+หรือ "ขอรูปฉลากเพิ่ม" — กรณีจริงไม่ได้มีแค่ "เพิ่มแล้ว" เฉยๆ ถ้าไม่มีช่องนี้ต้องไปทักนอกแอปอยู่ดี ขัดกับเหตุผล
+ที่สร้างฟีเจอร์นี้ขึ้นมา) — ไม่บังคับ link กับ custom_food ที่สร้างจริง (เก็บง่ายสุด) — **ไม่มี push
+notification** — requester เห็นสถานะ+โน้ตเปลี่ยนเฉพาะตอนเปิดแอปที่หน้า "คำขอของฉัน" ใหม่ (เข้าหลักการเดียว
+กับ BL-10)
+*AC: กด "ขอเพิ่มอาหาร" กรอกฟอร์มได้ครบตามที่ระบุ ทั้งจากสถานะมีผล/ไม่มีผลค้นหา; submit สำเร็จเห็นคำขอ
+ตัวเองในหน้า "คำขอของฉัน" สถานะ "รอดำเนินการ"; admin เห็น list คำขอ pending ของทุก user เปลี่ยนสถานะเป็น
+fulfilled/declined พร้อมใส่โน้ตได้; requester เห็นสถานะ+โน้ตของ admin เปลี่ยนตอนเปิดแอป ไม่มี notification
+ใดๆ; รูปที่แนบ resize+แปลง base64 ก่อนส่ง เก็บใน column เดียว ไม่สร้าง Storage bucket ใหม่; RLS — user
+เห็น/สร้างคำขอตัวเองเท่านั้น, admin เห็น/แก้ไขสถานะ+โน้ตของทุกคนได้*
+
 ## FR-DIARY — Daily Logging (P2)
 
 **FR-DIARY-1** บันทึกอาหารรายมื้อ (เช้า/กลางวัน/เย็น/ว่าง) ระบุ quantity — หน้าสรุปวันแสดงยอดรวม f/c/p/kcal
@@ -164,6 +182,18 @@ scale nutrient ตามสัดส่วนจาก serving ต้นทา�
 
 **FR-DIARY-3** ทางลัดลดการทำซ้ำ: (a) copy ทั้งวัน/ทั้งมื้อจากเมื่อวาน (b) รายการ recent (c) favorites
 *AC: บันทึกมื้อที่กินประจำได้ภายใน ≤3 taps จากหน้า diary*
+
+**FR-DIARY-4 (P4c)** ราคาต่อ diary entry (BL-01, optional) — `diary_entries` เพิ่ม column `price_baht`
+(nullable, ไม่กระทบ entry เดิม) — ช่องกรอกราคาอยู่เฉพาะ **4 จุดที่มีฟอร์มอยู่แล้ว** (add-to-diary จาก
+FoodDetail ทั้ง 3 source: custom food/FatSecret/dish, และ QuickAddFoodModal) — **ตั้งใจไม่เพิ่มช่องราคาใน
+เส้นทาง tap-to-add ทั้ง 5 จุด** (favorites, recent, meal template, copy ทั้งวัน/ทั้งมื้อจากเมื่อวาน) เพราะ
+จะขัดกับ "≤3 taps" ที่ FR-DIARY-3 ตั้งใจไว้ — entry จากทางนั้น `price_baht = null` เสมอ ยกเว้น
+copy-from-yesterday ที่ copy ทั้ง row มา ราคาเดิมอาจติดมาด้วย (ยอมรับได้ แก้ทีหลังได้) — หน้าสรุปวันแสดง
+ยอดรวมราคาเฉพาะ entry ที่มีราคา, ช่อง edit entry เดิมเพิ่มช่องแก้ราคาด้วย
+*AC: `price_baht` optional เสมอ, entry เดิมก่อน migration ไม่กระทบ; 4 จุดฟอร์ม (FoodDetail × 3,
+QuickAddFoodModal) มีช่องราคา; 5 จุด tap-to-add ไม่มีช่องราคาเพิ่มตามที่ scope ไว้; ยอดรวมราคาวันนั้นนับ
+เฉพาะ entry ที่มีราคา ไม่มี entry ไหนมีราคาเลย → ไม่แสดงยอดรวม (ไม่โชว์ "0 บาท"); แก้ไขราคา entry เดิมได้
+ผ่านช่อง edit ที่มีอยู่แล้ว*
 
 ## FR-DASH — Dashboard (P4a)
 
@@ -284,6 +314,10 @@ RLS: diary/health/profile/weight เห็นเฉพาะเจ้าขอ�
 
 ## Changelog
 
+- v1.17 (2026-08-21): เพิ่ม FR-FOOD-9 (ขออาหารใหม่ในแอป, BL-12, คำสั่งวี) และ FR-DIARY-4 (ราคาต่อ entry,
+  BL-01, คำสั่งวี) — เข้าคิว P4c: FR-FOOD-9 มี status 3 แบบ (pending/fulfilled/declined) + โน้ต admin
+  ส่งกลับ requester, FR-DIARY-4 จำกัดช่องราคาเฉพาะ 4 จุดที่มีฟอร์มอยู่แล้ว ไม่แตะ tap-to-add 5 จุดที่ต้อง
+  คง ≤3 taps ตาม FR-DIARY-3
 - v1.16 (2026-08-21): FR-CALC-5 ผ่าน dogfood (คำสั่งวี) — เพิ่ม AC (10) การ์ดแสดงเฉพาะวันนี้เท่านั้น (เคยเป็น
   แค่การตัดสินใจตอน implement ไม่ได้บันทึกเป็น AC มาก่อน กันหายตอน refactor ในอนาคต) — ปรับ UI เป็น
   progress bar สี (แดง=เกินเป้า, เขียว=ไม่เกิน) แทนข้อความล้วน

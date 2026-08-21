@@ -7,7 +7,7 @@ import "./SettingsHome.css";
 const SETTINGS_ITEMS = [
   { to: "/settings/profile", label: "โปรไฟล์", desc: "ข้อมูลร่างกาย เป้าหมาย สูตรคำนวณ", Icon: UserIcon },
   { to: "/settings/system", label: "ระบบ", desc: "หน่วย ค่า default", Icon: GearIcon },
-  { to: "/settings/day-type", label: "เป้าตามประเภทวัน", desc: "Allowance วัน rest/light/hard, carb/fat floor", Icon: TrendIcon },
+  { to: "/settings/day-type", label: "เป้าตามประเภทวันฝึก", desc: "Allowance วัน rest/light/hard, carb/fat floor", Icon: TrendIcon },
   { to: "/settings/meal-targets", label: "เป้าต่อมื้ออาหาร", desc: "เวลาตื่นนอน, เวลาต่อมื้อ, สัดส่วน % ต่อมื้อ", Icon: DiaryIcon },
   { to: "/settings/meal-templates", label: "มื้ออาหารของฉัน", desc: "จัดการชุดอาหารที่บันทึกไว้", Icon: ListIcon },
 ];

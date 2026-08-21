@@ -60,7 +60,7 @@ export default function SettingsDayType() {
 
   return (
     <section className="settings-day-type">
-      <h1>เป้าตามประเภทวัน</h1>
+      <h1>เป้าตามประเภทวันฝึก</h1>
       <p className="note">
         เป้า kcal ต่อวันปรับตามที่เลือกในหน้า Diary — rest = ไม่เพิ่ม, light/hard = เพิ่มจากเป้าปกติ ตามค่า
         ด้านล่าง (ค่าเริ่มต้น: rest +0, light +{DEFAULT_DAY_TYPE_ALLOWANCE_KCAL.light}, hard +

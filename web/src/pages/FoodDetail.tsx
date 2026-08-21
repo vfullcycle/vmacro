@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import FatSecretAttribution from "../components/FatSecretAttribution";
 import FavoriteToggle from "../components/FavoriteToggle";
 import NutritionFactsLabel from "../components/NutritionFactsLabel";
+import PriceInput from "../components/PriceInput";
 import VerifiedBadge from "../components/VerifiedBadge";
 import { API_BASE_URL } from "../config";
 import { useAuth } from "../lib/auth-context";
@@ -140,6 +141,7 @@ function FatSecretFoodDetail({ foodId }: { foodId: string }) {
   const [servingId, setServingId] = useState<string | null>(null);
   const [quantityMode, setQuantityMode] = useState<QuantityMode>("servings");
   const [quantityValue, setQuantityValue] = useState(1);
+  const [priceBaht, setPriceBaht] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -274,6 +276,7 @@ function FatSecretFoodDetail({ foodId }: { foodId: string }) {
       carbs_g: scaled.carbs_g,
       fat_g: scaled.fat_g,
       nutrients: scaled.nutrients ?? {},
+      price_baht: priceBaht ? Number(priceBaht) : null,
     });
     if (insertError) throw new Error(insertError.message);
   }
@@ -336,6 +339,7 @@ function FatSecretFoodDetail({ foodId }: { foodId: string }) {
         <NutritionFactsLabel nutrients={scaled} servingDescription={quantityLabel(quantityMode, quantityValue, selectedServingLabel)} />
       )}
 
+      {diary && <PriceInput value={priceBaht} onChange={setPriceBaht} />}
       {diary && <SaveToDiaryBar diary={diary} disabled={!scaled} onSave={saveToDiary} />}
       {dishCtx && <SaveToDishBar dish={dishCtx} disabled={!scaled} onSave={saveToDish} />}
 
@@ -368,6 +372,7 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
   const [verifySaving, setVerifySaving] = useState(false);
   const [quantityMode, setQuantityMode] = useState<QuantityMode>("servings");
   const [quantityValue, setQuantityValue] = useState(1);
+  const [priceBaht, setPriceBaht] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -454,6 +459,7 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
       carbs_g: scaled.carbs_g,
       fat_g: scaled.fat_g,
       nutrients: scaled.nutrients ?? {},
+      price_baht: priceBaht ? Number(priceBaht) : null,
     });
     if (insertError) throw new Error(insertError.message);
   }
@@ -528,6 +534,7 @@ function CustomFoodDetail({ foodId }: { foodId: string }) {
 
       {scaled && <NutritionFactsLabel nutrients={scaled} servingDescription={quantityLabel(quantityMode, quantityValue, servingDesc)} />}
 
+      {diary && <PriceInput value={priceBaht} onChange={setPriceBaht} />}
       {diary && <SaveToDiaryBar diary={diary} disabled={!scaled} onSave={saveToDiary} />}
       {dishCtx && <SaveToDishBar dish={dishCtx} disabled={!scaled} onSave={saveToDish} />}
     </main>
@@ -551,6 +558,7 @@ function DishFoodDetail({ dishId }: { dishId: string }) {
   const [creatorName, setCreatorName] = useState<string | null>(null);
   const [hasFatSecretIngredient, setHasFatSecretIngredient] = useState(false);
   const [quantityValue, setQuantityValue] = useState(1);
+  const [priceBaht, setPriceBaht] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -612,6 +620,7 @@ function DishFoodDetail({ dishId }: { dishId: string }) {
       carbs_g: scaled.carbs_g,
       fat_g: scaled.fat_g,
       nutrients: scaled.nutrients ?? {},
+      price_baht: priceBaht ? Number(priceBaht) : null,
     });
     if (insertError) throw new Error(insertError.message);
   }
@@ -642,6 +651,7 @@ function DishFoodDetail({ dishId }: { dishId: string }) {
 
       {scaled && <NutritionFactsLabel nutrients={scaled} servingDescription={`${quantityValue} × ${dish.name}`} />}
 
+      {diary && <PriceInput value={priceBaht} onChange={setPriceBaht} />}
       {diary && <SaveToDiaryBar diary={diary} disabled={!scaled} onSave={saveToDiary} />}
 
       {hasFatSecretIngredient && <FatSecretAttribution />}

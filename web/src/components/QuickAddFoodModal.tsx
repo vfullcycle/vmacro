@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PriceInput from "./PriceInput";
 import { useAuth } from "../lib/auth-context";
 import type { Meal } from "../lib/diary";
 import { supabase } from "../lib/supabase";
@@ -27,6 +28,7 @@ export default function QuickAddFoodModal({
   const [fat, setFat] = useState("");
   const [kcal, setKcal] = useState("");
   const [kcalAuto, setKcalAuto] = useState(true);
+  const [priceBaht, setPriceBaht] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,6 +56,7 @@ export default function QuickAddFoodModal({
       carbs_g: Number(carbs) || 0,
       fat_g: Number(fat) || 0,
       nutrients: {},
+      price_baht: priceBaht ? Number(priceBaht) : null,
     });
     setSaving(false);
     if (insertError) {
@@ -106,6 +109,8 @@ export default function QuickAddFoodModal({
             <input type="checkbox" checked={kcalAuto} onChange={(e) => setKcalAuto(e.target.checked)} />
             คำนวณ kcal อัตโนมัติจาก โปรตีน×4 + คาร์บ×4 + ไขมัน×9
           </label>
+
+          <PriceInput value={priceBaht} onChange={setPriceBaht} />
 
           {error && <p className="error">{error}</p>}
 

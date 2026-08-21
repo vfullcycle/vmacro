@@ -28,6 +28,7 @@ export interface DiaryEntryRow {
   carbs_g: number;
   fat_g: number;
   nutrients: NutrientPanel | null;
+  price_baht: number | null;
   custom_foods: { name: string } | null;
   dishes: { name: string } | null;
 }

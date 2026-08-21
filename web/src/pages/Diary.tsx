@@ -37,6 +37,7 @@ export default function Diary() {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [editPriceBaht, setEditPriceBaht] = useState("");
   const [editSaving, setEditSaving] = useState(false);
 
   const [pickerMeal, setPickerMeal] = useState<Meal | null>(null);
@@ -51,7 +52,7 @@ export default function Diary() {
     const { data, error } = await supabase
       .from("diary_entries")
       .select(
-        "id, entry_date, meal, source, custom_food_id, dish_id, fatsecret_food_id, fatsecret_food_name, quick_name, quantity, serving_size_g, kcal, protein_g, carbs_g, fat_g, nutrients, custom_foods(name), dishes(name)",
+        "id, entry_date, meal, source, custom_food_id, dish_id, fatsecret_food_id, fatsecret_food_name, quick_name, quantity, serving_size_g, kcal, protein_g, carbs_g, fat_g, nutrients, price_baht, custom_foods(name), dishes(name)",
       )
       .eq("user_id", user.id)
       .eq("entry_date", date)
@@ -88,6 +89,14 @@ export default function Diary() {
     [entries],
   );
 
+  // Only entries that were given a price count toward the sum — undefined, not 0, when
+  // nobody priced anything that day (FR-DIARY-4 AC).
+  const priceSum = useMemo(() => {
+    const priced = entries.filter((e) => e.price_baht != null);
+    if (priced.length === 0) return null;
+    return priced.reduce((sum, e) => sum + (e.price_baht as number), 0);
+  }, [entries]);
+
   // Only meaningful for today — "current meal right now" mixed with a different day's
   // logged entries would be incoherent (FR-CALC-5).
   const mealTargetView = useMemo(() => {
@@ -108,12 +117,14 @@ export default function Diary() {
   function startEdit(entry: DiaryEntryRow) {
     setEditingId(entry.id);
     setEditValue(entry.serving_size_g != null ? String(Math.round(entry.quantity * entry.serving_size_g)) : String(entry.quantity));
+    setEditPriceBaht(entry.price_baht != null ? String(entry.price_baht) : "");
     setError(null);
   }
 
   function cancelEdit() {
     setEditingId(null);
     setEditValue("");
+    setEditPriceBaht("");
   }
 
   async function handleEditSave(e: React.FormEvent, entry: DiaryEntryRow) {
@@ -143,6 +154,7 @@ export default function Diary() {
         carbs_g: rescaled.carbs_g,
         fat_g: rescaled.fat_g,
         nutrients: rescaled.nutrients,
+        price_baht: editPriceBaht ? Number(editPriceBaht) : null,
       })
       .eq("id", entry.id);
 
@@ -288,6 +300,8 @@ export default function Diary() {
 
       {mealTargetView && <MealTargetCard view={mealTargetView} />}
 
+      {priceSum != null && <p className="diary-price-sum">ยอดรวมราคาวันนี้: {priceSum.toLocaleString("th-TH")} บาท</p>}
+
       <button type="button" className="diary-add-link diary-copy-day-link" onClick={() => copyFromYesterday()}>
         คัดลอกทั้งวันจากวันก่อนหน้า
       </button>
@@ -330,6 +344,15 @@ export default function Diary() {
                           required
                         />
                         <span className="diary-edit-unit">{entry.serving_size_g != null ? "g" : "× หน่วยเดิม"}</span>
+                        <input
+                          type="number"
+                          step="1"
+                          min="0"
+                          className="diary-edit-price"
+                          placeholder="ราคา (บาท)"
+                          value={editPriceBaht}
+                          onChange={(e) => setEditPriceBaht(e.target.value)}
+                        />
                         <div className="diary-entry-actions">
                           <button type="submit" disabled={editSaving}>
                             {editSaving ? "..." : "บันทึก"}
@@ -346,7 +369,7 @@ export default function Diary() {
                         {entryDisplayName(entry)}
                         <span className="diary-entry-meta">
                           {entryQuantityLabel(entry)} — {Math.round(entry.kcal)} kcal · โปรตีน {entry.protein_g}g · คาร์บ {entry.carbs_g}g ·
-                          ไขมัน {entry.fat_g}g
+                          ไขมัน {entry.fat_g}g{entry.price_baht != null && ` · ${entry.price_baht.toLocaleString("th-TH")} บาท`}
                         </span>
                       </span>
                       <span className="diary-entry-actions">

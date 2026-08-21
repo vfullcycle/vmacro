@@ -6,6 +6,7 @@ import "./SettingsHome.css";
 const ADMIN_ITEMS = [
   { to: "/settings/admin/food-import", label: "Import อาหาร (JSON)", desc: "เพิ่ม custom food จาก JSON หลายรายการพร้อมกัน", Icon: WrenchIcon },
   { to: "/settings/admin/custom-foods", label: "Custom Food", desc: "ดู list และยืนยันความถูกต้อง (verify)", Icon: ListIcon },
+  { to: "/settings/admin/food-requests", label: "คำขออาหารใหม่", desc: "รายการที่เพื่อนขอเพิ่ม (FR-FOOD-9)", Icon: ListIcon },
 ];
 
 export default function AdminHome() {

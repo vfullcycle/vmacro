@@ -427,8 +427,22 @@ export default function FoodSearch() {
 
       {loading && <p className="hint">กำลังค้นหา...</p>}
       {error && <p className="error">{error}</p>}
-      {noResults && <p className="hint">ไม่พบผลลัพธ์</p>}
+      {noResults && (
+        <div className="food-search-no-results">
+          <p className="hint">ไม่พบผลลัพธ์</p>
+          {user && (
+            <Link to={`/food/requests?q=${encodeURIComponent(query)}`} className="food-search-request-prominent">
+              ขอเพิ่มอาหารนี้
+            </Link>
+          )}
+        </div>
+      )}
       <div className="food-search-add-links">
+        {user && !noResults && (
+          <Link to={`/food/requests?q=${encodeURIComponent(query)}`} className="add-food-link">
+            + ขอเพิ่มอาหาร
+          </Link>
+        )}
         <Link to="/food/custom/new" className="add-food-link">
           + เพิ่มอาหารของคุณเอง
         </Link>

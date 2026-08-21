@@ -4,6 +4,7 @@ import Layout from "./components/Layout";
 import { AuthProvider } from "./lib/auth-context";
 import AdminCustomFoods from "./pages/AdminCustomFoods";
 import AdminFoodImport from "./pages/AdminFoodImport";
+import AdminFoodRequests from "./pages/AdminFoodRequests";
 import AdminHome from "./pages/AdminHome";
 import AiFoodImport from "./pages/AiFoodImport";
 import Calculator from "./pages/Calculator";
@@ -12,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Diary from "./pages/Diary";
 import DishBuilder from "./pages/DishBuilder";
 import FoodDetail from "./pages/FoodDetail";
+import FoodRequests from "./pages/FoodRequests";
 import FoodSearch from "./pages/FoodSearch";
 import HealthCheck from "./pages/HealthCheck";
 import Login from "./pages/Login";
@@ -54,7 +56,9 @@ function App() {
             <Route path="/settings/admin" element={<AdminHome />} />
             <Route path="/settings/admin/food-import" element={<AdminFoodImport />} />
             <Route path="/settings/admin/custom-foods" element={<AdminCustomFoods />} />
+            <Route path="/settings/admin/food-requests" element={<AdminFoodRequests />} />
             <Route path="/weight-log" element={<WeightLog />} />
+            <Route path="/food/requests" element={<FoodRequests />} />
             <Route path="/food/ai-import" element={<AiFoodImport />} />
             <Route path="/food/custom/new" element={<CustomFoodForm />} />
             <Route path="/food/custom/:id/edit" element={<CustomFoodForm />} />

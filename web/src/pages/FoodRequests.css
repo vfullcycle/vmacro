@@ -1,0 +1,126 @@
+.food-requests-page {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+}
+
+.food-requests-page .note {
+  font-size: 0.85rem;
+  color: var(--text);
+  margin: 0.25rem 0 1rem;
+}
+
+.food-requests-page form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.food-requests-page label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.food-requests-page input[type="text"] {
+  padding: 0.65rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.food-requests-page button[type="submit"] {
+  padding: 0.7rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font: inherit;
+  font-weight: 600;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.food-requests-page .error {
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.food-requests-page .ok {
+  color: #16a34a;
+  font-size: 0.875rem;
+}
+
+.food-requests-page h2 {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 1rem;
+}
+
+.food-requests-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.food-request-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+}
+
+.food-request-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.food-request-name {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.food-request-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.food-request-status.status-pending {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.food-request-status.status-fulfilled {
+  background: rgba(22, 163, 74, 0.12);
+  color: #16a34a;
+}
+
+.food-request-status.status-declined {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+.food-request-meta {
+  font-size: 0.85rem;
+  color: var(--text);
+  margin: 0.3rem 0 0;
+}
+
+.food-request-note {
+  font-size: 0.85rem;
+  color: var(--text-h);
+  margin: 0.4rem 0 0;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--border);
+}

@@ -1,0 +1,121 @@
+.admin-food-requests {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+}
+
+.admin-food-requests .filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  margin: 0.75rem 0 1.25rem;
+}
+
+.admin-food-requests .error {
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.admin-food-requests .note {
+  font-size: 0.875rem;
+  color: var(--text);
+}
+
+.admin-food-request-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admin-food-request-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+}
+
+.admin-food-request-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.food-request-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.food-request-status.status-pending {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.food-request-status.status-fulfilled {
+  background: rgba(22, 163, 74, 0.12);
+  color: #16a34a;
+}
+
+.food-request-status.status-declined {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+.admin-food-request-meta {
+  font-size: 0.8rem;
+  color: var(--text);
+  margin: 0.3rem 0 0.6rem;
+}
+
+.admin-food-request-photo {
+  max-width: 100%;
+  max-height: 220px;
+  border-radius: 8px;
+  margin-bottom: 0.6rem;
+  display: block;
+}
+
+.admin-food-request-note-input {
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.85rem;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.admin-food-request-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.admin-food-request-actions button {
+  flex: 1 1 auto;
+  padding: 0.55rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font: inherit;
+  font-weight: 600;
+  min-height: 40px;
+  cursor: pointer;
+}
+
+.admin-food-request-actions button.secondary {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}

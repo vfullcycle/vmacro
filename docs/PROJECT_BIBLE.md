@@ -1,4 +1,4 @@
-# PROJECT_BIBLE — Vmacro v1.27
+# PROJECT_BIBLE — Vmacro v1.28
 
 > Single source of truth ของโปรเจกต์ ถ้าไฟล์อื่นขัดกับไฟล์นี้ ให้ยึดไฟล์นี้แล้วแจ้งวีเพื่อ sync
 
@@ -179,6 +179,14 @@ protein 40%, carbs 38%, fat 26% (ควรได้ ~80% ถ้า range สอ�
 วี import ทีเดียวหลายรายการผ่าน admin bulk-import เดิม → แจ้งกลับคนขอเมื่อเพิ่มแล้ว — แก้ปัญหาการ
 ประสานงาน (ตอนนี้ต้องทักกันนอกแอป) ไม่ใช่พยายามแทนที่ความรู้วีด้วย AI เหมือน D-023 ที่ล้มเหลว —
 ต้นทุน API = 0 |
+| BL-13 | ยังไม่กำหนด (เดิมอยู่ P4b, เลื่อนออก 2026-08-21) | | **FR-HLTH-3 client (Shortcut #2) +
+FR-ANLT-1** — วีตัดสินใจเลื่อนออกจาก P4b เพราะยังไม่พร้อมลงเวลาต่อ Shortcut ทีละ action บนเครื่องจริง
+(งานที่ต้องนั่งทำสด ไม่ใช่แค่เขียนโค้ด) — **server ฝั่ง FR-HLTH-3 พร้อมใช้งานแล้วและคงไว้ตามเดิม** (endpoint
+`/health/ingest`, ตาราง `health_workouts`/`health_daily_stats`, RPC `ingest_health_data_for_token()`,
+deploy+migration รันแล้ว 2026-08-21) ไม่มีต้นทุน maintain ระหว่างรอ — API contract ที่ยืนยันแล้วอยู่ที่
+`docs/shortcuts/shortcut-2-read.md` หยิบต่อ Shortcut ได้ทันทีเมื่อวีพร้อม โดยไม่ต้องแก้ฝั่ง server เลย —
+FR-ANLT-1 พึ่งข้อมูลจาก Shortcut #2 ทั้ง 3 metric เลื่อนตามไปด้วยเป็นคู่ ทำก่อนไม่ได้จนกว่าจะมีข้อมูลจริง
+สะสม |
 
 ## 8. Naming (ยุติแล้ว — D-010)
 
@@ -190,6 +198,9 @@ protein 40%, carbs 38%, fat 26% (ควรได้ ~80% ถ้า range สอ�
 
 ## Changelog
 
+- v1.28 (2026-08-21): เพิ่ม **BL-13** (คำสั่งวี) — เลื่อน FR-HLTH-3 client (Shortcut #2) + FR-ANLT-1 ออกจาก
+  P4b ไปเป็น backlog ยังไม่กำหนด phase (server ฝั่ง FR-HLTH-3 เสร็จ+deploy+migration แล้ว คงไว้เฉยๆ) — P4b
+  เหลือ BL-10 เป็นงานหลัก
 - v1.27 (2026-08-20): **BL-11 ปิดสมบูรณ์** — วีสั่งหยุดรอ SQL เพิ่มเติม (สัญญาณที่มีพอตัดสินใจแล้ว), ถอด
   instrumentation ทั้งหมด (โค้ด+ตาราง `search_latency_log`) ตามที่ตกลงไว้แต่แรกว่าเป็นของชั่วคราว — P4a
   เหลือ BL-08 dashboard เป็นงานสุดท้ายก่อนตี tag `v1.2.0`

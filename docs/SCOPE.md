@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.12
+# SCOPE — Vmacro v1.13
 
 ## In Scope
 
@@ -67,19 +67,16 @@
   10 ข้อ (2026-08-21)
 
 ### P4b — Data-dependent → tag `v1.3.0`
-- **FR-HLTH-3 (งานแรก, 2026-08-21)**: VPS ingest endpoint + Shortcut #2 (workout/HR/active energy) —
-  Apple Health READ — สลับมาทำก่อน BL-10 (เดิมกำหนดให้ BL-10 ทำก่อน) เพราะเวลาสะสมข้อมูลเร่งไม่ได้ ยิ่ง
-  เริ่ม ingest เร็ว ยิ่งมีข้อมูลพอสำหรับ FR-ANLT-1 เร็ว (วีอนุมัติ 2026-08-21) — **backend เสร็จ+deploy+
-  migration รันแล้ว (2026-08-21)**: endpoint `/health/ingest`, ตาราง `health_workouts`/
-  `health_daily_stats`, RPC `ingest_health_data_for_token()` — เหลือต่อ Shortcut #2 จริงบนเครื่อง (คู่มือ
-  API contract พร้อมที่ `docs/shortcuts/shortcut-2-read.md`, action-by-action รอ verify ทีละตัวแบบ
-  Shortcut #1) ก่อนถือว่า FR นี้ปิดตาม Phase Gate Rule
-- BL-10 (ขนาน/ตามหลัง FR-HLTH-3 ได้ทันที ไม่ต้องรอข้อมูลสะสม): Per-meal targets + visual cue ในแอป
-  ("มื้อนี้เหลือกินอีกเท่าไหร่") — reminder ตามเวลาจริง (push) เลื่อนไปทำหลัง FR-HLTH-3 เพราะจะได้ใช้ iOS
-  Shortcuts Automation ยิง endpoint ที่มีอยู่แล้วแทน Web Push บน iOS PWA ที่ไม่น่าเชื่อถือ
-- FR-ANLT-1: Dashboard analytics tier 1 — correlation/trend พื้นฐาน (เช่น kcal balance vs weight trend,
-  protein vs training days) ต้องมีข้อมูล health+diary สะสมจาก FR-HLTH-3 ก่อนถึงมีอะไรวิเคราะห์ — ทำหลังสุด
-  ใน P4b
+- **BL-10 (งานหลักของ P4b, 2026-08-21)**: Per-meal targets + visual cue ในแอป ("มื้อนี้เหลือกินอีกเท่าไหร่")
+  — ไม่พึ่งข้อมูล health ทำได้ทันที และวีได้ใช้ทุกวัน — reminder ตามเวลาจริง (push) ไม่อยู่ในขอบเขตรอบนี้
+  (รอ Shortcut #2/BL-13 กลับมาทำก่อน เพราะจะได้ใช้ iOS Shortcuts Automation ยิง endpoint แทน Web Push บน
+  iOS PWA ที่ไม่น่าเชื่อถือ) — ร่าง FR ตามกติกา FR-first ก่อนเริ่มโค้ด
+- ~~FR-HLTH-3 (Shortcut #2 client) + FR-ANLT-1~~ — **เลื่อนออกจาก P4b 2026-08-21 (วีตัดสินใจ)** ไปเป็น
+  backlog **BL-13** ยังไม่กำหนด phase — server ฝั่ง FR-HLTH-3 เสร็จ+deploy+migration แล้ว (endpoint
+  `/health/ingest`, ตาราง `health_workouts`/`health_daily_stats`, RPC
+  `ingest_health_data_for_token()`) คงไว้เฉยๆ ไม่มีต้นทุน maintain, API contract ยืนยันแล้วที่
+  `docs/shortcuts/shortcut-2-read.md` หยิบต่อได้ทันทีเมื่อวีพร้อมลงเวลาต่อ Shortcut ทีละ action บนเครื่องจริง
+  — P4b ปิด (ตี tag `v1.3.0`) ได้เมื่อ BL-10 จบ dogfood โดยไม่ต้องรอ BL-13
 - ปิด P4b แล้วค่อยตัดสินใจ BL-09 (Friends tab) ว่าเข้าก่อน/คู่ P5
 
 ### P5 — Insight tier 2 (LLM) → tag `v1.4.0`
@@ -98,6 +95,8 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.13 (2026-08-21): เลื่อน FR-HLTH-3 client (Shortcut #2) + FR-ANLT-1 ออกจาก P4b เป็น backlog BL-13
+  (คำสั่งวี, ยังไม่พร้อมลงเวลาต่อ Shortcut) — P4b เหลือ BL-10 เป็นงานหลัก ปิด phase ได้โดยไม่ต้องรอ BL-13
 - v1.12 (2026-08-21): FR-HLTH-3 backend เสร็จ+deploy+migration รันแล้ว — เหลือต่อ Shortcut #2 จริงก่อนปิด FR
 - v1.11 (2026-08-21): สลับลำดับ P4b (คำสั่งวี) — FR-HLTH-3 ทำก่อน BL-10/FR-ANLT-1 เพราะเวลาสะสมข้อมูล
   เร่งไม่ได้; BL-10 ตัดขอบเขต reminder ตามเวลา (push) ออกไปทำทีหลัง FR-HLTH-3, เหลือแค่ visual cue ในเฟสนี้

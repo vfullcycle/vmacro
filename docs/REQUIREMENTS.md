@@ -1,4 +1,4 @@
-# REQUIREMENTS — Vmacro (FROZEN v1.13, 2026-08-21)
+# REQUIREMENTS — Vmacro (FROZEN v1.14, 2026-08-21)
 
 > แก้ไขได้เฉพาะเมื่อวีสั่ง + bump version + บันทึก changelog ท้ายไฟล์
 > ทุก FR ระบุ phase ที่ implement ตาม SCOPE.md
@@ -191,7 +191,10 @@ best-effort ตามข้อมูลที่มีจริง)*
 ครั้งเดียวต่อเครื่อง ไม่ต้องแก้ไขข้างใน shortcut เอง (config ดึงจาก server)
 *AC: เพื่อนติดตั้งเองได้จากคู่มือโดยไม่ต้องถามวี*
 
-**FR-HLTH-3 (P4b)** อ่านข้อมูลจาก Apple Health ผ่าน Shortcut #2 → POST เข้า VPS ingest endpoint ใหม่ (auth
+**FR-HLTH-3 (P4b)** **[PARTIAL 2026-08-21 — server เสร็จ+deploy+migration รันแล้ว, client (Shortcut #2)
+เลื่อนเป็น backlog BL-13 ตามคำสั่งวี (ยังไม่พร้อมลงเวลาต่อ Shortcut ทีละ action บนเครื่องจริง) — API
+contract ยืนยันแล้วที่ `docs/shortcuts/shortcut-2-read.md` หยิบต่อได้ทันทีไม่ต้องแก้ spec นี้เลย]**
+อ่านข้อมูลจาก Apple Health ผ่าน Shortcut #2 → POST เข้า VPS ingest endpoint ใหม่ (auth
 ด้วย per-user token เดียวกับที่ Shortcut #1 ใช้ตาม D-020 — ไม่สร้างระบบ auth ใหม่) เก็บใน Supabase ผูก user
 อย่างน้อย: **(1) workout ต่อ session** — ชนิดกิจกรรม (ตามที่ HealthKit ให้มา ไม่ filter เฉพาะบางชนิด),
 เวลาเริ่ม, ระยะเวลา, พลังงานที่เผาผลาญของ workout นั้น (kcal), average heart rate ของ workout นั้น
@@ -213,7 +216,9 @@ Shortcuts ระหว่าง build ที่ทำให้อ่าน field
 
 ## FR-ANLT — Analysis (P4–P5, ตาม D-006)
 
-**FR-ANLT-1 (P4b)** Dashboard สถิติพื้นฐาน 3 metric ใช้ข้อมูลจริงจาก FR-HLTH-3 (ไม่ใช่แผน/day-type ที่
+**FR-ANLT-1 (P4b)** **[เลื่อน 2026-08-21 — พึ่งข้อมูลจาก FR-HLTH-3 client (Shortcut #2) ที่ยังไม่เริ่ม
+(ดู BL-13) ทำก่อนไม่ได้จนกว่าจะมีข้อมูลสะสมจริง — AC ด้านล่าง freeze ไว้ตามที่ตกลง ใช้ตรงได้เมื่อกลับมาทำ]**
+Dashboard สถิติพื้นฐาน 3 metric ใช้ข้อมูลจริงจาก FR-HLTH-3 (ไม่ใช่แผน/day-type ที่
 เลือกไว้ล่วงหน้า):
 **(1) kcal balance** = `intake − baseline_TDEE − active_energy_actual` — **`baseline_TDEE` ต้องเป็น BMR ×
 baseline activity multiplier ที่ไม่รวม exercise ตามนิยาม D-019 เท่านั้น ห้ามใช้ TDEE เดิมก่อนมี day-type**
@@ -245,6 +250,9 @@ RLS: diary/health/profile/weight เห็นเฉพาะเจ้าขอ�
 
 ## Changelog
 
+- v1.14 (2026-08-21): เลื่อน FR-HLTH-3 client (Shortcut #2) + FR-ANLT-1 ออกจาก P4b เป็น backlog BL-13
+  (คำสั่งวี) — server ฝั่ง FR-HLTH-3 เสร็จ+deploy+migration แล้ว คงไว้, spec/AC ทั้งคู่ freeze ไว้ตามเดิม
+  ใช้ต่อได้ทันทีเมื่อกลับมาทำ
 - v1.13 (2026-08-21): แก้ FR-HLTH-3 + FR-ANLT-1 เต็ม (คำสั่งวี, เริ่ม P4b) — FR-HLTH-3: scope field เต็ม
   (workout event/resting HR/active energy รวมวัน), แยก dedup 2 พฤติกรรม (workout insert-once vs daily
   stats upsert) + `synced_at`; FR-ANLT-1: balance ใช้ baseline_TDEE (ไม่รวม exercise) + active energy จริง

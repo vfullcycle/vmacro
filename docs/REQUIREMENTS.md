@@ -1,4 +1,4 @@
-# REQUIREMENTS — Vmacro (FROZEN v1.17, 2026-08-21)
+# REQUIREMENTS — Vmacro (FROZEN v1.18, 2026-08-21)
 
 > แก้ไขได้เฉพาะเมื่อวีสั่ง + bump version + บันทึก changelog ท้ายไฟล์
 > ทุก FR ระบุ phase ที่ implement ตาม SCOPE.md
@@ -239,6 +239,25 @@ other(ผลรวมจาก ring (6)); ไม่มี entry/field ที่�
 ring (6) ไม่รวม field ที่นับซ้อนกับ P/F/C; เปลี่ยนวันที่แล้วทุกส่วนอัปเดตตามวันที่เลือกถูกต้อง ยกเว้น
 weight card*
 
+**FR-DASH-2 (ยังไม่กำหนด phase)** Feed + notification badge (รวม BL-14 + BL-09 ส่วนที่ 1 เป็น FR เดียว
+เพราะใช้กลไก "มีอะไรใหม่ตั้งแต่เปิดดูครั้งล่าสุด" เดียวกัน) — Profile เพิ่ม `feed_last_seen_at` (default
+`now()` ตอน migrate/สมัครใหม่ กันของเก่าทั้งหมดโผล่เป็น "ใหม่" พรวดเดียวตอน launch) → **badge จุดแดงบนไอคอน
+แท็บ Dashboard** เช็คตอนเปิดแอปเท่านั้น (ไม่ push): มีอะไร `created_at`/`updated_at` ใหม่กว่า
+`feed_last_seen_at` ใน 3 แหล่งนี้ไหม — (1) อาหารใหม่ที่ **admin** เพิ่ม (`custom_foods` join
+`profiles.is_admin=true` — join ไม่ hardcode uuid เผื่ออนาคตมี admin เพิ่มคนอื่น) (2) จานใหม่จาก **ทุกคน**
+(`dishes`, ไม่จำกัด admin เพราะจานไม่มี concept verify ให้กรองคุณภาพเหมือน custom_foods อยู่แล้ว — เป็น
+เนื้อหาเดียวใน feed ที่มาจากเพื่อนโดยตรง ถือเป็นสัญญาณเสริมสำหรับตัดสิน BL-09 ส่วนที่ 2 ในอนาคตด้วย) (3)
+คำขอของตัวเอง (`food_requests`) ที่ถูกตอบแล้ว (fulfilled/declined พร้อมโน้ต admin ถ้ามี)
+→ **Dashboard section ใหม่ "มีอะไรใหม่"** รวม 3 ประเภทเรียงตามเวลาล่าสุดก่อน → **ไม่ mark ว่าอ่านแล้วทันที
+ตอน mount** (เร็วเกินไป — เปิด Dashboard แล้วสลับแท็บทันทีจะทำให้ของใหม่หายตลอดกาลทั้งที่ยังไม่ได้อ่าน) ต้อง
+หน่วง 2-3 วินาทีก่อนอัปเดต `feed_last_seen_at = now()` (ยกเลิก timer ถ้า unmount ก่อนครบเวลา — สลับแท็บเร็ว
+= ไม่ mark)
+*AC: user ใหม่/หลัง migrate ไม่เห็นของเก่าทั้งหมดเป็น "ใหม่" พรวดเดียว; badge ขึ้นเฉพาะเมื่อมีของจริงใหม่กว่า
+cursor จากทั้ง 3 แหล่ง; อยู่ในหน้า Dashboard ครบ 2-3 วินาทีแล้วเท่านั้น badge จึงหาย, สลับแท็บออกก่อนครบเวลา
+badge ต้องยังอยู่ (ทดสอบ race condition นี้โดยเฉพาะ); ไม่มี push/local notification ใดๆ ทั้งฟีเจอร์; feed
+แสดงรวมกันไม่เกิน 15-20 รายการ**รวมทุกประเภท**ต่อครั้ง (ไม่ใช่ต่อประเภท) เรียงเวลาใหม่สุดก่อน มีลิงก์
+"ดูทั้งหมด" ถ้าเกิน*
+
 ## FR-HLTH — Apple Health Integration (P3–P4)
 
 **FR-HLTH-1 (P3)** เขียนยอดวันลง Apple Health อย่างน้อย: dietary energy, fat (total/saturated/mono/poly),
@@ -314,6 +333,9 @@ RLS: diary/health/profile/weight เห็นเฉพาะเจ้าขอ�
 
 ## Changelog
 
+- v1.18 (2026-08-21): เพิ่ม FR-DASH-2 (feed + notification badge, รวม BL-14 + BL-09 ส่วนที่ 1, คำสั่งวี)
+  — badge จุดแดงบนแท็บ Dashboard, feed 3 ประเภท (อาหารใหม่จาก admin, จานใหม่จากทุกคน, คำขอของตัวเองที่ถูก
+  ตอบ), หน่วง mark-as-seen 2-3 วินาทีกัน false-read, จำกัดรวม 15-20 รายการทุกประเภทรวมกัน — ยังไม่กำหนด phase
 - v1.17 (2026-08-21): เพิ่ม FR-FOOD-9 (ขออาหารใหม่ในแอป, BL-12, คำสั่งวี) และ FR-DIARY-4 (ราคาต่อ entry,
   BL-01, คำสั่งวี) — เข้าคิว P4c: FR-FOOD-9 มี status 3 แบบ (pending/fulfilled/declined) + โน้ต admin
   ส่งกลับ requester, FR-DIARY-4 จำกัดช่องราคาเฉพาะ 4 จุดที่มีฟอร์มอยู่แล้ว ไม่แตะ tap-to-add 5 จุดที่ต้อง

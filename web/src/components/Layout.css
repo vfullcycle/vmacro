@@ -54,6 +54,22 @@
   height: 22px;
 }
 
+.app-tabbar .tab-icon-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.app-tabbar .tab-badge-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dc2626;
+  border: 1.5px solid var(--bg);
+}
+
 .app-tabbar a.active {
   color: var(--accent);
   font-weight: 600;

@@ -7,6 +7,7 @@ import ProgressBar from "../components/ProgressBar";
 import WeightChart from "../components/WeightChart";
 import { useAuth } from "../lib/auth-context";
 import { addDays, todayLocalDate, type Meal } from "../lib/diary";
+import { fetchFeedItems, markFeedSeen, type FeedItem } from "../lib/feed";
 import { computeDefaultMealWindows, computeMealTargets, getMealTargetView, resolveMealWindows } from "../lib/mealTargets";
 import { computeNutrientComposition, sumOtherNutrients } from "../lib/nutrientComposition";
 import type { NutrientPanel } from "../lib/scaling";
@@ -16,6 +17,8 @@ import "./Dashboard.css";
 
 const DAY_TYPE_LABELS = { rest: "Rest", light: "Light", hard: "Hard" };
 const WEEK_DAYS = 7;
+const FEED_DISPLAY_LIMIT = 18;
+const MARK_SEEN_DELAY_MS = 2500;
 
 const PROTEIN_COLOR = "#6366f1";
 const CARB_COLOR = "#f59e0b";
@@ -76,6 +79,8 @@ export default function Dashboard() {
   const [loggedDates, setLoggedDates] = useState<string[]>([]);
   const [weightLogs, setWeightLogs] = useState<WeightLogPoint[]>([]);
   const [loading, setLoading] = useState(true);
+  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
+  const [feedExpanded, setFeedExpanded] = useState(false);
 
   function goToDate(d: string) {
     setSearchParams({ date: d });
@@ -105,6 +110,36 @@ export default function Dashboard() {
         setLoggedDates([...new Set(rows.map((r) => r.entry_date))]);
       });
   }, [user, date]);
+
+  // Fetch feed items, then mark them seen after a delay — not immediately on mount, so a
+  // quick tab-switch away doesn't silently mark unread items as read (FR-DASH-2). The
+  // timer is cleared on unmount, so leaving before it fires leaves feed_last_seen_at
+  // untouched and the badge still shows next time.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    supabase
+      .from("profiles")
+      .select("feed_last_seen_at")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => {
+        const lastSeen = (data as { feed_last_seen_at: string } | null)?.feed_last_seen_at;
+        if (!lastSeen || cancelled) return;
+        fetchFeedItems(user.id, lastSeen).then((items) => {
+          if (!cancelled) setFeedItems(items);
+        });
+      });
+
+    const timer = setTimeout(() => {
+      if (!cancelled) markFeedSeen(user.id);
+    }, MARK_SEEN_DELAY_MS);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -184,6 +219,26 @@ export default function Dashboard() {
       </div>
 
       {mealTargetView && <MealTargetCard view={mealTargetView} />}
+
+      {feedItems.length > 0 && (
+        <div className="dash-card">
+          <h2>มีอะไรใหม่</h2>
+          <ul className="dash-feed-list">
+            {(feedExpanded ? feedItems : feedItems.slice(0, FEED_DISPLAY_LIMIT)).map((item) => (
+              <li key={item.key} className="dash-feed-item">
+                <span className="dash-feed-title">{item.title}</span>
+                {item.detail && <span className="dash-feed-detail">{item.detail}</span>}
+                <span className="dash-feed-time">{new Date(item.timestamp).toLocaleDateString("th-TH")}</span>
+              </li>
+            ))}
+          </ul>
+          {!feedExpanded && feedItems.length > FEED_DISPLAY_LIMIT && (
+            <button type="button" className="dash-feed-view-all" onClick={() => setFeedExpanded(true)}>
+              ดูทั้งหมด ({feedItems.length})
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="dash-card">
         <h2>สัดส่วนสารอาหารที่กินวันนี้</h2>

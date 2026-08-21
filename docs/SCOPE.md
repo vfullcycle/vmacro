@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.13
+# SCOPE — Vmacro v1.14
 
 ## In Scope
 
@@ -67,10 +67,11 @@
   10 ข้อ (2026-08-21)
 
 ### P4b — Data-dependent → tag `v1.3.0`
-- **BL-10 (งานหลักของ P4b, 2026-08-21)**: Per-meal targets + visual cue ในแอป ("มื้อนี้เหลือกินอีกเท่าไหร่")
-  — ไม่พึ่งข้อมูล health ทำได้ทันที และวีได้ใช้ทุกวัน — reminder ตามเวลาจริง (push) ไม่อยู่ในขอบเขตรอบนี้
-  (รอ Shortcut #2/BL-13 กลับมาทำก่อน เพราะจะได้ใช้ iOS Shortcuts Automation ยิง endpoint แทน Web Push บน
-  iOS PWA ที่ไม่น่าเชื่อถือ) — ร่าง FR ตามกติกา FR-first ก่อนเริ่มโค้ด
+- **BL-10 (งานหลักของ P4b) — FR-CALC-5 code-complete+deploy+migration รันแล้ว (2026-08-21)**: Per-meal
+  targets จากเวลาตื่นนอน/ชั่วโมงนอน (default คำนวณอัตโนมัติ override ได้เสมอไม่ถูกทับ), % ต่อมื้อปรับได้,
+  remaining-based display โทนข้อเท็จจริงล้วนใน Diary+Dashboard — reminder ตามเวลาจริง (push) ไม่อยู่ใน
+  ขอบเขตรอบนี้ (รอ Shortcut #2/BL-13 กลับมาทำก่อน เพราะจะได้ใช้ iOS Shortcuts Automation ยิง endpoint แทน
+  Web Push บน iOS PWA ที่ไม่น่าเชื่อถือ) — รอวี dogfood ตาม Phase Gate Rule ก่อนตี tag `v1.3.0`
 - ~~FR-HLTH-3 (Shortcut #2 client) + FR-ANLT-1~~ — **เลื่อนออกจาก P4b 2026-08-21 (วีตัดสินใจ)** ไปเป็น
   backlog **BL-13** ยังไม่กำหนด phase — server ฝั่ง FR-HLTH-3 เสร็จ+deploy+migration แล้ว (endpoint
   `/health/ingest`, ตาราง `health_workouts`/`health_daily_stats`, RPC
@@ -95,6 +96,8 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.14 (2026-08-21): FR-CALC-5 (BL-10) code-complete+deploy+migration รันแล้ว — P4b รอวี dogfood ก่อน
+  ตี tag `v1.3.0`
 - v1.13 (2026-08-21): เลื่อน FR-HLTH-3 client (Shortcut #2) + FR-ANLT-1 ออกจาก P4b เป็น backlog BL-13
   (คำสั่งวี, ยังไม่พร้อมลงเวลาต่อ Shortcut) — P4b เหลือ BL-10 เป็นงานหลัก ปิด phase ได้โดยไม่ต้องรอ BL-13
 - v1.12 (2026-08-21): FR-HLTH-3 backend เสร็จ+deploy+migration รันแล้ว — เหลือต่อ Shortcut #2 จริงก่อนปิด FR

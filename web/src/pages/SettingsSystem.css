@@ -60,7 +60,8 @@
 
 .settings-system .health-sync,
 .settings-system .day-type-target,
-.settings-system .fatsecret-toggle {
+.settings-system .fatsecret-toggle,
+.settings-system .meal-targets {
   margin-top: 2rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--border);
@@ -69,14 +70,54 @@
 
 .settings-system .health-sync h2,
 .settings-system .day-type-target h2,
-.settings-system .fatsecret-toggle h2 {
+.settings-system .fatsecret-toggle h2,
+.settings-system .meal-targets h2 {
   font-size: 1rem;
   margin: 0 0 0.5rem;
 }
 
 .settings-system .day-type-target label,
-.settings-system .fatsecret-toggle label {
+.settings-system .fatsecret-toggle label,
+.settings-system .meal-targets label {
   margin-top: 0.75rem;
+}
+
+.settings-system .meal-window-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.settings-system .meal-window-label {
+  flex: 0 0 4rem;
+  font-size: 0.85rem;
+}
+
+.settings-system .meal-window-row input[type="time"] {
+  min-height: 40px;
+  flex: 1 1 auto;
+}
+
+.settings-system .meal-window-reset {
+  min-height: 36px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+}
+
+.settings-system .meal-pct-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.settings-system .meal-pct-row label {
+  margin-top: 0;
+  flex: 1 1 0;
 }
 
 .settings-system .checkbox-label {

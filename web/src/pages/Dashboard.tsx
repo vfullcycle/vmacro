@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import DateNav from "../components/DateNav";
 import DonutRing from "../components/DonutRing";
+import MealTargetCard from "../components/MealTargetCard";
 import ProgressBar from "../components/ProgressBar";
 import WeightChart from "../components/WeightChart";
 import { useAuth } from "../lib/auth-context";
-import { addDays, todayLocalDate } from "../lib/diary";
+import { addDays, todayLocalDate, type Meal } from "../lib/diary";
+import { computeDefaultMealWindows, computeMealTargets, getMealTargetView, resolveMealWindows } from "../lib/mealTargets";
 import { computeNutrientComposition, sumOtherNutrients } from "../lib/nutrientComposition";
 import type { NutrientPanel } from "../lib/scaling";
 import { supabase } from "../lib/supabase";
@@ -22,6 +24,7 @@ const OTHER_COLOR = "#9ca3af";
 const OTHER_BREAKOUT_COLORS = ["#0ea5e9", "#10b981", "#f97316", "#a855f7", "#eab308", "#ec4899", "#14b8a6"];
 
 interface EntryRow {
+  meal: Meal;
   kcal: number;
   protein_g: number;
   carbs_g: number;
@@ -67,7 +70,7 @@ export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const date = searchParams.get("date") ?? todayLocalDate();
 
-  const { dayType, target } = useTodayTarget(date);
+  const { dayType, target, profile } = useTodayTarget(date);
 
   const [entries, setEntries] = useState<EntryRow[]>([]);
   const [loggedDates, setLoggedDates] = useState<string[]>([]);
@@ -82,7 +85,7 @@ export default function Dashboard() {
     if (!user) return;
     supabase
       .from("diary_entries")
-      .select("kcal, protein_g, carbs_g, fat_g, nutrients")
+      .select("meal, kcal, protein_g, carbs_g, fat_g, nutrients")
       .eq("user_id", user.id)
       .eq("entry_date", date)
       .then(({ data }) => setEntries((data as EntryRow[]) ?? []));
@@ -133,6 +136,18 @@ export default function Dashboard() {
   const otherNutrients = useMemo(() => sumOtherNutrients(entries.map((e) => e.nutrients)), [entries]);
   const nutrientComposition = useMemo(() => computeNutrientComposition(entries, otherNutrients), [entries, otherNutrients]);
 
+  // Only meaningful for today — see the identical guard in Diary.tsx (FR-CALC-5).
+  const mealTargetView = useMemo(() => {
+    if (date !== todayLocalDate() || !profile?.wake_time || !target) return null;
+    const defaults = computeDefaultMealWindows(profile.wake_time, profile.sleep_hours_target);
+    const windows = resolveMealWindows(defaults, profile.meal_time_overrides);
+    const mealTargets = computeMealTargets(
+      { kcal: target.kcal, protein_g: target.protein_g, carb_g: target.carb_g, fat_g: target.fat_g },
+      { breakfast_pct: profile.breakfast_pct, lunch_pct: profile.lunch_pct, dinner_pct: profile.dinner_pct, snack_pct: profile.snack_pct },
+    );
+    return getMealTargetView(windows, new Date(), mealTargets, entries);
+  }, [date, profile, target, entries]);
+
   const latestWeight = weightLogs.length > 0 ? weightLogs[weightLogs.length - 1] : null;
   const recentWeightLogs = useMemo(() => weightLogs.slice(-14), [weightLogs]);
 
@@ -167,6 +182,8 @@ export default function Dashboard() {
           ไปที่ Diary วันนี้
         </Link>
       </div>
+
+      {mealTargetView && <MealTargetCard view={mealTargetView} />}
 
       <div className="dash-card">
         <h2>สัดส่วนสารอาหารที่กินวันนี้</h2>

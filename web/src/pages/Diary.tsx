@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import DateNav from "../components/DateNav";
+import MealTargetCard from "../components/MealTargetCard";
 import MealTemplatePickerModal from "../components/MealTemplatePickerModal";
 import ProgressBar from "../components/ProgressBar";
 import RecentFavoritesModal from "../components/RecentFavoritesModal";
 import { useAuth } from "../lib/auth-context";
 import { addDays, entryDisplayName, entryQuantityLabel, MEAL_LABELS, MEALS, todayLocalDate, type DiaryEntryRow, type Meal } from "../lib/diary";
+import { computeDefaultMealWindows, computeMealTargets, getMealTargetView, resolveMealWindows } from "../lib/mealTargets";
 import { scaleNutrients } from "../lib/scaling";
 import { supabase } from "../lib/supabase";
 import type { DayType } from "../lib/tdee";
@@ -85,6 +87,19 @@ export default function Diary() {
       ),
     [entries],
   );
+
+  // Only meaningful for today — "current meal right now" mixed with a different day's
+  // logged entries would be incoherent (FR-CALC-5).
+  const mealTargetView = useMemo(() => {
+    if (date !== todayLocalDate() || !profile?.wake_time || !target) return null;
+    const defaults = computeDefaultMealWindows(profile.wake_time, profile.sleep_hours_target);
+    const windows = resolveMealWindows(defaults, profile.meal_time_overrides);
+    const mealTargets = computeMealTargets(
+      { kcal: target.kcal, protein_g: target.protein_g, carb_g: target.carb_g, fat_g: target.fat_g },
+      { breakfast_pct: profile.breakfast_pct, lunch_pct: profile.lunch_pct, dinner_pct: profile.dinner_pct, snack_pct: profile.snack_pct },
+    );
+    return getMealTargetView(windows, new Date(), mealTargets, entries);
+  }, [date, profile, target, entries]);
 
   function goToDate(d: string) {
     setSearchParams({ date: d });
@@ -270,6 +285,8 @@ export default function Diary() {
           ยังตั้งค่า Settings → Profile ไม่ครบ — <Link to="/settings/profile">ตั้งค่าเพื่อดู target</Link>
         </p>
       )}
+
+      {mealTargetView && <MealTargetCard view={mealTargetView} />}
 
       <button type="button" className="diary-add-link diary-copy-day-link" onClick={() => copyFromYesterday()}>
         คัดลอกทั้งวันจากวันก่อนหน้า

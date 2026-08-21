@@ -1,0 +1,41 @@
+.meal-target-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.meal-target-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-weight: 600;
+  color: var(--text-h);
+  margin-bottom: 0.5rem;
+}
+
+.meal-target-window {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.meal-target-upcoming {
+  font-size: 0.875rem;
+  color: var(--text);
+  margin: 0;
+}
+
+.meal-target-row {
+  font-size: 0.8rem;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin-top: 0.35rem;
+}
+
+.meal-target-row-label {
+  font-weight: 600;
+  color: var(--text-h);
+}

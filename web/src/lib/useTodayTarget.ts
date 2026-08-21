@@ -24,6 +24,15 @@ export interface ProfileForTarget {
   carb_floor_pct: number | null;
   fat_floor_g_per_kg: number | null;
   fat_floor_pct: number | null;
+  // Per-meal targets (FR-CALC-5) — wake_time null means the feature is off for this
+  // profile, callers must check it before using the rest of these fields.
+  wake_time: string | null;
+  sleep_hours_target: number;
+  meal_time_overrides: Partial<import("./mealTargets").MealWindows>;
+  breakfast_pct: number;
+  lunch_pct: number;
+  dinner_pct: number;
+  snack_pct: number;
 }
 
 export interface DayTypeTarget {
@@ -35,7 +44,7 @@ export interface DayTypeTarget {
 }
 
 const PROFILE_SELECT =
-  "sex, birth_date, height_cm, current_weight_kg, body_fat_pct, activity_level, goal, formula_choice, default_protein_g_per_kg, default_fat_pct, health_shortcut_name, default_day_type, day_type_allowance_rest_kcal, day_type_allowance_light_kcal, day_type_allowance_hard_kcal, carb_floor_g, carb_floor_pct, fat_floor_g_per_kg, fat_floor_pct";
+  "sex, birth_date, height_cm, current_weight_kg, body_fat_pct, activity_level, goal, formula_choice, default_protein_g_per_kg, default_fat_pct, health_shortcut_name, default_day_type, day_type_allowance_rest_kcal, day_type_allowance_light_kcal, day_type_allowance_hard_kcal, carb_floor_g, carb_floor_pct, fat_floor_g_per_kg, fat_floor_pct, wake_time, sleep_hours_target, meal_time_overrides, breakfast_pct, lunch_pct, dinner_pct, snack_pct";
 
 // Shared by Diary and Dashboard (FR-DASH-1) so both pages always show the same target
 // for the same day — never duplicate this profile + day-type + computeDayTypePreview
@@ -54,7 +63,10 @@ export function useTodayTarget(date: string) {
       .select(PROFILE_SELECT)
       .eq("id", user.id)
       .single()
-      .then(({ data }) => setProfile(data as ProfileForTarget | null));
+      .then(({ data }) => {
+        const row = data as ProfileForTarget | null;
+        setProfile(row ? { ...row, wake_time: row.wake_time ? row.wake_time.slice(0, 5) : null } : null);
+      });
   }, [user]);
 
   // Day-type is per (user, date) — separate from the profile fetch above so switching

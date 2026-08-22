@@ -1,4 +1,4 @@
-# PROJECT_BIBLE — Vmacro v1.40
+# PROJECT_BIBLE — Vmacro v1.41
 
 > Single source of truth ของโปรเจกต์ ถ้าไฟล์อื่นขัดกับไฟล์นี้ ให้ยึดไฟล์นี้แล้วแจ้งวีเพื่อ sync
 
@@ -241,7 +241,7 @@ input ตรงไปเซิร์ฟเวอร์เองมีควา�
 ต่อเนื่องครบ 7 วัน, อาหารที่สร้างถูกคนอื่นใช้ครบ N ครั้ง, ครบ 30 วันแรกของการใช้แอป, มี workout วันนั้น (รอ
 BL-13/Shortcut #2 ก่อนถึงมีข้อมูล) — หลักการเดียวกับ FR-FRIEND-3 ทั้งหมด: ยิงเฉพาะตอนสำเร็จ, ไม่มีตัวเลข
 เปรียบเทียบ, ห้ามข้อมูลอ่อนไหว (kcal/น้ำหนัก/สิ่งที่กิน) |
-| BL-21 | **พร้อมทำหลัง FR-FRIEND-3** (2026-08-22) | | **Achievement badges** สไตล์ Apple Fitness (ล็อก =
+| BL-21 | **FR-BADGE-1 code-complete+deploy+migration รันแล้ว 2026-08-22 — รอวี dogfood** | | **Achievement badges** สไตล์ Apple Fitness (ล็อก =
 เงาทึบโมโนโครม + แม่กุญแจ, ปลดแล้ว = สีเต็ม + วันที่ได้) — **จุดเข้าถึง (ตัดสินแล้ว):** การ์ด "ความสำเร็จ"
 ในหน้า Dashboard (toolbar คงเดิม 5 ปุ่ม ไม่เพิ่มปุ่ม/ไม่มีปุ่มลอย — เหตุผล: Dashboard เป็นหน้า "สรุปตัวฉัน"
 อยู่แล้ว badge เป็นสมาชิกธรรมชาติของกลุ่มนั้น) — การ์ดโชว์ badge 4-8 ชิ้น + ปุ่ม "ดูทั้งหมด" ไปหน้ารวม
@@ -272,6 +272,7 @@ BL-13/Shortcut #2 ก่อนถึงมีข้อมูล) — หลั�
 
 ## Changelog
 
+- v1.41 (2026-08-22): BL-21/FR-BADGE-1 code-complete+deploy+migration รันแล้ว — รอวี dogfood
 - v1.40 (2026-08-22): ปิด P4e (tag `v1.6.0`, คำสั่งวี) — BL-16/FR-FRIEND-2 + FR-FRIEND-3 dogfood ผ่านครบ
   ทุกข้อ — เพิ่ม **D-025**: บันทึกบั๊ก RLS ที่พบ (`activity_events_select` subquery ชน RLS ของ
   `profiles` เอง ทำให้ไม่มีใครเห็น event คนอื่นได้แม้เปิดแชร์) + แก้ด้วย SECURITY DEFINER function

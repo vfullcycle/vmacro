@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.21
+# SCOPE — Vmacro v1.22
 
 ## In Scope
 
@@ -122,6 +122,15 @@
   **BL-19** (link preview, ยังไม่ทำ), **BL-20** (activity events ส่วนที่เหลือ, ยังไม่ทำ), **BL-21**
   (achievement badges, พร้อมทำหลัง FR-FRIEND-3 — ดู PROJECT_BIBLE §7)
 
+### FR-BADGE-1 — Achievement badges (BL-21) → phase/tag ยังไม่กำหนด
+- **code-complete+deploy+migration รันแล้ว 2026-08-22 — รอวี dogfood**: 21 badge เริ่มต้น (4 กลุ่ม:
+  สม่ำเสมอ/ผู้สร้าง/โภชนาการ/การเดินทาง) — เก็บ counter ดิบ (`badge_progress`) แยกจากสถานะปลดล็อก
+  (`user_badges`), trigger 5 จุด (Diary/สร้างอาหาร/สร้างจาน/บันทึกน้ำหนัก/`set_food_verified` RPC) +
+  Dashboard เป็นตาข่ายรอง (เช็คซ้ำทุก counter + `food_used_by_others_total` สด + tenure badge) —
+  ปลดล็อกขึ้น Friends feed ผ่าน `activity_events(badge_unlocked)` ใช้ `share_activity` toggle เดิม —
+  การ์ด "ความสำเร็จ" ใน Dashboard (ผสมเพิ่งปลด+ใกล้ปลด) + หน้ารวม `/achievements` — มี
+  `supabase/scripts/recompute-badges.sql` สำหรับ backfill มือถ้า state เพี้ยน (ไม่ยิง event ย้อนหลัง)
+
 ### P5 — Insight tier 2 (LLM) → tag `v1.7.0`
 - LLM endpoint บน VPS สรุป pattern รายสัปดาห์เป็นภาษาไทย
 - (ประตูสู่อนาคต) เมื่อข้อมูล ≥3–6 เดือน ค่อยประเมิน ML tier 3 เป็นโปรเจกต์ย่อยแยก
@@ -138,6 +147,8 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.22 (2026-08-22): เพิ่ม FR-BADGE-1 (achievement badges, BL-21, คำสั่งวี) — code-complete+
+  deploy+migration รันแล้ว รอวี dogfood — ยังไม่ตี tag/กำหนด phase
 - v1.21 (2026-08-22): ปิด P4e (tag `v1.6.0`) — BL-16/FR-FRIEND-2 + FR-FRIEND-3 วี dogfood ผ่านครบทุกข้อ
   รวมแก้บั๊ก RLS ที่พบระหว่างทาง (`activity_events_select` subquery ชน RLS ของ `profiles` เอง — แก้ด้วย
   SECURITY DEFINER function) — P5 เลื่อนเป็น `v1.7.0`

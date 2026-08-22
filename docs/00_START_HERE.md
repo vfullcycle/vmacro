@@ -40,9 +40,10 @@ vmacro/
 
 ## สถานะปัจจุบัน
 
-- **Docs version:** v1.14 (2026-08-22)
-- **Phase ปัจจุบัน:** P4e จบแล้ว, ยังไม่เริ่ม phase ถัดไป — ดู `docs/PROJECT_BIBLE.md` §7 Backlog สำหรับ
-  รายการเต็มที่รอตัดสินใจ (BL-09 ส่วนที่ 2/BL-13/BL-15/BL-21 กำลังจะร่าง FR)
+- **Docs version:** v1.15 (2026-08-22)
+- **Phase ปัจจุบัน:** P4e จบแล้ว — FR-BADGE-1 (BL-21, achievement badges) code-complete+deploy+
+  migration รันแล้ว 2026-08-22 รอวี dogfood, ยังไม่กำหนด phase/tag — ดู `docs/PROJECT_BIBLE.md` §7
+  Backlog สำหรับรายการเต็มที่รอตัดสินใจ (BL-09 ส่วนที่ 2/BL-13/BL-15/BL-20)
 - **P4e จบแล้ว, tag `v1.6.0`** (2026-08-22) — วี dogfood ผ่านครบทุกข้อ: BL-16/FR-FRIEND-2 (โพสต์ใน
   Friends feed, แยก "โพสต์"/"ความเคลื่อนไหว" หลัง dogfood พบปัญหา bulk import ดันโพสต์ตก), FR-FRIEND-3
   (activity events เชิงบวกล้วน 4 แบบ — พบ+แก้บั๊ก RLS ที่ `activity_events_select` ชน RLS ของ `profiles`
@@ -99,6 +100,8 @@ Vision → Boundary → Requirement → Decision → Freeze → Working Rules
 
 ## Changelog
 
+- v1.15 (2026-08-22): FR-BADGE-1 (achievement badges, BL-21) code-complete+deploy+migration รันแล้ว
+  รอวี dogfood — ยังไม่กำหนด phase/tag
 - v1.14 (2026-08-22): เพิ่ม+ปิด P4e (tag `v1.6.0`) — BL-16/FR-FRIEND-2 + FR-FRIEND-3 วี dogfood ผ่านครบ
   ทุกข้อ รวมแก้บั๊ก RLS ที่พบระหว่างทาง (`activity_events_select` ชน RLS ของ `profiles` เอง)
 - v1.13 (2026-08-22): เพิ่ม P4e (Friends: posts + activity events) ระหว่างทาง — BL-16/FR-FRIEND-2 dogfood

@@ -1,4 +1,4 @@
-# REQUIREMENTS — Vmacro (FROZEN v1.19, 2026-08-21)
+# REQUIREMENTS — Vmacro (FROZEN v1.20, 2026-08-22)
 
 > แก้ไขได้เฉพาะเมื่อวีสั่ง + bump version + บันทึก changelog ท้ายไฟล์
 > ทุก FR ระบุ phase ที่ implement ตาม SCOPE.md
@@ -274,6 +274,29 @@ cursor จากทั้ง 3 แหล่ง; badge อยู่ที่ไ�
 15-20 รายการ**รวมทุกประเภท**ต่อครั้ง (ไม่ใช่ต่อประเภท) เรียงเวลาใหม่สุดก่อน มีลิงก์ "ดูทั้งหมด" ถ้าเกิน;
 tab bar มี 5 ปุ่มตามลำดับที่ระบุ*
 
+**FR-FRIEND-2 (ยังไม่กำหนด phase)** Posts ใน Friends feed (BL-16) — ตาราง `posts` (`author_id`, `body`,
+`created_at`, `updated_at`) — **RLS: อ่านได้ทุกคน (authenticated), insert ต้อง `author_id = auth.uid()`,
+update/delete เฉพาะเจ้าของหรือ admin** (moderation ขั้นต่ำ — admin ลบของใครก็ได้แต่แก้ไม่ได้) —
+`body` จำกัดความยาว **CHECK constraint ระดับ DB ~2,000 ตัวอักษร** (กัน layout/การโหลด feed พังจากข้อความ
+ยาวเกิน ใส่ตอนสร้างตารางถูกกว่าแก้ทีหลัง) พร้อมนับตัวอักษรใน UI — แสดงผล **preserve line break แต่ห้าม
+render markdown/HTML** (ข้อความธรรมดา ไม่เปิดช่อง XSS โดยไม่จำเป็น)
+
+ฟอร์มเขียนโพสต์อยู่บนสุดของหน้า Friends เลย (ไม่ใช่หน้า admin) — ทุกคนเห็น/ใช้ได้เท่ากัน — โพสต์แล้วเห็น
+ทันทีในหน้าตัวเอง ไม่ต้องรอ approve → เป็นแหล่งที่ 4 ผสานเข้า feed เดิม (`lib/feed.ts`) เรียงรวมกับ
+อาหาร/จาน/คำขอตามเวลา, โชว์ชื่อผู้เขียน (nickname), reuse `feed_last_seen_at` cursor เดิมทั้งหมด (โพสต์ใหม่
+= badge ขึ้นเหมือนแหล่งอื่น) → เจ้าของโพสต์แก้/ลบโพสต์ตัวเองได้ (inline, pattern เดียวกับ Diary entry edit)
+— **แก้โพสต์ไม่กระทบ `created_at`** ที่ใช้ตัดสิน "ใหม่/เก่า" (แก้ typo ไม่ควร re-trigger badge ให้ทุกคน) —
+**ไม่มี** comment/reaction (BL-17, รอเกณฑ์ BL-09 ส่วนที่ 2), push notification
+*AC: (1) ทุก user โพสต์ได้จากหน้า Friends (`body` required ไม่ว่างเปล่า, ≤2,000 ตัวอักษรบังคับทั้ง DB
+constraint และ UI) เห็นโพสต์ตัวเองทันทีหลังโพสต์; (2) ทุกโพสต์แสดงชื่อผู้เขียน; **(3) เจ้าของโพสต์แก้/ลบ
+โพสต์ตัวเองได้, admin ลบโพสต์คนอื่นได้ (แก้ไม่ได้), user ทั่วไปแก้/ลบโพสต์คนอื่นไม่ได้ — ต้องทดสอบผ่าน RLS
+จริง (จำลอง `set_config('request.jwt.claims', ...)` + `set local role authenticated` แบบเดียวกับที่ทำกับ
+`food_requests`) ไม่ใช่แค่ซ่อนปุ่มใน UI** เพราะเป็นตารางแรกที่ user เขียนแล้วคนอื่นอ่านได้ ถ้า policy พลาด
+เพื่อนแก้โพสต์กันเองได้; (4) โพสต์ใหม่ปรากฏใน feed รวมกับอาหาร/จาน/คำขอ เรียงเวลาเดียวกัน ทำให้ badge ขึ้น
+สำหรับคนอื่นที่ยังไม่เห็น; (5) แก้ไขโพสต์ที่มีอยู่แล้วไม่ทำให้ badge ขึ้นใหม่ (ใช้ `created_at` ไม่ใช่
+`updated_at` ตัดสิน); (6) ขึ้นบรรทัดใหม่ในโพสต์แสดงผลถูกต้อง (preserve line break) แต่ไม่มี markdown/HTML
+ใดๆ ถูก render; (7) ไม่มี UI comment/reaction ใดๆ; ไม่มี push/local notification*
+
 ## FR-HLTH — Apple Health Integration (P3–P4)
 
 **FR-HLTH-1 (P3)** เขียนยอดวันลง Apple Health อย่างน้อย: dietary energy, fat (total/saturated/mono/poly),
@@ -349,6 +372,10 @@ RLS: diary/health/profile/weight เห็นเฉพาะเจ้าขอ�
 
 ## Changelog
 
+- v1.20 (2026-08-22): เพิ่ม FR-FRIEND-2 (posts ใน Friends feed, BL-16, คำสั่งวี) — เปิดทุกคนโพสต์ได้ (ไม่ใช่
+  admin-only), จำกัด body ≤2,000 ตัวอักษร (DB constraint + UI), preserve line break ไม่ render
+  markdown/HTML, แก้โพสต์ไม่ re-trigger badge (ใช้ created_at), AC บังคับทดสอบ RLS จริงไม่ใช่แค่ UI —
+  ยังไม่กำหนด phase
 - v1.19 (2026-08-21): **FR-DASH-2 superseded โดย FR-FRIEND-1** (คำสั่งวี) — ย้าย feed + notification badge
   จาก Dashboard section เป็นแท็บ "Friends" แยก (toolbar 5 ปุ่ม: Diary·Search·Dashboard·Friends·Settings)
   ตั้งแต่รอบแรก แทนที่จะแปะ Dashboard ก่อนแล้วย้ายทีหลัง — รวมแหล่งอาหารจาก admin/คนอื่นเป็น query เดียว

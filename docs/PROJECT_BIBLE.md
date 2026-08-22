@@ -1,4 +1,4 @@
-# PROJECT_BIBLE — Vmacro v1.42
+# PROJECT_BIBLE — Vmacro v1.43
 
 > Single source of truth ของโปรเจกต์ ถ้าไฟล์อื่นขัดกับไฟล์นี้ ให้ยึดไฟล์นี้แล้วแจ้งวีเพื่อ sync
 
@@ -166,7 +166,7 @@ protein 40%, carbs 38%, fat 26% (ควรได้ ~80% ถ้า range สอ�
 | BL-04 | Post-P5 | | Barcode scan ผ่าน Open Food Facts (OFF, open data ODbL) — เรียกตรงจาก client ไม่ผ่าน proxy (ไม่มี secret + กระจาย rate limit เป็นราย user แทนรวมที่ IP VPS), rate ต่ำ (อ่าน 15/นาที, ค้น 10/นาที) เฉพาะ barcode lookup + submit search ห้าม search-as-you-type เด็ดขาด, cache ผลลง Supabase เสมอ, custom User-Agent "Vmacro/x.x (email)" + กรอกฟอร์มแจ้งการใช้งานกับ OFF ก่อนใช้จริง, ข้อมูล crowdsource เข้า admin verification ได้ (D-017) — พิจารณาพร้อม NOVA group (ultra-processed level) เป็นตัวแปรวิเคราะห์ P4/P5 |
 | BL-05 | **เสร็จแล้ว — FR-CALC-4, P4a, tag `v1.2.0`** | | Day-type energy target — ดู D-019 สำหรับ design เต็ม ระบุเป็น FR ใหม่ก่อนเริ่มโค้ดตามกติกา FR-first (CLAUDE.md) |
 | BL-06 | Post-P5 (หรือเร็วกว่านั้นถ้า R-03 กลายเป็น pain point จริงจัง) | | Native iOS app แทนที่ PWA ทั้งระบบ (Swift/SwiftUI) เพื่อเข้าถึง HealthKit เต็มรูปแบบ (read/write/delete จริง, background sync ใกล้ real-time กว่า Shortcuts) — ประเมินขอบเขตแล้ว (2026-08-16, ระหว่างทำ FR-HLTH-1/2): business logic core (`lib/tdee.ts`/`scaling.ts`/`dish.ts` ~970 บรรทัด + test 18 เคส) และ backend (raw JSON REST + Supabase) port/reuse ได้ง่าย แต่ UI ~4,000 บรรทัด (14 หน้าที่ dogfood ผ่านแล้วใน P0-P2) ต้องเขียนใหม่ทั้งหมด ไม่มีทาง reuse จาก React — ตัดสินใจไม่ทำตอนนี้เพราะต้นทุนสูงเกินไปเทียบกับปัญหาที่แก้ได้ด้วย delta approach (D-022) อยู่แล้ว |
-| BL-07 | รอ core ทุกอย่างจบก่อน (ยาว, ไม่รีบ) | | Shortcut #1 ส่วน extended nutrients (กลุ่ม D ใน `docs/shortcuts/shortcut-1-write.md` — sodium/sugar/fiber/potassium/calcium/iron/vitamin C,D/sat-mono-poly fat/cholesterol, 12 field, 36 action) — core 4 (kcal/protein/carb/fat) เสร็จ+ยืนยันทำงานจริงแล้ว (2026-08-18) แต่ extended nutrients ยังไม่ได้เริ่ม วีตั้งใจแยกเป็น **shortcut ที่สอง** ("extension") ที่ main shortcut เรียกผ่าน action `Run Shortcut` ส่ง `Data` dictionary ต่อให้ ไม่ยิง API ซ้ำ — มีจุดต้องตัดสินใจตอนเริ่มจริง: จะแจก extension คู่กับ main shortcut ให้เพื่อนเสมอ (กัน `Run Shortcut` error ถ้าไม่มี) หรือ extension เป็นของวีใช้เองอย่างเดียว — **วีขอให้ remind เรื่องนี้อีกครั้งหลัง core ทุกอย่าง (รวม FR-DIARY-3) เคลียร์จบแล้ว** |
+| BL-07 | **ยกเลิก 2026-08-22** (คำสั่งวี, พบระหว่างไล่ backlog ตอนปิด P4f — เงื่อนไขเดิม "รอ core จบ" ผ่านมาตั้งแต่ P2 ปี 2026-08-18 แล้วแต่ไม่มีใครย้อนเช็ค) | | ~~Shortcut #1 ส่วน extended nutrients~~ (กลุ่ม D ใน `docs/shortcuts/shortcut-1-write.md` — sodium/sugar/fiber/potassium/calcium/iron/vitamin C,D/sat-mono-poly fat/cholesterol, 12 field, 36 action) — เหตุผลยกเลิก: เขียนลง Apple Health แล้วไม่มีอะไรเอาไปใช้ต่อจริง (Health ไม่คำนวณอะไรให้จาก field พวกนี้ และวีไม่มีแอปอื่นอ่านค่าเหล่านี้) ในขณะที่ต้นทุนคือ Shortcut ตัวที่สามที่ต้องนั่งต่อทีละ action สด (งานประเภทเดียวกับที่ BL-13/Shortcut #2 ถูกเลื่อนไปเพราะไม่มีเวลา) แต่ให้คุณค่าน้อยกว่ามาก — โค้ดฝั่ง server รองรับ best-effort ไว้แล้วตาม FR-HLTH-1 เดิม ถ้าวันหนึ่งอยากได้จริงกลับมาต่อ Shortcut ได้ทันทีโดยไม่ต้องแก้ server |
 | BL-08 | **เสร็จแล้ว — FR-DASH-1, P4a, tag `v1.2.0`** | | Dashboard tab แทน Weight tab: today-at-a-glance (kcal ring + P/C/F + day type), weight card + sparkline (หน้า weight เดิมย้ายมาอยู่ใต้), streak/สรุปสัปดาห์, โซน analytics tier 1 (FR-ANLT-1) — เป็นบ้านของ P4 analytics |
 | BL-09 | **ส่วนที่ 1 เสร็จแล้ว 2026-08-22 (tag `v1.5.0`)** — ส่วนที่ 2 รอเกณฑ์ | | **เปลี่ยนชื่อ/ขอบเขตจาก "Friends tab" เป็น "ข่าวสาร + สังคม"** แบ่ง 2 ส่วน: **ส่วนที่ 1 (มีประโยชน์แน่ ไม่ต้องรอเกณฑ์)** — feed ข่าวสาร: อาหารใหม่ที่ admin เพิ่มล่าสุด, คำขอที่ถูก fulfilled (เชื่อมกับ BL-12), ของใหม่ในระบบ — แก้ปัญหาจริงที่ตอนนี้เพื่อนไม่มีทางรู้เลยว่ามีอะไรใหม่ให้ค้นเจอ **ส่วนที่ 2 (ยังไม่รู้ว่าจะมีคนสนใจ รอเกณฑ์)** — streak leaderboard, contribution board (สร้าง/verify custom food), opt-in activity feed ของเพื่อน — คงหลักการเดิม: แข่งที่พฤติกรรม ห้ามมี leaderboard น้ำหนัก/kcal, diary ยัง private ตาม RLS เดิม — **เกณฑ์ตัดสินส่วนที่ 2 เท่านั้น (2026-08-21):** BL-12 (ขออาหารใหม่ในแอป) คือ interaction ระหว่าง user ครั้งแรกของระบบ ถือเป็น prototype ของส่วนที่ 2 ในตัว — วัดผลหลัง BL-12 ใช้จริง 3-4 สัปดาห์: เพื่อนกดขอสม่ำเสมอ = ทำส่วนที่ 2 เต็ม; แทบไม่มีใครกด = ปิดส่วนที่ 2 ทิ้งได้เลยไม่ต้องเสียดาย — **ส่วนที่ 1 เสร็จแล้ว 2026-08-22 เป็น FR-FRIEND-1** (แท็บ "Friends" แยกต่างหากตั้งแต่รอบแรก ไม่ใช่
 section ใน Dashboard, dogfood ผ่านครบ 7 ข้อ ไม่มี DF, tag `v1.5.0`) — **Toolbar 5 ปุ่มยืนยันแล้วและ deploy
@@ -176,8 +176,9 @@ section ใน Dashboard, dogfood ผ่านครบ 7 ข้อ ไม่ม
 **เริ่มนับ 2026-08-22** (วันที่วีแจ้งเพื่อนเรื่องแท็บ Friends — ปุ่ม "ขอเพิ่มอาหาร"/BL-12 แจ้งไปก่อนหน้านี้
 แล้ว) **ประเมินผล 2026-09-19** (ครบ 4 สัปดาห์) — เพื่อนกดขอสม่ำเสมอ = ทำส่วนที่ 2 เต็ม; แทบไม่มีใครกด = ปิด
 ส่วนที่ 2 ทิ้งได้เลย |
-| BL-10 | **เสร็จแล้ว (บางส่วน) — FR-CALC-5, P4b, tag `v1.3.0`: per-meal target + remaining-based display
-ทำแล้ว, meal-time reminder (push/Shortcuts) ยังไม่ทำ** | | Per-meal targets + meal-time reminders — Profile: จำนวนมื้อ/วัน (1–6) + เวลาแต่ละมื้อ + สัดส่วน % ต่อมื้อ (default หารเท่า ปรับได้ รวม 100%). Engine กระจาย daily target (ที่ผ่าน day-type แล้ว) เป็น target ต่อมื้อ + โหมด remaining-based ("ก่อนมื้อนี้เหลือให้กินอีก X" คำนวณจากที่กินจริงไปแล้ว ไม่ยึดตัวเลขตายตัว) แสดงผลใน diary/dashboard เป็นระยะแรก (ไม่พึ่ง push). Reminder ตามเวลามื้อ: ทางหลัก = iOS Shortcuts Automation ยิง VPS endpoint (pattern เดียวกับ P3 health token) เพราะ reliability สูงกว่า Web Push บน iOS PWA — Web Push เป็นทางเลือกรอง, ข้อจำกัด iOS นี้บันทึกไว้เป็น risk |
+| BL-10 | **เสร็จแล้ว — FR-CALC-5, P4b, tag `v1.3.0`: per-meal target + remaining-based display ทำแล้ว —
+meal-time reminder **ยุบรวมเข้า BL-15 แล้ว (2026-08-22, คำสั่งวี — เงื่อนไขเดียวกันอยู่แล้ว ไม่ต้องแยก
+สองรายการ)** | | Per-meal targets + meal-time reminders — Profile: จำนวนมื้อ/วัน (1–6) + เวลาแต่ละมื้อ + สัดส่วน % ต่อมื้อ (default หารเท่า ปรับได้ รวม 100%). Engine กระจาย daily target (ที่ผ่าน day-type แล้ว) เป็น target ต่อมื้อ + โหมด remaining-based ("ก่อนมื้อนี้เหลือให้กินอีก X" คำนวณจากที่กินจริงไปแล้ว ไม่ยึดตัวเลขตายตัว) แสดงผลใน diary/dashboard เป็นระยะแรก (ไม่พึ่ง push). Reminder ตามเวลามื้อ ดูรายละเอียดที่ BL-15 |
 | BL-11 | P4a (งานแรกของ P4a) | | Search UX เร็วขึ้น+อ่านง่ายขึ้น — ปรับ UI/พฤติกรรมของ FR-FOOD-1 ที่มีอยู่แล้ว ไม่ใช่ FR ใหม่: (1) วัดก่อนทำ — instrument latency จริงว่าหายไปที่ Supabase/FatSecret/Haiku translation ช่วงไหน รายงานตัวเลขก่อนตัดสินใจ implement (2) progressive results — ผลจาก Supabase (custom food/จาน/template/recent) แสดงทันทีที่ได้ ไม่รอ FatSecret, FatSecret+คำแปลไหลมาต่อท้ายพร้อม loading indicator (3) Settings: switch เปิด/ปิด FatSecret ต่อ user (default เปิด) (4) จัดกลุ่มผลค้นหาเป็น section (ของฉัน/จาน/recent/FatSecret) แต่ละกลุ่มแสดงจำกัด+"ดูทั้งหมด", ใช้ load-more/infinite scroll แทน pagination ตัวเลข (mobile-first) — เสนอรูปแบบสุดท้ายพร้อม mock สั้นๆ ก่อนทำจริง — **(อัปเดต 2026-08-19)** ขั้น (1) instrumentation deploy แล้ว: ตาราง `search_latency_log` (Supabase, write-only จาก client, ดู migration `20260819000000_search_latency_log.sql`) + `console.debug` ฝั่ง client อยู่หลัง feature flag `SEARCH_LATENCY_LOGGING` (`web/src/config.ts`) — เป็นเครื่องมือชั่วคราว ปิด flag + drop ตารางเมื่อ implement เสร็จ. แผน: สะสมข้อมูล 3-5 วัน แล้วรายงานตัวเลขพร้อมข้อเสนอ — **(อัปเดต 2026-08-19 รอบ 2)** `server/src/fatsecret.mjs` `DEFAULT_MAX_RESULTS` เปลี่ยน 10→50 (คำสั่งวี, deploy 2026-08-19 13:23 ICT ระหว่างที่ instrumentation กำลังเก็บข้อมูลอยู่) — **รายงาน BL-11 ต้อง mark timestamp นี้แยกข้อมูลก่อน/หลังชัดเจน** (ผลเยอะขึ้น = โอกาส translation cache miss ต่อครั้งค้นหาสูงขึ้น เทียบกันตรงๆ ไม่ได้) และเพิ่ม **"รองรับผล 50 รายการได้ลื่น" เป็น requirement ของ BL-11 เอง** ตั้งแต่ตอนนี้ (ไม่ใช่แค่ 10 เหมือนตอนออกแบบเดิม) — **(อัปเดต 2026-08-19 รอบ 3)** ขั้น (2)/(4) เสร็จแล้ว: แปลผล FatSecret เป็น batch ละ 10 (fetch เดิมสูงสุด 50 ไม่เปลี่ยน) โชว์อังกฤษทันทีระหว่างรอแปล (DF7 reversed — คุ้มที่ 50 ผล/~9.5s แม้ไม่คุ้มตอน 10 ผล/~2s), ปุ่ม "โหลดเพิ่ม" แปล batch ถัดไป, section เปลี่ยนชื่อเป็น "ของฉัน"/"จานอาหาร"/"FatSecret" + ปุ่ม "ดูทั้งหมด" (ข้อมูล fetch ไว้แล้ว ไม่ยิง network เพิ่ม). ขั้น (3) เสร็จแล้ว: switch เปิด/ปิด FatSecret ใน Settings → System (`profiles.fatsecret_search_enabled`, migration `20260819020000_fatsecret_toggle.sql`). Instrumentation ยังทำงานต่อ (วัดแค่ batch แรกจากนี้ไป แม่นกว่าเดิม) — **BL-11 ครบทั้ง 4 ข้อแล้ว** เหลือแค่รอสะสมข้อมูลเพิ่มแล้วพิจารณาถอด instrumentation ออกทีหลัง — **(ปิดงาน 2026-08-20)** วีตัดสินใจ
 ไม่รอสะสมข้อมูล SQL เพิ่มแล้ว (เพื่อนบอกแค่ "หน่วงนิดๆ" ไม่ใช่ปัญหาใหญ่ + progressive results เป็น design
 ที่ถูกไม่ว่าตัวเลขจะออกมาแบบไหน เพราะไม่ทำให้อะไรช้าลง) — ถอด instrumentation ออกแล้วทั้งหมด: ลบ `timed()`,
@@ -200,7 +201,8 @@ FR-ANLT-1 พึ่งข้อมูลจาก Shortcut #2 ทั้ง 3 met
 notification badge** — จุดแจ้งเตือนบนไอคอนแท็บ Friends เมื่อมีของใหม่ที่เกี่ยวข้องกับ user: คำขออาหารของ
 ตัวเองเปลี่ยนสถานะ (BL-12), อาหาร/จานใหม่จากทุกคน — เช็คตอนเปิดแอปเท่านั้น ไม่ใช้ push — เหตุผล: สำหรับ 3
 คนที่เปิดแอปทุกวันอยู่แล้ว badge ตอบโจทย์ ~90% ด้วยต้นทุนแทบศูนย์ |
-| BL-15 | ยังไม่ทำ — รอเงื่อนไขด้านล่างข้อใดข้อหนึ่ง (2026-08-22) | | **Web Push notification** —
+| BL-15 | ยังไม่ทำ — รอเงื่อนไขด้านล่างข้อใดข้อหนึ่ง (2026-08-22) — **รวม meal-time reminder ของ BL-10
+เข้าที่นี่แล้ว (2026-08-22, คำสั่งวี — เงื่อนไขเดียวกัน คือเงื่อนไข (1) ด้านล่างนี้เอง)** | | **Web Push notification** —
 ไล่ event ทั้งหมดที่ระบบมีตอนนี้ (คำขอถูกตอบ, อาหาร/จานใหม่ — BL-14) แล้วพบว่าทุกตัว "รอเปิดแอปได้" หมด
 badge จึงพอ — ตัวเดียวที่ push มีคุณค่าจริงคือ **meal-time reminder (BL-10)** เพราะประโยชน์อยู่ที่การเตือน
 **ก่อน**คนจะลืม ถ้าเห็นตอนเปิดแอปก็แปลว่าเปิดเองอยู่แล้วไม่ต้องเตือน — **เงื่อนไขกลับมาพิจารณา (ข้อใดข้อ
@@ -232,10 +234,10 @@ Storage~~ — เหตุผลยกเลิก: base64 ใน DB (pattern �
 bucket+policy+orphan file cleanup ซึ่งยังไม่คุ้มตอนนี้ — **แก้ปัญหาด้วยลิงก์แทน** (auto-link URL ธรรมดา
 ใน FR-FRIEND-2 แทน) — เงื่อนไขกลับมาพิจารณา: ใช้โพสต์จริงสัก 5-10 อัน แล้วพบว่าส่วนใหญ่ขาดรูปแล้วสื่อสารไม่
 ครบ — บันทึกไว้เป็นหลักฐานกันเสนอซ้ำ (pattern เดียวกับ D-023) |
-| BL-19 | ยังไม่ทำ — รอประเมินว่าจำเป็นไหม (2026-08-22) | | Link preview ในโพสต์ (ดึง OG tags มาโชว์การ์ด
-ตัวอย่างเว็บ) — ต้องมี endpoint บน VPS ไป fetch OG tags + cache + validate กัน SSRF (ยิง URL จาก user
-input ตรงไปเซิร์ฟเวอร์เองมีความเสี่ยง ต้องกรอง URL/IP ก่อนยิง) — ตอนนี้แค่ auto-link ธรรมดา (FR-FRIEND-2)
-พอ ยังไม่เห็นความจำเป็นชัดเจน |
+| BL-19 | **ยกเลิก 2026-08-22** (คำสั่งวี) | | ~~Link preview ในโพสต์~~ (ดึง OG tags มาโชว์การ์ด
+ตัวอย่างเว็บ) — เหตุผลยกเลิก: ยังไม่มีใครโพสต์ลิงก์สักอันเลยตั้งแต่ FR-FRIEND-2 ปล่อยใช้จริง, auto-link
+ธรรมดาที่มีอยู่พอแล้ว — เปิดใหม่ได้ถ้าใช้จริงแล้วรู้สึกขาด (ต้องมี endpoint บน VPS fetch OG tags + cache +
+validate กัน SSRF ถ้าทำจริง) |
 | BL-20 | รอ 1-2 สัปดาห์หลังแจ้งเพื่อนเรื่อง Friends แล้ว feed ทำงานจริง หรือรอเกณฑ์ BL-09 ส่วนที่ 2
 (2026-08-22) | | Activity events ส่วนที่เหลือ (แยกจาก 4 event แรกที่ทำเป็น FR-FRIEND-3) — บันทึกน้ำหนัก
 ต่อเนื่องครบ 7 วัน, อาหารที่สร้างถูกคนอื่นใช้ครบ N ครั้ง, ครบ 30 วันแรกของการใช้แอป, มี workout วันนั้น (รอ
@@ -272,6 +274,13 @@ BL-13/Shortcut #2 ก่อนถึงมีข้อมูล) — หลั�
 
 ## Changelog
 
+- v1.43 (2026-08-22): ไล่ backlog ทั้งตารางหลังปิด P4f (คำสั่งวี) — ยกเลิก **BL-07** (extended nutrients
+  Shortcut #1 — เขียนแล้วไม่มีอะไรเอาไปใช้ต่อ, เงื่อนไขเดิมผ่านมาตั้งแต่ 2026-08-18 แต่ตกหล่นไม่มีใครเช็ค),
+  ยกเลิก **BL-19** (link preview — ยังไม่มีใครโพสต์ลิงก์เลย auto-link พอแล้ว), ยุบ **BL-10** remainder
+  (meal-time reminder) รวมเข้า **BL-15** (เงื่อนไขเดียวกันอยู่แล้ว) — ผลคือไม่มีงานสร้างของใหม่เหลือใน
+  backlog ที่ทำได้ทันที ทุกรายการที่เหลือรอเงื่อนไข/ข้อมูลจริง (BL-09 ส่วนที่ 2/BL-13/BL-15/BL-17/BL-20)
+  หรือเป็น post-P5 (BL-03/04/06) — ตรงตามที่ตั้งใจ: ปล่อยฟีเจอร์ใหญ่ 3 รอบใน 2 วัน (posts, activity
+  events, badges) ตอนนี้เป็นโหมดใช้จริง+สังเกตผล ไม่ใช่โหมดสร้างของใหม่
 - v1.42 (2026-08-22): ปิด P4f (tag `v1.7.0`, คำสั่งวี) — BL-21/FR-BADGE-1 dogfood ผ่านครบ ไม่มี DF
 - v1.41 (2026-08-22): BL-21/FR-BADGE-1 code-complete+deploy+migration รันแล้ว — รอวี dogfood
 - v1.40 (2026-08-22): ปิด P4e (tag `v1.6.0`, คำสั่งวี) — BL-16/FR-FRIEND-2 + FR-FRIEND-3 dogfood ผ่านครบ

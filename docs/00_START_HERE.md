@@ -40,9 +40,12 @@ vmacro/
 
 ## สถานะปัจจุบัน
 
-- **Docs version:** v1.16 (2026-08-22)
-- **Phase ปัจจุบัน:** P4f จบแล้ว, ยังไม่เริ่ม phase ถัดไป — ดู `docs/PROJECT_BIBLE.md` §7 Backlog
-  สำหรับรายการเต็มที่รอตัดสินใจ (BL-09 ส่วนที่ 2/BL-13/BL-15/BL-20)
+- **Docs version:** v1.17 (2026-08-22)
+- **Phase ปัจจุบัน:** P4f จบแล้ว — **ไม่มีงานสร้างของใหม่ค้างใน backlog ที่ทำได้ทันที** (ไล่ตารางทั้งหมด
+  หลังปิด P4f แล้ว 2026-08-22 — ยกเลิก BL-07/BL-19, ยุบ BL-10 remainder เข้า BL-15) ทุกรายการที่เหลือรอ
+  เงื่อนไข/ข้อมูลจริงเท่านั้น (BL-09 ส่วนที่ 2 + BL-17 รอถึง 2026-09-19, BL-13 รอวีมีเวลา, BL-15/BL-20
+  รอ event ที่ควรค่า push จริง) หรือเป็น post-P5 — ตั้งใจอยู่ในโหมดใช้งานจริง+สังเกตผลของ 3 ฟีเจอร์ใหญ่ที่
+  เพิ่งปล่อย (posts/activity events/badges) ไม่ใช่โหมดหาโปรเจกต์ใหม่ — **อย่าเสนองานใหม่เองจนกว่าวีจะสั่ง**
 - **P4f จบแล้ว, tag `v1.7.0`** (2026-08-22) — วี dogfood ผ่านครบ ไม่มี DF: FR-BADGE-1 (achievement
   badges, BL-21 — 21 badge เริ่มต้น 4 กลุ่ม, การ์ด "ความสำเร็จ" ใน Dashboard + หน้ารวม `/achievements`,
   ปลดล็อกขึ้น Friends feed ผ่าน `share_activity` toggle เดิม)
@@ -102,6 +105,8 @@ Vision → Boundary → Requirement → Decision → Freeze → Working Rules
 
 ## Changelog
 
+- v1.17 (2026-08-22): ไล่ backlog ทั้งตารางหลังปิด P4f — ยกเลิก BL-07/BL-19, ยุบ BL-10 remainder เข้า
+  BL-15 — สถานะปัจจุบัน: ไม่มีงานสร้างของใหม่ค้างที่ทำได้ทันที ทุกอย่างรอเงื่อนไขจริง
 - v1.16 (2026-08-22): เพิ่ม+ปิด P4f (tag `v1.7.0`) — FR-BADGE-1 (achievement badges, BL-21) วี dogfood
   ผ่านครบ ไม่มี DF — P5 เลื่อนเป็น `v1.8.0`
 - v1.15 (2026-08-22): FR-BADGE-1 (achievement badges, BL-21) code-complete+deploy+migration รันแล้ว

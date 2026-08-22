@@ -1,20 +1,27 @@
 import { useEffect, useState } from "react";
+import Linkified from "../components/Linkified";
 import { useAuth } from "../lib/auth-context";
-import { fetchFeedItems, markFeedSeen, type FeedItem } from "../lib/feed";
+import { fetchActivityFeed, fetchPosts, markFeedSeen, type FeedItem } from "../lib/feed";
 import { supabase } from "../lib/supabase";
 import { useIsAdmin } from "../lib/use-is-admin";
 import "./Friends.css";
 
-const FEED_DISPLAY_LIMIT = 18;
+const POSTS_DISPLAY_LIMIT = 10;
+const ACTIVITY_DISPLAY_LIMIT = 18;
 const MARK_SEEN_DELAY_MS = 2500;
 const POST_BODY_MAX_LENGTH = 2000;
 
 export default function Friends() {
   const { user } = useAuth();
   const { isAdmin } = useIsAdmin();
-  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
-  const [feedExpanded, setFeedExpanded] = useState(false);
-  const [loading, setLoading] = useState(true);
+
+  const [posts, setPosts] = useState<FeedItem[]>([]);
+  const [postsExpanded, setPostsExpanded] = useState(false);
+  const [postsLoading, setPostsLoading] = useState(true);
+
+  const [activityItems, setActivityItems] = useState<FeedItem[]>([]);
+  const [activityExpanded, setActivityExpanded] = useState(false);
+  const [activityLoading, setActivityLoading] = useState(true);
 
   const [postDraft, setPostDraft] = useState("");
   const [posting, setPosting] = useState(false);
@@ -24,19 +31,23 @@ export default function Friends() {
   const [editBody, setEditBody] = useState("");
   const [editSaving, setEditSaving] = useState(false);
 
-  async function reloadFeed() {
-    if (!user) return;
-    const { data } = await supabase.from("profiles").select("feed_last_seen_at").eq("id", user.id).single();
-    const lastSeen = (data as { feed_last_seen_at: string } | null)?.feed_last_seen_at;
-    if (!lastSeen) return;
-    const items = await fetchFeedItems(user.id, lastSeen);
-    setFeedItems(items);
+  async function reloadPosts() {
+    setPosts(await fetchPosts());
   }
 
-  // Fetch feed items, then mark them seen after a delay — not immediately on mount, so a
-  // quick tab-switch away doesn't silently mark unread items as read (FR-FRIEND-1). The
-  // timer is cleared on unmount, so leaving before it fires leaves feed_last_seen_at
-  // untouched and the badge still shows next time.
+  // Posts: persistent list, independent of the "seen" cursor — always shows everything
+  // (own load-more), unlike the activity feed below (FR-FRIEND-2 amendment, 2026-08-22).
+  useEffect(() => {
+    fetchPosts().then((items) => {
+      setPosts(items);
+      setPostsLoading(false);
+    });
+  }, []);
+
+  // Activity feed: "what's new since I last looked" — food/dish/requests only. Marked
+  // seen after a delay, not immediately on mount, so a quick tab-switch away doesn't
+  // silently mark unread items as read (FR-FRIEND-1). Timer clears on unmount, so leaving
+  // before it fires keeps feed_last_seen_at untouched and the badge still shows next time.
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
@@ -48,10 +59,10 @@ export default function Friends() {
       .then(({ data }) => {
         const lastSeen = (data as { feed_last_seen_at: string } | null)?.feed_last_seen_at;
         if (!lastSeen || cancelled) return;
-        fetchFeedItems(user.id, lastSeen).then((items) => {
+        fetchActivityFeed(user.id, lastSeen).then((items) => {
           if (!cancelled) {
-            setFeedItems(items);
-            setLoading(false);
+            setActivityItems(items);
+            setActivityLoading(false);
           }
         });
       });
@@ -78,7 +89,7 @@ export default function Friends() {
       return;
     }
     setPostDraft("");
-    await reloadFeed();
+    await reloadPosts();
   }
 
   function startEditPost(item: FeedItem) {
@@ -103,7 +114,7 @@ export default function Friends() {
       return;
     }
     cancelEditPost();
-    await reloadFeed();
+    await reloadPosts();
   }
 
   async function deletePost(postId: string) {
@@ -113,10 +124,11 @@ export default function Friends() {
       setPostError(error.message);
       return;
     }
-    await reloadFeed();
+    await reloadPosts();
   }
 
-  const shownItems = feedExpanded ? feedItems : feedItems.slice(0, FEED_DISPLAY_LIMIT);
+  const shownPosts = postsExpanded ? posts : posts.slice(0, POSTS_DISPLAY_LIMIT);
+  const shownActivity = activityExpanded ? activityItems : activityItems.slice(0, ACTIVITY_DISPLAY_LIMIT);
 
   return (
     <section className="friends-page">
@@ -140,18 +152,19 @@ export default function Friends() {
         {postError && <p className="error">{postError}</p>}
       </form>
 
-      {loading ? (
+      <h2 className="friends-section-title">โพสต์</h2>
+      {postsLoading ? (
         <p>กำลังโหลด...</p>
-      ) : feedItems.length === 0 ? (
-        <p className="friends-empty">ยังไม่มีอะไรใหม่</p>
+      ) : posts.length === 0 ? (
+        <p className="friends-empty">ยังไม่มีใครโพสต์</p>
       ) : (
         <>
           <ul className="friends-feed-list">
-            {shownItems.map((item) => {
-              const isOwnPost = item.type === "post" && item.authorId === user?.id;
-              const canDelete = item.type === "post" && (isOwnPost || isAdmin);
+            {shownPosts.map((item) => {
+              const isOwnPost = item.authorId === user?.id;
+              const canDelete = isOwnPost || isAdmin;
 
-              if (item.type === "post" && editingPostId === item.postId) {
+              if (editingPostId === item.postId) {
                 return (
                   <li key={item.key} className="friends-feed-item">
                     <form onSubmit={saveEditPost} className="friends-post-edit-form">
@@ -176,33 +189,57 @@ export default function Friends() {
 
               return (
                 <li key={item.key} className="friends-feed-item">
-                  <span className={item.type === "post" ? "friends-feed-post-body" : "friends-feed-title"}>
-                    {item.title}
+                  <span className="friends-feed-post-body">
+                    <Linkified text={item.title} />
                     {item.creatorName && <span className="friends-feed-creator"> — โดย {item.creatorName}</span>}
                   </span>
-                  {item.detail && <span className="friends-feed-detail">{item.detail}</span>}
                   <span className="friends-feed-time">{new Date(item.timestamp).toLocaleDateString("th-TH")}</span>
-                  {item.type === "post" && canDelete && (
+                  {canDelete && (
                     <span className="friends-feed-post-actions">
                       {isOwnPost && (
                         <button type="button" className="friends-btn-secondary" onClick={() => startEditPost(item)}>
                           แก้ไข
                         </button>
                       )}
-                      {canDelete && (
-                        <button type="button" className="friends-btn-danger" onClick={() => deletePost(item.postId as string)}>
-                          ลบ
-                        </button>
-                      )}
+                      <button type="button" className="friends-btn-danger" onClick={() => deletePost(item.postId as string)}>
+                        ลบ
+                      </button>
                     </span>
                   )}
                 </li>
               );
             })}
           </ul>
-          {!feedExpanded && feedItems.length > FEED_DISPLAY_LIMIT && (
-            <button type="button" className="friends-feed-view-all" onClick={() => setFeedExpanded(true)}>
-              ดูทั้งหมด ({feedItems.length})
+          {!postsExpanded && posts.length > POSTS_DISPLAY_LIMIT && (
+            <button type="button" className="friends-feed-view-all" onClick={() => setPostsExpanded(true)}>
+              ดูทั้งหมด ({posts.length})
+            </button>
+          )}
+        </>
+      )}
+
+      <h2 className="friends-section-title friends-section-title-activity">ความเคลื่อนไหว</h2>
+      {activityLoading ? (
+        <p>กำลังโหลด...</p>
+      ) : activityItems.length === 0 ? (
+        <p className="friends-empty">ยังไม่มีอะไรใหม่</p>
+      ) : (
+        <>
+          <ul className="friends-feed-list">
+            {shownActivity.map((item) => (
+              <li key={item.key} className="friends-feed-item">
+                <span className="friends-feed-title">
+                  {item.title}
+                  {item.creatorName && <span className="friends-feed-creator"> — โดย {item.creatorName}</span>}
+                </span>
+                {item.detail && <span className="friends-feed-detail">{item.detail}</span>}
+                <span className="friends-feed-time">{new Date(item.timestamp).toLocaleDateString("th-TH")}</span>
+              </li>
+            ))}
+          </ul>
+          {!activityExpanded && activityItems.length > ACTIVITY_DISPLAY_LIMIT && (
+            <button type="button" className="friends-feed-view-all" onClick={() => setActivityExpanded(true)}>
+              ดูทั้งหมด ({activityItems.length})
             </button>
           )}
         </>

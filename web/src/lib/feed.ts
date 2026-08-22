@@ -14,6 +14,7 @@ export interface FeedItem {
 }
 
 const PER_SOURCE_LIMIT = 20;
+const POSTS_FETCH_LIMIT = 50;
 
 interface FoodOrDishRow {
   id: string;
@@ -37,15 +38,44 @@ interface PostRow {
   created_at: string;
 }
 
-// Four sources merged into one timeline. Food and dishes are a single "who created what"
-// query each (custom_foods/dishes are already public-read per FR-FOOD-2/3) — no need to
-// split "admin's food" from "everyone else's food" the way FR-DASH-2 originally did, since
-// every item now shows its creator's name directly (FR-FRIEND-1). Posts (FR-FRIEND-2) are
-// the only source anyone can create directly rather than as a side effect of another
-// action — sorted by created_at like everything else, so editing a post never re-surfaces
-// it as "new" (see AC 5).
-export async function fetchFeedItems(userId: string, sinceIso: string): Promise<FeedItem[]> {
-  const [foods, dishes, requests, posts] = await Promise.all([
+async function getDisplayNameMap(ids: string[]): Promise<Map<string, string>> {
+  const nameMap = new Map<string, string>();
+  if (ids.length === 0) return nameMap;
+  const { data } = await supabase.rpc("get_display_names", { profile_ids: ids });
+  for (const n of (data as { id: string; display_name: string }[]) ?? []) nameMap.set(n.id, n.display_name);
+  return nameMap;
+}
+
+// Posts are persistent content, not "what's new since last visit" — a post from last week
+// should still be there when someone scrolls down, unlike a food/dish/request notice which
+// is only interesting while it's fresh. Kept as its own always-available list (own
+// load-more) instead of being mixed into the capped "ความเคลื่อนไหว" section below, where a
+// burst of bulk-imported foods was pushing posts off the bottom entirely (found during
+// FR-FRIEND-2 dogfood, 2026-08-22).
+export async function fetchPosts(limit = POSTS_FETCH_LIMIT): Promise<FeedItem[]> {
+  const { data } = await supabase.from("posts").select("id, author_id, body, created_at").order("created_at", { ascending: false }).limit(limit);
+  const rows = (data as PostRow[]) ?? [];
+  const nameMap = await getDisplayNameMap([...new Set(rows.map((r) => r.author_id))]);
+
+  return rows.map((p) => ({
+    key: `post-${p.id}`,
+    type: "post" as const,
+    title: p.body,
+    detail: null,
+    creatorName: nameMap.get(p.author_id) ?? null,
+    timestamp: p.created_at,
+    postId: p.id,
+    authorId: p.author_id,
+  }));
+}
+
+// "What's new since I last looked" — food/dish/requests only (posts moved out, see
+// fetchPosts above). Food and dishes are a single "who created what" query each
+// (custom_foods/dishes are already public-read per FR-FOOD-2/3) — no need to split
+// "admin's food" from "everyone else's food", since every item shows its creator's name
+// directly (FR-FRIEND-1).
+export async function fetchActivityFeed(userId: string, sinceIso: string): Promise<FeedItem[]> {
+  const [foods, dishes, requests] = await Promise.all([
     supabase
       .from("custom_foods")
       .select("id, name, creator_id, created_at")
@@ -61,20 +91,13 @@ export async function fetchFeedItems(userId: string, sinceIso: string): Promise<
       .gt("updated_at", sinceIso)
       .order("updated_at", { ascending: false })
       .limit(PER_SOURCE_LIMIT),
-    supabase.from("posts").select("id, author_id, body, created_at").gt("created_at", sinceIso).order("created_at", { ascending: false }).limit(PER_SOURCE_LIMIT),
   ]);
 
   const foodRows = (foods.data as FoodOrDishRow[]) ?? [];
   const dishRows = (dishes.data as FoodOrDishRow[]) ?? [];
   const requestRows = (requests.data as RequestRow[]) ?? [];
-  const postRows = (posts.data as PostRow[]) ?? [];
 
-  const creatorIds = [...new Set([...foodRows.map((r) => r.creator_id), ...dishRows.map((r) => r.creator_id), ...postRows.map((r) => r.author_id)])];
-  const nameMap = new Map<string, string>();
-  if (creatorIds.length > 0) {
-    const { data: names } = await supabase.rpc("get_display_names", { profile_ids: creatorIds });
-    for (const n of (names as { id: string; display_name: string }[]) ?? []) nameMap.set(n.id, n.display_name);
-  }
+  const nameMap = await getDisplayNameMap([...new Set([...foodRows.map((r) => r.creator_id), ...dishRows.map((r) => r.creator_id)])]);
 
   const items: FeedItem[] = [
     ...foodRows.map((f) => ({
@@ -101,22 +124,13 @@ export async function fetchFeedItems(userId: string, sinceIso: string): Promise<
       creatorName: null,
       timestamp: r.updated_at,
     })),
-    ...postRows.map((p) => ({
-      key: `post-${p.id}`,
-      type: "post" as const,
-      title: p.body,
-      detail: null,
-      creatorName: nameMap.get(p.author_id) ?? null,
-      timestamp: p.created_at,
-      postId: p.id,
-      authorId: p.author_id,
-    })),
   ];
 
   return items.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
 }
 
-// Cheap existence check for the tab-icon badge — same 4 sources, limit 1 each.
+// Cheap existence check for the tab-icon badge — still all 4 sources including posts (a
+// new post should still light up the badge), independent of how the page displays them.
 export async function hasUnseenFeed(userId: string, sinceIso: string): Promise<boolean> {
   const [foods, dishes, requests, posts] = await Promise.all([
     supabase.from("custom_foods").select("id").gt("created_at", sinceIso).limit(1),

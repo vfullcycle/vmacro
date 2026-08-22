@@ -40,10 +40,14 @@ vmacro/
 
 ## สถานะปัจจุบัน
 
-- **Docs version:** v1.13 (2026-08-22)
-- **Phase ปัจจุบัน:** P4e กำลังทำ (Friends: posts + activity events, ยังไม่ตี tag) — ดู `docs/SCOPE.md`
-  §P4e — BL-16/FR-FRIEND-2 dogfood ผ่านครบ 7 ข้อ+แก้ design issue แล้ว (แยกโพสต์ถาวร/ความเคลื่อนไหว
-  capped), FR-FRIEND-3 (activity events) code-complete+deploy+migration รันแล้ว 2026-08-22 — รอวี dogfood
+- **Docs version:** v1.14 (2026-08-22)
+- **Phase ปัจจุบัน:** P4e จบแล้ว, ยังไม่เริ่ม phase ถัดไป — ดู `docs/PROJECT_BIBLE.md` §7 Backlog สำหรับ
+  รายการเต็มที่รอตัดสินใจ (BL-09 ส่วนที่ 2/BL-13/BL-15/BL-21 กำลังจะร่าง FR)
+- **P4e จบแล้ว, tag `v1.6.0`** (2026-08-22) — วี dogfood ผ่านครบทุกข้อ: BL-16/FR-FRIEND-2 (โพสต์ใน
+  Friends feed, แยก "โพสต์"/"ความเคลื่อนไหว" หลัง dogfood พบปัญหา bulk import ดันโพสต์ตก), FR-FRIEND-3
+  (activity events เชิงบวกล้วน 4 แบบ — พบ+แก้บั๊ก RLS ที่ `activity_events_select` ชน RLS ของ `profiles`
+  เอง ทำให้ไม่มีใครเห็น event คนอื่นได้แม้เปิดแชร์อยู่ แก้ด้วย SECURITY DEFINER function
+  `profile_shares_activity()`)
 - **P4d จบแล้ว, tag `v1.5.0`** (2026-08-22) — วี dogfood ผ่านครบ 7 ข้อ ไม่มี DF: FR-FRIEND-1 (แท็บ
   "Friends" ใหม่ toolbar 5 ปุ่ม — feed อาหาร/จานใหม่พร้อมชื่อผู้สร้าง + คำขอของตัวเองที่ถูกตอบ +
   notification badge เช็คตอนเปิดแอปไม่ใช้ push) รวม BL-14 + BL-09 ส่วนที่ 1 — BL-09 ส่วนที่ 2
@@ -95,6 +99,8 @@ Vision → Boundary → Requirement → Decision → Freeze → Working Rules
 
 ## Changelog
 
+- v1.14 (2026-08-22): เพิ่ม+ปิด P4e (tag `v1.6.0`) — BL-16/FR-FRIEND-2 + FR-FRIEND-3 วี dogfood ผ่านครบ
+  ทุกข้อ รวมแก้บั๊ก RLS ที่พบระหว่างทาง (`activity_events_select` ชน RLS ของ `profiles` เอง)
 - v1.13 (2026-08-22): เพิ่ม P4e (Friends: posts + activity events) ระหว่างทาง — BL-16/FR-FRIEND-2 dogfood
   ผ่าน+แก้ design issue (แยกโพสต์/ความเคลื่อนไหว), FR-FRIEND-3 code-complete+deploy+migration รันแล้ว
   รอวี dogfood — ยังไม่ตี tag

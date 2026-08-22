@@ -67,8 +67,9 @@ Feature ที่เข้า gate: ห้ามเริ่มโค้ดจ�
   - `docs:` / `chore:` / `test:` ตามชนิดงาน
 - **Tag:** semver ผูกกับ phase gate — annotated tag พร้อมข้อความอ้าง phase
   - `v0.1.0` = จบ P0, `v0.2.0` = จบ P1, `v1.0.0` = จบ P2 (core ครบ), `v1.1.0` = จบ P3, `v1.2.0` = จบ P4a,
-    `v1.3.0` = จบ P4b, `v1.4.0` = จบ P4c, `v1.5.0` = จบ P4d, `v1.6.0` = จบ P5 (เลื่อนอีกครั้ง 2026-08-22 —
-    P4d (Friends tab, FR-FRIEND-1) แทรกเข้ามาเป็น feature ตาม semver ไม่ใช่ patch เช่นเดียวกับ P4c ก่อนหน้า)
+    `v1.3.0` = จบ P4b, `v1.4.0` = จบ P4c, `v1.5.0` = จบ P4d, `v1.6.0` = จบ P4e (Friends: posts + activity
+    events), `v1.7.0` = จบ P5 (เลื่อนอีกครั้ง 2026-08-22 — P4e แทรกเข้ามาเป็น feature ตาม semver ไม่ใช่
+    patch เช่นเดียวกับ P4c/P4d ก่อนหน้า)
   - ตัวอย่าง: `git tag -a v0.1.0 -m "P0 complete: infra spike, R-01/R-02 closed"`
 - **Commit/tag message:** สั้น อ้างอิง decision ID (Dxxx) หรือ FR ID แทนการอธิบายเหตุผลยาวในข้อความ —
   เหตุผลเต็มอยู่ใน PROJECT_BIBLE Decision Log เสมอ อยู่แล้ว ไม่ต้องพูดซ้ำ (2026-08-19: message ยาวเกินไป

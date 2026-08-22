@@ -1,4 +1,4 @@
-# PROJECT_BIBLE — Vmacro v1.39
+# PROJECT_BIBLE — Vmacro v1.40
 
 > Single source of truth ของโปรเจกต์ ถ้าไฟล์อื่นขัดกับไฟล์นี้ ให้ยึดไฟล์นี้แล้วแจ้งวีเพื่อ sync
 
@@ -114,6 +114,7 @@ credit เพิ่มจากที่ไม่มีอยู่แล้ว 
 (`docs/research/ai-import.md`) เก็บไว้เป็นหลักฐานไม่ลบ — แทนที่ด้วย BL-12 (ขออาหารใหม่ในแอป, แก้ปัญหาการ
 ประสานงานแทนที่จะพยายามแทนที่ความรู้วีด้วย AI) | วีแทบไม่ใช้ FatSecret จริง — workflow จริงที่ใช้อยู่คือให้ ChatGPT คำนวณ macro (อ้าง Thai FCD/USDA) ออกเป็น JSON แล้ววีตรวจเอง+import ผ่าน admin bulk-import อยู่แล้ว — AI Import ทำให้เพื่อนทุกคนได้ workflow เดียวกันในแอปโดยไม่ต้องออกจากแอป โดยไม่ลด governance ลงจากเดิม (LLM ไม่เขียน DB ตรง, human verify 2 ชั้นเหมือนเดิม) | 2026-08-19, ยกเลิก 2026-08-20 |
 | D-024 | **Exception ของ Phase Gate Rule (ครั้งที่ 2)**: ปิด P2 (ตี tag `v1.0.0`) โดยไม่รอ FR-DIARY-3 ผ่าน manual dogfood ครบ 2-3 วันตามเกณฑ์ปกติของ SCOPE.md — ตี `v1.1.0` (P3 core: FR-HLTH-1/2 core 4) ต่อทันทีในรอบเดียวกัน เพราะ core 4 ยืนยันทำงานจริงแล้ว (2026-08-18) | FR-DIARY-3 เป็น shortcut ลด friction ล้วน (copy-from-yesterday, favorites, recent) ไม่ใช่ core data path — ความเสี่ยงถ้ามีบั๊กต่ำกว่า feature ที่แตะ diary/macro โดยตรง วีตัดสินใจไม่บล็อกการปิด phase ไว้รอ, บั๊กที่เจอภายหลังจากการใช้จริงจะแก้เป็น patch (`v1.0.x`) แทน — สอดคล้องกับ pattern exception เดิม (D-021: สลับคิว P3 ก่อน P2 ระหว่าง dogfood) คือวีเป็นผู้อนุมัติ exception ของ gate ที่ตัวเองตั้งไว้ได้เสมอเมื่อประเมินความเสี่ยงแล้วว่าคุ้ม | 2026-08-19 |
+| D-025 | **RLS policy ที่อ้างอิงตารางอื่นด้วย subquery ต้องผ่าน SECURITY DEFINER function เสมอ ถ้าตารางนั้นมี RLS ของตัวเองแบบ owner-only** — พบบั๊กจริงระหว่าง dogfood FR-FRIEND-3: `activity_events_select` เช็ค `profiles.share_activity` ของเจ้าของ event ด้วย `exists (select ... from profiles where id = activity_events.user_id and share_activity = true)` แต่ subquery รันในฐานะ role `authenticated` ของผู้ที่กำลัง query เอง ถูก `profiles_all_own` (`id = auth.uid()`) บล็อกไม่ให้เห็น row ของคนอื่น ทำให้ `exists(...)` เป็น false เสมอไม่ว่า toggle จะเป็นอะไร — แก้ด้วย `profile_shares_activity(uuid)` (SECURITY DEFINER, `stable`) แทน ตาม pattern เดียวกับ D-014/D-017/D-020 | เดิมกฎ SECURITY DEFINER pattern ในโปรเจกต์นี้ถูกใช้ตอน "endpoint/RPC ต้องข้าม RLS โดยตรง" เท่านั้น — รอบนี้พลาดเพราะ RLS policy ตัวหนึ่ง (ไม่ใช่ RPC) ไปอ้างอิงอีกตารางที่มี RLS แบบ owner-only โดยไม่ทันสังเกตว่ากฎเดียวกันต้องใช้ — บันทึกเป็น decision แยกกันชัดเจนกันพลาดซ้ำตอนออกแบบ policy ใหม่ในอนาคต (เช่น BL-21 badges ที่ต้องเช็คสถานะ badge ข้าม user เหมือนกัน) | 2026-08-22 |
 
 ### Evidence notes (ไม่ใช่ decision ใหม่ — บันทึกผลทดสอบสนับสนุน decision ที่มีอยู่)
 
@@ -211,9 +212,7 @@ Automation (ใช้ per-user token ที่มีอยู่แล้วจ�
 Android รองรับมานานและเสถียรกว่ามาก, subscription หลุดได้ตอน re-install PWA, ของที่ต้องสร้างใหม่ทั้งหมด:
 service worker รองรับ push event (ตอนนี้มีแค่ cache shell), VAPID key pair, ตาราง+endpoint เก็บ push
 subscription ต่อ user/เครื่อง (1 คนอาจมีหลายเครื่อง), server-side logic ยิง push ตอนเกิด event จริง |
-| BL-16 | **FR-FRIEND-2 dogfood ผ่านครบ 7 ข้อ (รวม SQL ยืนยัน RLS) 2026-08-22 — พบ design issue ระหว่าง
-dogfood (โพสต์ถูกดันตกจาก feed ที่ capped เวลามี bulk import เยอะ) แก้แล้วด้วยการแยก "โพสต์"
-(ถาวร)/"ความเคลื่อนไหว" (capped) — รอตี tag พร้อม FR-FRIEND-3 (P4e)** | | **Posts ใน Friends feed** — เปิดให้
+| BL-16 | **เสร็จแล้ว — FR-FRIEND-2, tag `v1.6.0` (P4e, 2026-08-22)** | | **Posts ใน Friends feed** — เปิดให้
 **ทุกคนโพสต์ได้** ไม่ใช่แค่ admin (ตัดสินใจสุดท้าย หลังเริ่มร่างเป็น admin-only broadcast ก่อน) — ตาราง
 `posts` (author_id, body, created_at) + RLS: อ่านได้ทุกคน, เขียนได้ทุกคน (`author_id = auth.uid()`),
 แก้/ลบเฉพาะเจ้าของ, admin ลบของใครก็ได้ (moderation ขั้นต่ำ) — ฟอร์มเขียนอยู่ในหน้า Friends เลย (ไม่ใช่หน้า
@@ -273,6 +272,10 @@ BL-13/Shortcut #2 ก่อนถึงมีข้อมูล) — หลั�
 
 ## Changelog
 
+- v1.40 (2026-08-22): ปิด P4e (tag `v1.6.0`, คำสั่งวี) — BL-16/FR-FRIEND-2 + FR-FRIEND-3 dogfood ผ่านครบ
+  ทุกข้อ — เพิ่ม **D-025**: บันทึกบั๊ก RLS ที่พบ (`activity_events_select` subquery ชน RLS ของ
+  `profiles` เอง ทำให้ไม่มีใครเห็น event คนอื่นได้แม้เปิดแชร์) + แก้ด้วย SECURITY DEFINER function
+  `profile_shares_activity()` — วางกฎทั่วไปกันพลาดซ้ำตอนออกแบบ policy ใหม่ (มีผลกับ BL-21 ที่กำลังจะร่าง)
 - v1.39 (2026-08-22): BL-16/FR-FRIEND-2 dogfood ผ่านครบ 7 ข้อ+แก้ design issue ที่พบระหว่าง dogfood (แยก
   โพสต์ถาวร/ความเคลื่อนไหว capped) — FR-FRIEND-3 (activity events) code-complete+deploy+migration รันแล้ว
   รอวี dogfood — ทั้งสองรอตี tag รวมกันเป็น P4e (ดู SCOPE.md)

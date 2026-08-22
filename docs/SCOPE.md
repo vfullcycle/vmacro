@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.20
+# SCOPE — Vmacro v1.21
 
 ## In Scope
 
@@ -100,23 +100,29 @@
   จากเพื่อน 3-4 สัปดาห์ นับจากวันที่วีแจ้งเพื่อนจริง — ยังไม่ระบุวันที่)
 - Backlog เพิ่ม BL-15 (Web Push notification) ระหว่างทาง — ยังไม่ทำ รอเงื่อนไข (ดู PROJECT_BIBLE §7)
 
-### P4e — Friends: posts + activity events → tag ยังไม่กำหนด (รอปิด phase)
-- **BL-16/FR-FRIEND-2 — dogfood ผ่านครบ 7 ข้อ (รวม SQL ยืนยัน RLS)**: โพสต์ใน Friends feed เปิดให้ทุกคน
-  โพสต์ได้ — พบปัญหาออกแบบระหว่าง dogfood (โพสต์ถูกดันตกจาก feed ที่ capped เวลามี bulk import เยอะ) แก้แล้ว
-  ด้วยการแยกเป็น 2 ส่วน: "โพสต์" (ถาวร ไม่ capped, `fetchPosts`) กับ "ความเคลื่อนไหว" (capped/ephemeral,
-  `fetchActivityFeed`) ใช้ cursor เดียวกันสำหรับ badge — เพิ่ม auto-link URL ใน body ผ่าน `Linkified.tsx`
-  (split-based, ไม่ใช้ markdown/HTML render กัน XSS)
-- **FR-FRIEND-3 — code-complete+deploy+migration รันแล้ว 2026-08-22 — รอวี dogfood**: activity events
-  เชิงบวกล้วน 4 แบบ (บันทึกครบทุกมื้อ, ต่อเนื่องครบ 7/14/30 วัน — ใช้ "milestone สูงสุดที่ยังไม่เคยฉลอง"
-  กันพลาดตอนไม่เปิดแอปวันที่ครบพอดี, ถึงเป้าโปรตีน, อาหารที่สร้างได้รับการยืนยัน — ผูกกับผู้สร้างอาหารไม่ใช่
-  admin ที่กด) แสดงในส่วน "ความเคลื่อนไหว" — ห้ามมีตัวเลขเทียบ/เปิดเผย kcal/น้ำหนัก/สิ่งที่กิน — toggle
-  "แชร์กิจกรรม" ใน Settings → System หัวข้อ "การแชร์ใน Friends" (default เปิด, บังคับด้วย RLS ไม่ใช่ client
-  filter — เตรียมที่ว่างให้ BL-20/BL-21 เข้ากลุ่มเดียวกันทีหลัง)
+### P4e — Friends: posts + activity events → tag `v1.6.0` **(ปิดแล้ว 2026-08-22)**
+- **BL-16/FR-FRIEND-2 — เสร็จแล้ว**: โพสต์ใน Friends feed เปิดให้ทุกคนโพสต์ได้ — พบปัญหาออกแบบระหว่าง
+  dogfood (โพสต์ถูกดันตกจาก feed ที่ capped เวลามี bulk import เยอะ) แก้แล้วด้วยการแยกเป็น 2 ส่วน: "โพสต์"
+  (ถาวร ไม่ capped, `fetchPosts`) กับ "ความเคลื่อนไหว" (capped/ephemeral, `fetchActivityFeed`) ใช้ cursor
+  เดียวกันสำหรับ badge — เพิ่ม auto-link URL ใน body ผ่าน `Linkified.tsx` (split-based, ไม่ใช้
+  markdown/HTML render กัน XSS) — วี dogfood ผ่านครบ 7 ข้อ (รวม SQL ยืนยัน RLS)
+- **FR-FRIEND-3 — เสร็จแล้ว**: activity events เชิงบวกล้วน 4 แบบ (บันทึกครบทุกมื้อ, ต่อเนื่องครบ 7/14/30
+  วัน — ใช้ "milestone สูงสุดที่ยังไม่เคยฉลอง" กันพลาดตอนไม่เปิดแอปวันที่ครบพอดี, ถึงเป้าโปรตีน, อาหารที่
+  สร้างได้รับการยืนยัน — ผูกกับผู้สร้างอาหารไม่ใช่ admin ที่กด) แสดงในส่วน "ความเคลื่อนไหว" — ห้ามมีตัวเลข
+  เทียบ/เปิดเผย kcal/น้ำหนัก/สิ่งที่กิน — toggle "แชร์กิจกรรม" ใน Settings → System หัวข้อ "การแชร์ใน
+  Friends" (default เปิด, บังคับด้วย RLS ไม่ใช่ client filter — เตรียมที่ว่างให้ BL-20/BL-21 เข้ากลุ่ม
+  เดียวกันทีหลัง) — **พบบั๊ก RLS ระหว่าง dogfood**: `activity_events_select` เช็ค `share_activity` ผ่าน
+  subquery ตรงไปที่ `profiles` ซึ่งมี RLS `id = auth.uid()` ของตัวเอง ทำให้ subquery คืนค่าว่างเสมอไม่ว่า
+  toggle จะเป็นอะไร (ไม่มีใครเห็น event คนอื่นได้เลยแม้เปิดแชร์อยู่) — แก้ด้วย SECURITY DEFINER function
+  `profile_shares_activity()` ตาม pattern เดิม (`get_display_names`/`set_food_verified`) — วี dogfood
+  ผ่านครบทุกข้อหลังแก้ รวมตรวจ RLS จาก raw network response ของ session เพื่อนจริงทั้งสองทิศทาง (ปิด
+  toggle = ไม่มี event ใน response, เปิด = มี), streak catch-up ยืนยันด้วย unit test (12/12), dedup +
+  badge cursor ปกติ
 - Backlog ปรับระหว่างทาง: ยกเลิก **BL-18** (รูปภาพในโพสต์/Storage, คำสั่งวีหลัง discuss ที่ปรึกษา), เพิ่ม
   **BL-19** (link preview, ยังไม่ทำ), **BL-20** (activity events ส่วนที่เหลือ, ยังไม่ทำ), **BL-21**
   (achievement badges, พร้อมทำหลัง FR-FRIEND-3 — ดู PROJECT_BIBLE §7)
 
-### P5 — Insight tier 2 (LLM) → tag `v1.6.0` (เลขอาจขยับถ้า P4e ตี tag คั่นก่อน)
+### P5 — Insight tier 2 (LLM) → tag `v1.7.0`
 - LLM endpoint บน VPS สรุป pattern รายสัปดาห์เป็นภาษาไทย
 - (ประตูสู่อนาคต) เมื่อข้อมูล ≥3–6 เดือน ค่อยประเมิน ML tier 3 เป็นโปรเจกต์ย่อยแยก
 
@@ -132,6 +138,9 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.21 (2026-08-22): ปิด P4e (tag `v1.6.0`) — BL-16/FR-FRIEND-2 + FR-FRIEND-3 วี dogfood ผ่านครบทุกข้อ
+  รวมแก้บั๊ก RLS ที่พบระหว่างทาง (`activity_events_select` subquery ชน RLS ของ `profiles` เอง — แก้ด้วย
+  SECURITY DEFINER function) — P5 เลื่อนเป็น `v1.7.0`
 - v1.20 (2026-08-22): เพิ่ม P4e (Friends: posts + activity events) ระหว่างทาง — BL-16/FR-FRIEND-2 dogfood
   ผ่าน+แก้ design issue ที่พบ (แยกโพสต์ถาวร/ความเคลื่อนไหว capped), FR-FRIEND-3 code-complete+
   deploy+migration รันแล้ว รอวี dogfood — ยังไม่ตี tag, เลขยังไม่กำหนด

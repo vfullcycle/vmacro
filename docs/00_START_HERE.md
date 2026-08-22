@@ -40,9 +40,13 @@ vmacro/
 
 ## สถานะปัจจุบัน
 
-- **Docs version:** v1.11 (2026-08-21)
-- **Phase ปัจจุบัน:** P4c จบแล้ว, ยังไม่เริ่ม phase ถัดไป — ดู `docs/PROJECT_BIBLE.md` §7 Backlog สำหรับ
-  รายการเต็มที่รอตัดสินใจ (BL-09/BL-13/BL-14)
+- **Docs version:** v1.12 (2026-08-22)
+- **Phase ปัจจุบัน:** P4d จบแล้ว, ยังไม่เริ่ม phase ถัดไป — ดู `docs/PROJECT_BIBLE.md` §7 Backlog สำหรับ
+  รายการเต็มที่รอตัดสินใจ (BL-09 ส่วนที่ 2/BL-13/BL-15)
+- **P4d จบแล้ว, tag `v1.5.0`** (2026-08-22) — วี dogfood ผ่านครบ 7 ข้อ ไม่มี DF: FR-FRIEND-1 (แท็บ
+  "Friends" ใหม่ toolbar 5 ปุ่ม — feed อาหาร/จานใหม่พร้อมชื่อผู้สร้าง + คำขอของตัวเองที่ถูกตอบ +
+  notification badge เช็คตอนเปิดแอปไม่ใช้ push) รวม BL-14 + BL-09 ส่วนที่ 1 — BL-09 ส่วนที่ 2
+  (leaderboard ฯลฯ) ยังรอเกณฑ์เดิม, เพิ่ม backlog BL-15 (Web Push, ยังไม่ทำ)
 - **P4c จบแล้ว, tag `v1.4.0`** (2026-08-21) — วี dogfood ผ่านครบ 8 ข้อ ไม่มี DF เหลือ: BL-12/FR-FOOD-9
   (ขออาหารใหม่ในแอป — status 3 แบบ, โน้ต admin ส่งกลับ requester, ไม่มี push — ถือเป็น prototype ของ BL-09
   ในตัว), BL-01/FR-DIARY-4 (ราคาต่อ diary entry, optional, ตกหล่นจาก P2 ตั้งแต่แรก) — ระหว่าง dogfood แยก
@@ -90,6 +94,8 @@ Vision → Boundary → Requirement → Decision → Freeze → Working Rules
 
 ## Changelog
 
+- v1.12 (2026-08-22): เพิ่ม+ปิด P4d (tag `v1.5.0`) — FR-FRIEND-1 (Friends tab) วี dogfood ผ่านครบ 7 ข้อ
+  ไม่มี DF, ปิด BL-14, เพิ่ม BL-15 (Web Push, ยังไม่ทำ) — P5 เลื่อนเป็น `v1.6.0`
 - v1.11 (2026-08-21): ปิด P4c (tag `v1.4.0`) — วี dogfood BL-12/BL-01 ผ่านครบ 8 ข้อ, ยังไม่เริ่ม phase
   ถัดไป — เพิ่ม BL-14 (notification badge) + ปรับขอบเขต BL-09 เป็น 2 ส่วนใน backlog
 - v1.10 (2026-08-21): ปิด P4b (tag `v1.3.0`) — วี dogfood FR-CALC-5/BL-10 ผ่านครบ, ยังไม่เริ่ม phase ถัดไป

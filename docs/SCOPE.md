@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.18
+# SCOPE — Vmacro v1.19
 
 ## In Scope
 
@@ -90,7 +90,17 @@
   user เข้าใจง่าย: "เป้าตามประเภทวันฝึก", "เป้าต่อมื้ออาหาร"), แก้ spacing DF หลายจุด, จำกัด "ที่เคยกินมื้อนี้"
   เหลือ 5 รายการ+โหลดเพิ่ม
 
-### P5 — Insight tier 2 (LLM) → tag `v1.5.0`
+### P4d — Friends tab foundation → tag `v1.5.0` **(ปิดแล้ว 2026-08-22)**
+- **BL-14/BL-09 ส่วนที่ 1 → FR-FRIEND-1 — เสร็จแล้ว**: แท็บ "Friends" ใหม่ (toolbar 5 ปุ่ม:
+  Diary·Search·Dashboard·Friends·Settings) เริ่มจาก feed (อาหาร/จานใหม่จากทุกคนพร้อมชื่อผู้สร้าง, คำขอของ
+  ตัวเองที่ถูกตอบ) + notification badge จุดแดงบนไอคอนแท็บ เช็คตอนเปิดแอปเท่านั้นไม่ใช้ push — เดิมออกแบบเป็น
+  Dashboard section (FR-DASH-2) แล้วย้ายมาเป็นแท็บแยกก่อน deploy จริงตามแผน toolbar 5 ปุ่มที่ BL-09 บันทึกไว้
+  แล้ว กันทำงานสองรอบ — วี dogfood ผ่านครบ 7 ข้อ ไม่มี DF
+- BL-09 ส่วนที่ 2 (leaderboard/contribution board/activity feed) ยังไม่เริ่ม รอเกณฑ์เดิม (จำนวนคำขอ BL-12
+  จากเพื่อน 3-4 สัปดาห์ นับจากวันที่วีแจ้งเพื่อนจริง — ยังไม่ระบุวันที่)
+- Backlog เพิ่ม BL-15 (Web Push notification) ระหว่างทาง — ยังไม่ทำ รอเงื่อนไข (ดู PROJECT_BIBLE §7)
+
+### P5 — Insight tier 2 (LLM) → tag `v1.6.0`
 - LLM endpoint บน VPS สรุป pattern รายสัปดาห์เป็นภาษาไทย
 - (ประตูสู่อนาคต) เมื่อข้อมูล ≥3–6 เดือน ค่อยประเมิน ML tier 3 เป็นโปรเจกต์ย่อยแยก
 
@@ -106,6 +116,8 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.19 (2026-08-22): เพิ่ม+ปิด P4d (tag `v1.5.0`) — FR-FRIEND-1 (Friends tab) เสร็จ dogfood ผ่านครบ 7 ข้อ
+  ไม่มี DF — P5 เลื่อนเป็น `v1.6.0`
 - v1.18 (2026-08-21): ปิด P4c (tag `v1.4.0`) — วี dogfood ผ่านครบ 8 ข้อ ไม่มี DF เหลือ, ยังไม่เริ่ม phase
   ถัดไป — เพิ่ม backlog BL-14 (in-app notification badge), ปรับขอบเขต BL-09 เป็น 2 ส่วน (ดู PROJECT_BIBLE
   §7)

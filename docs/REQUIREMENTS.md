@@ -1,4 +1,4 @@
-# REQUIREMENTS — Vmacro (FROZEN v1.21, 2026-08-22)
+# REQUIREMENTS — Vmacro (FROZEN v1.22, 2026-08-22)
 
 > แก้ไขได้เฉพาะเมื่อวีสั่ง + bump version + บันทึก changelog ท้ายไฟล์
 > ทุก FR ระบุ phase ที่ implement ตาม SCOPE.md
@@ -307,6 +307,46 @@ RLS จริง (จำลอง `set_config('request.jwt.claims', ...)` + `set
 push/local notification; **(8) ส่วน "โพสต์" เป็นลิสต์ถาวรไม่หายเมื่อมีอาหาร/จาน/คำขอใหม่เข้ามาจำนวนมาก —
 ส่วน "ความเคลื่อนไหว" ยังจำกัด 15-20 รายการเหมือนเดิม แยกอิสระจากกัน*
 
+**FR-FRIEND-3 (ยังไม่กำหนด phase)** Activity events ใน Friends feed (BL-20 บางส่วน, positive-only, opt-in
+default เปิด) — ตาราง `activity_events` (`user_id` = เจ้าของ achievement เสมอ แม้แต่ `food_verified` ที่
+ผูกกับ **creator ของอาหาร ไม่ใช่ admin ที่กด verify**, `event_type`, `occurred_on`, `milestone_days`
+เฉพาะ streak, `food_id`+`food_name` snapshot เฉพาะ food_verified กันปัญหาถ้าลบอาหารทีหลัง) — Profile เพิ่ม
+`share_activity boolean default true`
+
+**4 event เริ่มต้น** (คำนวณฝั่ง client หลัง Diary โหลด entries ของวันนี้เสร็จ ไม่เช็ควันย้อนหลัง, ยกเว้น
+food_verified ที่ทำใน RPC): (1) `all_meals_logged` — บันทึกครบทุก 4 มื้อของวันนี้ (2) `streak_milestone` —
+**ยิง milestone สูงสุดที่ยังไม่เคยฉลอง** ไม่ใช่ "เท่ากับ 7/14/30 พอดี" (กันพลาดถ้าไม่ได้เปิดแอปวันที่ครบ
+milestone พอดี เช่น streak 9 วันแล้วไม่เคยได้ 7 → ยิง 7; **dedup ต่อ (user, milestone_days) ไม่ผูก
+occurred_on** เพราะ milestone แต่ละระดับควรได้แค่ครั้งเดียวตลอดไป ไม่ใช่ต่อวัน) (3) `protein_goal_hit` —
+โปรตีนวันนี้ถึงเป้า (4) `food_verified` — ต่อยอด RPC `set_food_verified()` เดิม เช็ค flip false→true ก่อน
+insert event ให้ creator — **dedup ต่อ food_id** (อาหารหนึ่งชิ้นถูก verify ครั้งแรกแค่ครั้งเดียว) ส่วน
+`all_meals_logged`/`protein_goal_hit` dedup ต่อ (user, event_type, occurred_on) ตามปกติ (คนละ semantic
+กับ streak โดยเจตนา — สามพฤติกรรมนี้ dedup กันคนละแบบ อย่ารวมเป็น constraint เดียว)
+
+**ข้อความแสดงผล** (โทนเบา ไม่มีอัศเจรีย์ ไม่ใช่เสียงเชียร์): "{ชื่อ} บันทึกครบทุกมื้อวันนี้" /
+"{ชื่อ} บันทึกต่อเนื่องครบ {N} วัน" / "{ชื่อ} ถึงเป้าโปรตีนของวันแล้ว" /
+"อาหารของ {ชื่อ} ได้รับการยืนยัน: {ชื่ออาหาร}"
+
+**RLS**: select เห็นของตัวเองเสมอ + เห็นของคนอื่นเฉพาะที่ `share_activity = true` **(บังคับด้วย RLS ไม่ใช่
+filter ฝั่ง client — filter ฝั่ง client แปลว่าข้อมูลยังไหลถึงเครื่องคนอื่นจริงอยู่ดี)**; insert 3 ประเภทแรก
+client insert เอง (`user_id = auth.uid()`), `food_verified` insert ผ่าน RPC เท่านั้น; ไม่มี update/delete
+
+**Settings**: เพิ่ม section "**การแชร์ใน Friends**" (ตั้งชื่อกลุ่ม ไม่ใช่ชื่อ toggle ตัวเดียว — เผื่อ BL-20/BL-21
+เพิ่ม option อื่นเข้ากลุ่มเดียวกันทีหลังโดยไม่ต้องย้ายหน้า) ใน Settings → System — toggle "แชร์กิจกรรมของฉัน"
+default เปิด
+
+แสดงในส่วน "ความเคลื่อนไหว" (แยกจาก "โพสต์" ตาม FR-FRIEND-2 amendment), badge cursor รวม event ด้วย
+*AC: (1) ทุก event ยิงเฉพาะตอนสำเร็จเท่านั้น ไม่มี event ไหนสื่อถึงความล้มเหลว/พลาด; (2) ไม่มีตัวเลขที่เอาไป
+เรียง/เทียบกันได้ระหว่าง user (ไม่ใช่ leaderboard); (3) ไม่มี event ไหนเปิดเผยว่ากินอะไร/เมื่อไหร่/kcal/
+น้ำหนัก/% ความคืบหน้า; (4) toggle default เปิด ปิดได้จาก Settings → System § การแชร์ใน Friends; **(5) ปิด
+toggle แล้ว event ทั้งหมด (เก่า+ใหม่) ของตัวเองหายจาก feed คนอื่นทันที ต้องทดสอบผ่าน RLS จริง (pattern
+เดียวกับ posts/food_requests) ตัวเองยังเห็นของตัวเองได้เสมอไม่ว่า toggle จะปิดไหม**; (6) event เดียวกัน
+(ตาม dedup key ของ type นั้น) ไม่ยิงซ้ำ — ทดสอบ trigger เงื่อนไขซ้ำ 2 ครั้งแล้วเช็คว่ามีแค่ 1 แถว; **(7)
+streak milestone ยิงเฉพาะ milestone สูงสุดที่ยังไม่เคยฉลอง แม้ streak จะกระโดดข้าม milestone ไปหลายระดับ
+เพราะไม่ได้เปิดแอป** (ทดสอบ: จำลอง streak ตรงๆ ที่ 9 วันโดยไม่เคยมี event 7 มาก่อน ต้องได้ event milestone=7
+ไม่ใช่ไม่มี event เลย); (8) `food_verified` ผูกกับ creator ของอาหาร ไม่ใช่ admin ที่กด verify; (9) แสดงใน
+ส่วน "ความเคลื่อนไหว" ทำให้ badge ขึ้นเหมือนแหล่งอื่น*
+
 ## FR-HLTH — Apple Health Integration (P3–P4)
 
 **FR-HLTH-1 (P3)** เขียนยอดวันลง Apple Health อย่างน้อย: dietary energy, fat (total/saturated/mono/poly),
@@ -382,6 +422,10 @@ RLS: diary/health/profile/weight เห็นเฉพาะเจ้าขอ�
 
 ## Changelog
 
+- v1.22 (2026-08-22): เพิ่ม FR-FRIEND-3 (activity events, คำสั่งวี) — 4 event เริ่มต้น (all_meals_logged,
+  streak_milestone, protein_goal_hit, food_verified), positive-only, dedup แยกตาม semantic ของแต่ละ type
+  (streak dedup ต่อ milestone_days ไม่ผูก occurred_on — ยิง milestone สูงสุดที่ยังไม่เคยฉลอง กันพลาดถ้าไม่
+  เปิดแอปวันที่ครบพอดี), RLS บังคับการแชร์ (ไม่ใช่ client filter), toggle "การแชร์ใน Friends" default เปิด
 - v1.21 (2026-08-22): แก้ FR-FRIEND-2 (คำสั่งวี, พบระหว่าง dogfood) — แยกหน้า Friends เป็น 2 ส่วน "โพสต์"
   (ถาวร ไม่ผูก cursor) กับ "ความเคลื่อนไหว" (จำกัด 15-20 เหมือนเดิม) แก้ปัญหาโพสต์ตกขอบเมื่อมี bulk import
   จำนวนมาก — badge cursor ไม่เปลี่ยน; เพิ่ม auto-link URL ในโพสต์ (ไม่มี link preview, ดู BL-19)

@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 
-export type FeedItemType = "new_food" | "new_dish" | "request_answered";
+export type FeedItemType = "new_food" | "new_dish" | "request_answered" | "post";
 
 export interface FeedItem {
   key: string;
@@ -9,6 +9,8 @@ export interface FeedItem {
   detail: string | null;
   creatorName: string | null;
   timestamp: string; // ISO
+  postId?: string;
+  authorId?: string;
 }
 
 const PER_SOURCE_LIMIT = 20;
@@ -28,14 +30,22 @@ interface RequestRow {
   updated_at: string;
 }
 
-// Three sources merged into one timeline. Food and dishes are a single "who created what"
+interface PostRow {
+  id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+}
+
+// Four sources merged into one timeline. Food and dishes are a single "who created what"
 // query each (custom_foods/dishes are already public-read per FR-FOOD-2/3) — no need to
 // split "admin's food" from "everyone else's food" the way FR-DASH-2 originally did, since
-// every item now shows its creator's name directly (FR-FRIEND-1). Dishes in particular are
-// the only feed content that comes from a friend rather than admin/self — an early signal
-// for whether BL-09 part 2's social features would get used at all.
+// every item now shows its creator's name directly (FR-FRIEND-1). Posts (FR-FRIEND-2) are
+// the only source anyone can create directly rather than as a side effect of another
+// action — sorted by created_at like everything else, so editing a post never re-surfaces
+// it as "new" (see AC 5).
 export async function fetchFeedItems(userId: string, sinceIso: string): Promise<FeedItem[]> {
-  const [foods, dishes, requests] = await Promise.all([
+  const [foods, dishes, requests, posts] = await Promise.all([
     supabase
       .from("custom_foods")
       .select("id, name, creator_id, created_at")
@@ -51,13 +61,15 @@ export async function fetchFeedItems(userId: string, sinceIso: string): Promise<
       .gt("updated_at", sinceIso)
       .order("updated_at", { ascending: false })
       .limit(PER_SOURCE_LIMIT),
+    supabase.from("posts").select("id, author_id, body, created_at").gt("created_at", sinceIso).order("created_at", { ascending: false }).limit(PER_SOURCE_LIMIT),
   ]);
 
   const foodRows = (foods.data as FoodOrDishRow[]) ?? [];
   const dishRows = (dishes.data as FoodOrDishRow[]) ?? [];
   const requestRows = (requests.data as RequestRow[]) ?? [];
+  const postRows = (posts.data as PostRow[]) ?? [];
 
-  const creatorIds = [...new Set([...foodRows.map((r) => r.creator_id), ...dishRows.map((r) => r.creator_id)])];
+  const creatorIds = [...new Set([...foodRows.map((r) => r.creator_id), ...dishRows.map((r) => r.creator_id), ...postRows.map((r) => r.author_id)])];
   const nameMap = new Map<string, string>();
   if (creatorIds.length > 0) {
     const { data: names } = await supabase.rpc("get_display_names", { profile_ids: creatorIds });
@@ -89,20 +101,31 @@ export async function fetchFeedItems(userId: string, sinceIso: string): Promise<
       creatorName: null,
       timestamp: r.updated_at,
     })),
+    ...postRows.map((p) => ({
+      key: `post-${p.id}`,
+      type: "post" as const,
+      title: p.body,
+      detail: null,
+      creatorName: nameMap.get(p.author_id) ?? null,
+      timestamp: p.created_at,
+      postId: p.id,
+      authorId: p.author_id,
+    })),
   ];
 
   return items.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
 }
 
-// Cheap existence check for the tab-icon badge — same 3 sources, limit 1 each.
+// Cheap existence check for the tab-icon badge — same 4 sources, limit 1 each.
 export async function hasUnseenFeed(userId: string, sinceIso: string): Promise<boolean> {
-  const [foods, dishes, requests] = await Promise.all([
+  const [foods, dishes, requests, posts] = await Promise.all([
     supabase.from("custom_foods").select("id").gt("created_at", sinceIso).limit(1),
     supabase.from("dishes").select("id").gt("created_at", sinceIso).limit(1),
     supabase.from("food_requests").select("id").eq("requester_id", userId).neq("status", "pending").gt("updated_at", sinceIso).limit(1),
+    supabase.from("posts").select("id").gt("created_at", sinceIso).limit(1),
   ]);
 
-  return (foods.data?.length ?? 0) > 0 || (dishes.data?.length ?? 0) > 0 || (requests.data?.length ?? 0) > 0;
+  return (foods.data?.length ?? 0) > 0 || (dishes.data?.length ?? 0) > 0 || (requests.data?.length ?? 0) > 0 || (posts.data?.length ?? 0) > 0;
 }
 
 export async function markFeedSeen(userId: string): Promise<void> {

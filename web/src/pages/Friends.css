@@ -68,3 +68,102 @@
   min-height: 44px;
   cursor: pointer;
 }
+
+.friends-post-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.friends-post-form textarea,
+.friends-post-edit-form textarea {
+  width: 100%;
+  padding: 0.65rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 16px;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.friends-post-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.friends-post-counter {
+  font-size: 0.75rem;
+  color: var(--text);
+}
+
+.friends-post-form button[type="submit"],
+.friends-post-edit-form button[type="submit"] {
+  padding: 0.55rem 1.1rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  min-height: 40px;
+  cursor: pointer;
+}
+
+.friends-post-form button[disabled],
+.friends-post-edit-form button[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.friends-feed-post-body {
+  font-size: 0.9rem;
+  color: var(--text-h);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.friends-post-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.friends-post-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.friends-feed-post-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+
+.friends-btn-secondary,
+.friends-btn-danger {
+  padding: 0.35rem 0.7rem;
+  min-height: 32px;
+  font-size: 0.75rem;
+  font: inherit;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.friends-btn-secondary {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.friends-btn-danger {
+  background: transparent;
+  color: #dc2626;
+  border: 1px solid #dc2626;
+}

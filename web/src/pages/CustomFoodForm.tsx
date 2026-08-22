@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CustomFoodFieldsForm from "../components/CustomFoodFieldsForm";
 import { useAuth } from "../lib/auth-context";
+import { checkBadgesAfterFoodCreate } from "../lib/badges";
 import { buildNutrients, EMPTY_CORE, flattenNutrients, type CoreFormState, type ExtraFormState } from "../lib/customFoodNutrients";
 import type { NutrientPanel } from "../lib/scaling";
 import { supabase } from "../lib/supabase";
@@ -86,6 +87,7 @@ export default function CustomFoodForm() {
         setError(error.message);
         return;
       }
+      checkBadgesAfterFoodCreate(user.id);
       navigate(`/food/custom/${data.id}`);
     }
   }

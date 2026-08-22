@@ -1,3 +1,4 @@
+import { BADGE_CATALOG } from "./badges";
 import { supabase } from "./supabase";
 
 export type FeedItemType = "new_food" | "new_dish" | "request_answered" | "post" | "activity";
@@ -41,10 +42,11 @@ interface PostRow {
 interface ActivityEventRow {
   id: string;
   user_id: string;
-  event_type: "all_meals_logged" | "streak_milestone" | "protein_goal_hit" | "food_verified";
+  event_type: "all_meals_logged" | "streak_milestone" | "protein_goal_hit" | "food_verified" | "badge_unlocked";
   occurred_on: string;
   milestone_days: number | null;
   food_name: string | null;
+  badge_key: string | null;
   created_at: string;
 }
 
@@ -60,6 +62,10 @@ function activityEventTitle(row: ActivityEventRow, name: string): string {
       return `${name} ถึงเป้าโปรตีนของวันแล้ว`;
     case "food_verified":
       return `อาหารของ ${name} ได้รับการยืนยัน: ${row.food_name}`;
+    case "badge_unlocked": {
+      const badge = BADGE_CATALOG.find((b) => b.key === row.badge_key);
+      return `${name} ปลดล็อก: ${badge?.title ?? row.badge_key}`;
+    }
   }
 }
 
@@ -120,7 +126,7 @@ export async function fetchActivityFeed(userId: string, sinceIso: string): Promi
     // share_activity off — no extra filtering needed here.
     supabase
       .from("activity_events")
-      .select("id, user_id, event_type, occurred_on, milestone_days, food_name, created_at")
+      .select("id, user_id, event_type, occurred_on, milestone_days, food_name, badge_key, created_at")
       .gt("created_at", sinceIso)
       .order("created_at", { ascending: false })
       .limit(PER_SOURCE_LIMIT),

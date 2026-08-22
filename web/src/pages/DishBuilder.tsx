@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import NutritionFactsLabel from "../components/NutritionFactsLabel";
 import { API_BASE_URL } from "../config";
 import { useAuth } from "../lib/auth-context";
+import { checkBadgesAfterDishCreate } from "../lib/badges";
 import { ingredientDisplayName, ingredientQuantityLabel, sumIngredients, type DishIngredientRow, type DishRow } from "../lib/dish";
 import { parseFoodDetail, servingToScalable } from "../lib/fatsecret";
 import { scaleNutrients } from "../lib/scaling";
@@ -97,6 +98,7 @@ export default function DishBuilder() {
       setError(insertError.message);
       return;
     }
+    checkBadgesAfterDishCreate(user.id);
     navigate(`/food/dish/${data.id}/edit`, { replace: true });
   }
 

@@ -7,6 +7,7 @@ import ProgressBar from "../components/ProgressBar";
 import RecentFavoritesModal from "../components/RecentFavoritesModal";
 import { checkAndRecordDailyEvents } from "../lib/activityEvents";
 import { useAuth } from "../lib/auth-context";
+import { checkBadgesAfterDiarySave } from "../lib/badges";
 import { addDays, entryDisplayName, entryQuantityLabel, MEAL_LABELS, MEALS, todayLocalDate, type DiaryEntryRow, type Meal } from "../lib/diary";
 import { computeDefaultMealWindows, computeMealTargets, getMealTargetView, resolveMealWindows } from "../lib/mealTargets";
 import { scaleNutrients } from "../lib/scaling";
@@ -118,6 +119,7 @@ export default function Diary() {
   useEffect(() => {
     if (!user || date !== todayLocalDate() || loading || !target) return;
     checkAndRecordDailyEvents({ userId: user.id, date, entries, proteinTarget: target.protein_g });
+    checkBadgesAfterDiarySave(user.id, date);
   }, [user, date, loading, entries, target]);
 
   function goToDate(d: string) {

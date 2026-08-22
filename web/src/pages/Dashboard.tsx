@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import AchievementCard from "../components/AchievementCard";
 import DateNav from "../components/DateNav";
 import DonutRing from "../components/DonutRing";
 import MealTargetCard from "../components/MealTargetCard";
 import ProgressBar from "../components/ProgressBar";
 import WeightChart from "../components/WeightChart";
 import { useAuth } from "../lib/auth-context";
+import { checkBadgesOnDashboardOpen, computeTenureDays, fetchBadgeDisplayState, type BadgeDisplayState } from "../lib/badges";
 import { addDays, todayLocalDate, type Meal } from "../lib/diary";
 import { computeDefaultMealWindows, computeMealTargets, getMealTargetView, resolveMealWindows } from "../lib/mealTargets";
 import { computeNutrientComposition, sumOtherNutrients } from "../lib/nutrientComposition";
@@ -76,10 +78,29 @@ export default function Dashboard() {
   const [loggedDates, setLoggedDates] = useState<string[]>([]);
   const [weightLogs, setWeightLogs] = useState<WeightLogPoint[]>([]);
   const [loading, setLoading] = useState(true);
+  const [badges, setBadges] = useState<BadgeDisplayState[]>([]);
 
   function goToDate(d: string) {
     setSearchParams({ date: d });
   }
+
+  // Dashboard is the badge safety net (FR-BADGE-1 AC 2) — re-checks every counter this
+  // session can compute, including the two that only make sense here (food usage by
+  // others, tenure) — then reload display state so newly-unlocked badges show immediately.
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("created_at")
+      .eq("id", user.id)
+      .single()
+      .then(async ({ data }) => {
+        const createdAt = (data as { created_at: string } | null)?.created_at;
+        if (!createdAt) return;
+        await checkBadgesOnDashboardOpen(user.id, createdAt);
+        setBadges(await fetchBadgeDisplayState(user.id, computeTenureDays(createdAt)));
+      });
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -184,6 +205,8 @@ export default function Dashboard() {
       </div>
 
       {mealTargetView && <MealTargetCard view={mealTargetView} />}
+
+      <AchievementCard badges={badges} />
 
       <div className="dash-card">
         <h2>สัดส่วนสารอาหารที่กินวันนี้</h2>

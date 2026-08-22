@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import WeightChart from "../components/WeightChart";
 import { useAuth } from "../lib/auth-context";
+import { checkBadgesAfterWeightLog } from "../lib/badges";
 import { supabase } from "../lib/supabase";
 import "./WeightLog.css";
 
@@ -82,6 +83,7 @@ export default function WeightLog() {
 
     setWeight("");
     setSaving(false);
+    checkBadgesAfterWeightLog(user.id);
     await syncCurrentWeight(await loadLogs());
   }
 

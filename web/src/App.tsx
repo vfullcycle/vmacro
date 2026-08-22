@@ -2,6 +2,7 @@ import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import { AuthProvider } from "./lib/auth-context";
+import Achievements from "./pages/Achievements";
 import AdminCustomFoods from "./pages/AdminCustomFoods";
 import AdminFoodImport from "./pages/AdminFoodImport";
 import AdminFoodRequests from "./pages/AdminFoodRequests";
@@ -52,6 +53,7 @@ function App() {
             <Route path="/" element={<Navigate to="/diary" replace />} />
             <Route path="/diary" element={<Diary />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/achievements" element={<Achievements />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/settings" element={<SettingsHome />} />
             <Route path="/settings/profile" element={<SettingsProfile />} />

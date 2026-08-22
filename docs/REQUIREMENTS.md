@@ -1,4 +1,4 @@
-# REQUIREMENTS — Vmacro (FROZEN v1.22, 2026-08-22)
+# REQUIREMENTS — Vmacro (FROZEN v1.23, 2026-08-22)
 
 > แก้ไขได้เฉพาะเมื่อวีสั่ง + bump version + บันทึก changelog ท้ายไฟล์
 > ทุก FR ระบุ phase ที่ implement ตาม SCOPE.md
@@ -347,6 +347,76 @@ streak milestone ยิงเฉพาะ milestone สูงสุดที่�
 ไม่ใช่ไม่มี event เลย); (8) `food_verified` ผูกกับ creator ของอาหาร ไม่ใช่ admin ที่กด verify; (9) แสดงใน
 ส่วน "ความเคลื่อนไหว" ทำให้ badge ขึ้นเหมือนแหล่งอื่น*
 
+## FR-BADGE — Achievement badges (BL-21)
+
+**FR-BADGE-1 (ยังไม่กำหนด phase)** Achievement badges สไตล์ Apple Fitness (ล็อก = เงาทึบโมโนโครม +
+แม่กุญแจ, ปลดแล้ว = สีเต็ม + วันที่ได้) — ของส่วนตัวล้วน ห้ามแสดงยอด/เรียงเทียบกับคนอื่นทุกกรณี
+
+**Data model**: `badge_progress` (`user_id`, `counter_key`, `current_value`, `updated_at`) เก็บ**ตัวนับดิบ**
+ไม่ใช่สถานะ badge โดยตรง (badge หลาย tier ใช้ counter เดียวกัน เช่น "นักสะสมสูตร 10/50" เทียบกับ
+`custom_foods_created_total` ตัวเดียว) — RLS **owner-only** (`user_id = auth.uid()`) ทั้ง select/insert/
+update ไม่มีใครอ่านของคนอื่นได้ (progress ไม่ใช่สิ่งที่ต้องแชร์) — `user_badges` (`user_id`, `badge_key`,
+`unlocked_at`) unique `(user_id, badge_key)`, RLS owner-only เช่นกัน (การแจ้งเพื่อนไปทาง `activity_events`
+อยู่แล้ว ไม่ต้องอ่านตารางนี้ข้าม user) — **badge catalog (key/threshold/copy) เก็บเป็น const array ในโค้ด
+ไม่ใช่ตาราง DB** — เพิ่ม badge ใหม่เพิ่ม key ได้เสมอ **ห้าม rename/ลบ `badge_key` ที่เคยใช้แล้วเด็ดขาด**
+(append-only ตลอดชีพ — key เก่าที่เลิกใช้ mark deprecated ในโค้ดแทน กัน `user_badges` มีแถวกำพร้าที่ UI
+แสดงไม่ได้ ดู CLAUDE.md)
+
+`activity_events`: เพิ่ม `event_type = 'badge_unlocked'` เข้า CHECK constraint + คอลัมน์ `badge_key text`
+(nullable, เฉพาะ type นี้) + unique index `(user_id, badge_key) where event_type = 'badge_unlocked'` กันยิง
+ซ้ำ — เพิ่มเข้า `insert_own` policy สำหรับ badge ที่ปลดฝั่ง client, ส่วนที่ปลดผ่าน RPC insert ผ่าน SECURITY
+DEFINER (bypass RLS อยู่แล้ว ไม่ต้องอยู่ใน `insert_own`) — **select ทุกจุดต้องผ่าน `profile_shares_activity()`
+เดิมจาก D-025 ไม่ใช่ subquery ตรงไปยัง `profiles`**
+
+**ชุด badge เริ่มต้น (4 กลุ่ม) + counter ที่ผูก:**
+
+| Counter | อัปเดตตอนไหน | Badge |
+|---|---|---|
+| `diary_days_total` (วันที่ log สะสม ไม่ต้องติดกัน) | หลัง Diary บันทึกวันนี้ (จุดเดิม FR-FRIEND-3) | ก้าวแรก(1) / สัปดาห์ครบถ้วน(7) / เดือนครบถ้วน(30) |
+| `diary_streak_current` (reuse `computeStreakLength`) | จุดเดียวกัน | ไม่ขาดสาย 7/30/100 วัน |
+| `protein_goal_hit_total` | จุดเดียวกัน (คู่กับ insert event เดิม) | โปรตีนครบสะสม 7/30 วัน |
+| `custom_foods_created_total` | หลังสร้างอาหารใหม่สำเร็จ | เชฟฝึกหัด(1) / นักสะสมสูตร 10/50 |
+| `custom_foods_verified_own_total` | ใน `set_food_verified()` RPC (เพิ่ม +1 ให้ creator ในทรานแซคชันเดียวกับ insert `food_verified`) | ตรารับรอง(1) |
+| `food_used_by_others_total` — **นับทุกครั้งที่ diary entry อ้างอาหารเรา (ไม่ใช่นับจำนวนคนต่าง — ระบบมี ≤5 คน นับ distinct user เพดานสูงสุด 4 คน threshold 10/100 จะปลดไม่ได้ตลอดกาล)**, copy ต้องเขียนตรงความจริง **"อาหารของคุณถูกใช้ N ครั้ง"** ไม่ใช่ "มี N คนใช้" | เฉพาะตอน creator เปิด Dashboard เอง (live count ของตัวเอง — ข้อยกเว้นเดียวของ "ห้ามนับสด" เพราะ bounded scoped-to-self, เกิดใน session คนอื่นไม่มี RPC เดี่ยวให้เกาะเหมือน verified) | ของดีบอกต่อ 10/100 |
+| `dishes_created_total` | หลังสร้างจานใหม่สำเร็จ | นักปรุง 1/10 |
+| `weight_logs_total` | หลังบันทึกน้ำหนักสำเร็จ | ขาประจำตาชั่ง 10/50 |
+| tenure (คำนวณจาก `profiles.created_at`, **ไม่มี counter แยก** แต่ยังเก็บ `user_badges`+ยิง event เหมือน badge อื่นทุกตัว — เช็คเฉพาะตอน Dashboard เปิดหน้า) | Dashboard เปิดหน้า | ใช้แอปครบ 30/100/365 วัน |
+
+**Trigger points** (เรียก `checkAndUnlockBadges`, pattern เดียวกับ `checkAndRecordDailyEvents`): (1) หลัง
+Diary บันทึกวันนี้ (2) หลังสร้างอาหาร/จานใหม่สำเร็จ (3) หลังบันทึกน้ำหนักสำเร็จ (4) ใน `set_food_verified()`
+RPC ตรงฝั่ง SQL (5) **Dashboard เปิดหน้า — ตาข่ายรองเช็คซ้ำทุก counter ที่มี + recompute
+`food_used_by_others_total` สด + เช็ค tenure badge** (จุดเดียวที่ tenure badge ถูกเช็ค) — ปลดใหม่ = insert
+`user_badges` + insert `activity_events(badge_unlocked)` **หนึ่ง insert ต่อ badge ไม่ batch** (บทเรียนเดิม
+FR-FRIEND-3 กันตัวหนึ่งซ้ำบล็อกตัวใหม่) — **tenure badge ปลดแล้วต้องมีแถวใน `user_badges`
+(`unlocked_at`) และขึ้น `activity_events` เหมือน badge อื่นทุกประการ** แม้จะคำนวณจาก `profiles.created_at`
+สดก็ตาม (พฤติกรรมสม่ำเสมอทั้งระบบ ไม่ใช่ special case)
+
+**Recompute script**: รันมือ (`server/scripts/recompute-badges.ts` หรือ SQL function เดียว) — recompute
+ทั้ง 8 counter จากตารางดิบ (`diary_entries`, `custom_foods`, `dishes`, `weight_logs`, `activity_events`)
+ทับ `badge_progress` แล้ว re-run unlock-check ต่อ **backfill `user_badges` ที่ตกหล่นแบบเงียบ ไม่ยิง
+`activity_events` ใหม่ย้อนหลัง** (กันสแปม feed ด้วย achievement เก่าตอน rebuild — trigger จาก data-fix
+ไม่ใช่ "เพิ่งทำสำเร็จจริง") — ใช้กู้จาก bug/migration/ลบข้อมูลผิดพลาด ไม่ต้องมี UI
+
+**UI**: Dashboard การ์ด "ความสำเร็จ" โชว์ 4-8 badge ผสม "เพิ่งปลดล่าสุด" (`unlocked_at`) กับ "ใกล้จะได้"
+(locked ที่ `current/target` สูงสุด) ไม่ใช่เรียงตามที่ปลดแล้วอย่างเดียว + ปุ่ม "ดูทั้งหมด" → หน้ารวม (ปลดแล้ว
++ล็อก) — badge ล็อกต้องโชว์เงื่อนไข+progress ชัดเจนเสมอ ห้ามเป็นปริศนา — ปลดล็อกขึ้น Friends feed ส่วน
+"ความเคลื่อนไหว" เป็น event ใหม่ ("{ชื่อ} ปลดล็อก: {ชื่อ badge}") ใช้ toggle `share_activity` เดิมจาก
+FR-FRIEND-3 ไม่มี toggle ใหม่
+
+*AC: (1) badge ทุกตัวปลดล็อกถูกต้องตาม threshold เมื่อ counter ที่เกี่ยวข้องถึงค่า; **(2) Dashboard เปิดหน้า
+แล้วเห็น badge ที่ควรปลดแม้ trigger จุดอื่นพลาดไป — ทดสอบ: set counter ถึงเกณฑ์ผ่าน SQL ตรงๆ แล้วเปิด
+Dashboard โดยไม่ผ่าน trigger อื่นเลย ต้องปลดล็อก**; (3) `food_used_by_others_total` อัปเดตถูกต้องตอนเปิด
+Dashboard ของเจ้าของอาหารเท่านั้น ไม่กระทบ query ของคนอื่น, copy แสดง "ถูกใช้ N ครั้ง" ไม่ใช่ "N คนใช้"; (4)
+`custom_foods_verified_own_total`+badge "ตรารับรอง" ผูกกับเจ้าของอาหาร ไม่ใช่ admin ที่กด verify; (5) ปลดล็อก
+ซ้ำ (trigger เดียวกันรันซ้ำ) ไม่สร้าง `user_badges`/`activity_events` ซ้ำ — ทดสอบ unique constraint จริง;
+**(6) ไม่มี badge เกี่ยวกับ kcal/deficit/น้ำหนักลด; ไม่มีตัวเลขเทียบข้าม user ได้ที่ไหนเลยรวม
+`badge_progress` — RLS ต้องบล็อกจริงไม่ใช่แค่ UI ไม่โชว์ ทดสอบผ่าน RLS จริงแบบเดียวกับ D-025**; (7) badge
+ล็อกแสดงเงื่อนไข+progress ตัวเลขชัดเจนเสมอ ไม่มี badge ปริศนา; (8) การ์ด Dashboard แสดง 4-8 badge ผสมทั้ง
+เพิ่งปลด+ใกล้ปลด; (9) ปลดล็อกใหม่ (รวม tenure badge) สร้าง `activity_events(badge_unlocked)` เห็นใน Friends
+feed ตาม `share_activity` toggle — ปิด toggle = เพื่อนไม่เห็น ทดสอบผ่าน RLS จริง; (10) รัน recompute script
+แล้ว counter/badge ตรงกับข้อมูลดิบ และ**ไม่มี** `activity_events` ใหม่เกิดจากการ backfill; (11) tenure badge
+ปลดแล้วมีแถวใน `user_badges` พร้อม `unlocked_at` เหมือน badge อื่นทุกตัว ไม่ special-case*
+
 ## FR-HLTH — Apple Health Integration (P3–P4)
 
 **FR-HLTH-1 (P3)** เขียนยอดวันลง Apple Health อย่างน้อย: dietary energy, fat (total/saturated/mono/poly),
@@ -422,6 +492,11 @@ RLS: diary/health/profile/weight เห็นเฉพาะเจ้าขอ�
 
 ## Changelog
 
+- v1.23 (2026-08-22): เพิ่ม FR-BADGE-1 (achievement badges, BL-21, คำสั่งวี) — เก็บ counter ดิบ
+  (`badge_progress`) แยกจากสถานะปลดล็อก (`user_badges`), badge catalog เป็น const ในโค้ด append-only
+  (ห้าม rename/ลบ `badge_key` เก่า), trigger 5 จุด + Dashboard เป็นตาข่ายรอง, `food_used_by_others_total`
+  นับทุกครั้งไม่ใช่ distinct user (ระบบ ≤5 คน), tenure badge ยังคง insert `user_badges`+event เหมือน badge
+  อื่นแม้คำนวณสดจาก `profiles.created_at`, recompute script backfill เงียบไม่ยิง event ย้อนหลัง
 - v1.22 (2026-08-22): เพิ่ม FR-FRIEND-3 (activity events, คำสั่งวี) — 4 event เริ่มต้น (all_meals_logged,
   streak_milestone, protein_goal_hit, food_verified), positive-only, dedup แยกตาม semantic ของแต่ละ type
   (streak dedup ต่อ milestone_days ไม่ผูก occurred_on — ยิง milestone สูงสุดที่ยังไม่เคยฉลอง กันพลาดถ้าไม่

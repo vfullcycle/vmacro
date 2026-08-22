@@ -97,6 +97,13 @@ Feature ที่เข้า gate: ห้ามเริ่มโค้ดจ�
 ต้อง backup ก่อนรันเสมอ: `pg_dump` เฉพาะตารางนั้นผ่าน `psql` (ใช้ connection string ของ Supabase, รันจาก
 VPS หรือเครื่อง local ก็ได้ที่ต่อถึง) เก็บไฟล์ไว้ก่อน — ไม่ต้องระบบ backup ใหญ่ แค่ dump ไฟล์เก็บพอ
 
+## Append-only identifiers (เพิ่ม 2026-08-22, D-025 follow-up)
+
+Key/enum ที่เก็บถาวรลง DB แต่ catalog/ความหมายอยู่ในโค้ด (เช่น `badge_key` ของ FR-BADGE-1) —
+**ห้าม rename หรือลบค่าที่เคยใช้แล้วเด็ดขาด** เพิ่มค่าใหม่ได้เสมอ ค่าที่เลิกใช้ mark deprecated ในโค้ด
+แทนการลบ — เหตุผล: DB มีแถวอ้างอิง key เก่าอยู่แล้ว (เช่น `user_badges.badge_key`) ถ้า key หายไปจาก catalog
+แถวนั้นจะกลายเป็นข้อมูลกำพร้าที่ UI แสดงไม่ได้ ไม่มีทาง migrate คืนโดยไม่เสียข้อมูล history จริงของ user
+
 ## Tech constraints (สรุปจาก PROJECT_BIBLE — ที่นั่นคือ source of truth)
 
 - Frontend: React + TypeScript + Vite, PWA, deploy บน GitHub Pages (**repo public — ห้าม commit secret ทุกชนิด**)

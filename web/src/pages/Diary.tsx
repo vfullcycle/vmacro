@@ -5,6 +5,7 @@ import MealTargetCard from "../components/MealTargetCard";
 import MealTemplatePickerModal from "../components/MealTemplatePickerModal";
 import ProgressBar from "../components/ProgressBar";
 import RecentFavoritesModal from "../components/RecentFavoritesModal";
+import { checkAndRecordDailyEvents } from "../lib/activityEvents";
 import { useAuth } from "../lib/auth-context";
 import { addDays, entryDisplayName, entryQuantityLabel, MEAL_LABELS, MEALS, todayLocalDate, type DiaryEntryRow, type Meal } from "../lib/diary";
 import { computeDefaultMealWindows, computeMealTargets, getMealTargetView, resolveMealWindows } from "../lib/mealTargets";
@@ -109,6 +110,15 @@ export default function Diary() {
     );
     return getMealTargetView(windows, new Date(), mealTargets, entries);
   }, [date, profile, target, entries]);
+
+  // Only meaningful for today, same reasoning as mealTargetView above — checking a past
+  // date's entries against "today's" streak/protein-goal state would be incoherent
+  // (FR-FRIEND-3). Duplicate inserts are cheap no-ops (partial unique indexes), so this can
+  // safely re-run every time entries reload without its own dedup logic here.
+  useEffect(() => {
+    if (!user || date !== todayLocalDate() || loading || !target) return;
+    checkAndRecordDailyEvents({ userId: user.id, date, entries, proteinTarget: target.protein_g });
+  }, [user, date, loading, entries, target]);
 
   function goToDate(d: string) {
     setSearchParams({ date: d });

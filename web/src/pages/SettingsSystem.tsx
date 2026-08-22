@@ -11,6 +11,7 @@ interface SystemForm {
   default_fat_pct: number | null;
   health_shortcut_name: string;
   fatsecret_search_enabled: boolean;
+  share_activity: boolean;
 }
 
 interface HealthTokenRow {
@@ -35,7 +36,7 @@ export default function SettingsSystem() {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("unit_system, default_protein_g_per_kg, default_fat_pct, health_shortcut_name, fatsecret_search_enabled")
+      .select("unit_system, default_protein_g_per_kg, default_fat_pct, health_shortcut_name, fatsecret_search_enabled, share_activity")
       .eq("id", user.id)
       .single()
       .then(({ data, error }) => {
@@ -166,6 +167,19 @@ export default function SettingsSystem() {
             />
             ค้นหาจาก FatSecret ด้วย (ปิดได้ถ้าไม่ต้องการรอโหลด/แปลผล FatSecret — ยังค้นหา custom food/จาน
             ของระบบได้ตามปกติ)
+          </label>
+        </div>
+
+        <div className="friends-sharing">
+          <h2>การแชร์ใน Friends</h2>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={form.share_activity}
+              onChange={(e) => setForm({ ...form, share_activity: e.target.checked })}
+            />
+            แชร์กิจกรรมของฉัน (บันทึกครบทุกมื้อ, ต่อเนื่องครบวัน, ถึงเป้าโปรตีน ฯลฯ ให้เพื่อนเห็นใน
+            Friends feed)
           </label>
         </div>
 

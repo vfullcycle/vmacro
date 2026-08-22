@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 
-export type FeedItemType = "new_food" | "new_dish" | "request_answered" | "post";
+export type FeedItemType = "new_food" | "new_dish" | "request_answered" | "post" | "activity";
 
 export interface FeedItem {
   key: string;
@@ -36,6 +36,31 @@ interface PostRow {
   author_id: string;
   body: string;
   created_at: string;
+}
+
+interface ActivityEventRow {
+  id: string;
+  user_id: string;
+  event_type: "all_meals_logged" | "streak_milestone" | "protein_goal_hit" | "food_verified";
+  occurred_on: string;
+  milestone_days: number | null;
+  food_name: string | null;
+  created_at: string;
+}
+
+// Tone is deliberately flat/factual, no exclamation marks — seeing these daily would turn
+// into unwanted noise otherwise (FR-FRIEND-3, adjusted after review).
+function activityEventTitle(row: ActivityEventRow, name: string): string {
+  switch (row.event_type) {
+    case "all_meals_logged":
+      return `${name} บันทึกครบทุกมื้อวันนี้`;
+    case "streak_milestone":
+      return `${name} บันทึกต่อเนื่องครบ ${row.milestone_days} วัน`;
+    case "protein_goal_hit":
+      return `${name} ถึงเป้าโปรตีนของวันแล้ว`;
+    case "food_verified":
+      return `อาหารของ ${name} ได้รับการยืนยัน: ${row.food_name}`;
+  }
 }
 
 async function getDisplayNameMap(ids: string[]): Promise<Map<string, string>> {
@@ -75,7 +100,7 @@ export async function fetchPosts(limit = POSTS_FETCH_LIMIT): Promise<FeedItem[]>
 // "admin's food" from "everyone else's food", since every item shows its creator's name
 // directly (FR-FRIEND-1).
 export async function fetchActivityFeed(userId: string, sinceIso: string): Promise<FeedItem[]> {
-  const [foods, dishes, requests] = await Promise.all([
+  const [foods, dishes, requests, activity] = await Promise.all([
     supabase
       .from("custom_foods")
       .select("id, name, creator_id, created_at")
@@ -91,13 +116,24 @@ export async function fetchActivityFeed(userId: string, sinceIso: string): Promi
       .gt("updated_at", sinceIso)
       .order("updated_at", { ascending: false })
       .limit(PER_SOURCE_LIMIT),
+    // RLS (activity_events_select) already filters out events from users who've turned
+    // share_activity off — no extra filtering needed here.
+    supabase
+      .from("activity_events")
+      .select("id, user_id, event_type, occurred_on, milestone_days, food_name, created_at")
+      .gt("created_at", sinceIso)
+      .order("created_at", { ascending: false })
+      .limit(PER_SOURCE_LIMIT),
   ]);
 
   const foodRows = (foods.data as FoodOrDishRow[]) ?? [];
   const dishRows = (dishes.data as FoodOrDishRow[]) ?? [];
   const requestRows = (requests.data as RequestRow[]) ?? [];
+  const activityRows = (activity.data as ActivityEventRow[]) ?? [];
 
-  const nameMap = await getDisplayNameMap([...new Set([...foodRows.map((r) => r.creator_id), ...dishRows.map((r) => r.creator_id)])]);
+  const nameMap = await getDisplayNameMap([
+    ...new Set([...foodRows.map((r) => r.creator_id), ...dishRows.map((r) => r.creator_id), ...activityRows.map((r) => r.user_id)]),
+  ]);
 
   const items: FeedItem[] = [
     ...foodRows.map((f) => ({
@@ -124,22 +160,37 @@ export async function fetchActivityFeed(userId: string, sinceIso: string): Promi
       creatorName: null,
       timestamp: r.updated_at,
     })),
+    ...activityRows.map((a) => ({
+      key: `activity-${a.id}`,
+      type: "activity" as const,
+      title: activityEventTitle(a, nameMap.get(a.user_id) ?? "เพื่อน"),
+      detail: null,
+      creatorName: null,
+      timestamp: a.created_at,
+    })),
   ];
 
   return items.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
 }
 
-// Cheap existence check for the tab-icon badge — still all 4 sources including posts (a
-// new post should still light up the badge), independent of how the page displays them.
+// Cheap existence check for the tab-icon badge — still all 5 sources including posts and
+// activity events, independent of how the page displays them.
 export async function hasUnseenFeed(userId: string, sinceIso: string): Promise<boolean> {
-  const [foods, dishes, requests, posts] = await Promise.all([
+  const [foods, dishes, requests, posts, activity] = await Promise.all([
     supabase.from("custom_foods").select("id").gt("created_at", sinceIso).limit(1),
     supabase.from("dishes").select("id").gt("created_at", sinceIso).limit(1),
     supabase.from("food_requests").select("id").eq("requester_id", userId).neq("status", "pending").gt("updated_at", sinceIso).limit(1),
     supabase.from("posts").select("id").gt("created_at", sinceIso).limit(1),
+    supabase.from("activity_events").select("id").gt("created_at", sinceIso).limit(1),
   ]);
 
-  return (foods.data?.length ?? 0) > 0 || (dishes.data?.length ?? 0) > 0 || (requests.data?.length ?? 0) > 0 || (posts.data?.length ?? 0) > 0;
+  return (
+    (foods.data?.length ?? 0) > 0 ||
+    (dishes.data?.length ?? 0) > 0 ||
+    (requests.data?.length ?? 0) > 0 ||
+    (posts.data?.length ?? 0) > 0 ||
+    (activity.data?.length ?? 0) > 0
+  );
 }
 
 export async function markFeedSeen(userId: string): Promise<void> {

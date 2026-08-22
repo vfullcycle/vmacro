@@ -1,4 +1,4 @@
-# SCOPE — Vmacro v1.19
+# SCOPE — Vmacro v1.20
 
 ## In Scope
 
@@ -100,7 +100,23 @@
   จากเพื่อน 3-4 สัปดาห์ นับจากวันที่วีแจ้งเพื่อนจริง — ยังไม่ระบุวันที่)
 - Backlog เพิ่ม BL-15 (Web Push notification) ระหว่างทาง — ยังไม่ทำ รอเงื่อนไข (ดู PROJECT_BIBLE §7)
 
-### P5 — Insight tier 2 (LLM) → tag `v1.6.0`
+### P4e — Friends: posts + activity events → tag ยังไม่กำหนด (รอปิด phase)
+- **BL-16/FR-FRIEND-2 — dogfood ผ่านครบ 7 ข้อ (รวม SQL ยืนยัน RLS)**: โพสต์ใน Friends feed เปิดให้ทุกคน
+  โพสต์ได้ — พบปัญหาออกแบบระหว่าง dogfood (โพสต์ถูกดันตกจาก feed ที่ capped เวลามี bulk import เยอะ) แก้แล้ว
+  ด้วยการแยกเป็น 2 ส่วน: "โพสต์" (ถาวร ไม่ capped, `fetchPosts`) กับ "ความเคลื่อนไหว" (capped/ephemeral,
+  `fetchActivityFeed`) ใช้ cursor เดียวกันสำหรับ badge — เพิ่ม auto-link URL ใน body ผ่าน `Linkified.tsx`
+  (split-based, ไม่ใช้ markdown/HTML render กัน XSS)
+- **FR-FRIEND-3 — code-complete+deploy+migration รันแล้ว 2026-08-22 — รอวี dogfood**: activity events
+  เชิงบวกล้วน 4 แบบ (บันทึกครบทุกมื้อ, ต่อเนื่องครบ 7/14/30 วัน — ใช้ "milestone สูงสุดที่ยังไม่เคยฉลอง"
+  กันพลาดตอนไม่เปิดแอปวันที่ครบพอดี, ถึงเป้าโปรตีน, อาหารที่สร้างได้รับการยืนยัน — ผูกกับผู้สร้างอาหารไม่ใช่
+  admin ที่กด) แสดงในส่วน "ความเคลื่อนไหว" — ห้ามมีตัวเลขเทียบ/เปิดเผย kcal/น้ำหนัก/สิ่งที่กิน — toggle
+  "แชร์กิจกรรม" ใน Settings → System หัวข้อ "การแชร์ใน Friends" (default เปิด, บังคับด้วย RLS ไม่ใช่ client
+  filter — เตรียมที่ว่างให้ BL-20/BL-21 เข้ากลุ่มเดียวกันทีหลัง)
+- Backlog ปรับระหว่างทาง: ยกเลิก **BL-18** (รูปภาพในโพสต์/Storage, คำสั่งวีหลัง discuss ที่ปรึกษา), เพิ่ม
+  **BL-19** (link preview, ยังไม่ทำ), **BL-20** (activity events ส่วนที่เหลือ, ยังไม่ทำ), **BL-21**
+  (achievement badges, พร้อมทำหลัง FR-FRIEND-3 — ดู PROJECT_BIBLE §7)
+
+### P5 — Insight tier 2 (LLM) → tag `v1.6.0` (เลขอาจขยับถ้า P4e ตี tag คั่นก่อน)
 - LLM endpoint บน VPS สรุป pattern รายสัปดาห์เป็นภาษาไทย
 - (ประตูสู่อนาคต) เมื่อข้อมูล ≥3–6 เดือน ค่อยประเมิน ML tier 3 เป็นโปรเจกต์ย่อยแยก
 
@@ -116,6 +132,9 @@ dry-run, service restart resilience) ก่อนตี tag แทนการ�
 
 ## Changelog
 
+- v1.20 (2026-08-22): เพิ่ม P4e (Friends: posts + activity events) ระหว่างทาง — BL-16/FR-FRIEND-2 dogfood
+  ผ่าน+แก้ design issue ที่พบ (แยกโพสต์ถาวร/ความเคลื่อนไหว capped), FR-FRIEND-3 code-complete+
+  deploy+migration รันแล้ว รอวี dogfood — ยังไม่ตี tag, เลขยังไม่กำหนด
 - v1.19 (2026-08-22): เพิ่ม+ปิด P4d (tag `v1.5.0`) — FR-FRIEND-1 (Friends tab) เสร็จ dogfood ผ่านครบ 7 ข้อ
   ไม่มี DF — P5 เลื่อนเป็น `v1.6.0`
 - v1.18 (2026-08-21): ปิด P4c (tag `v1.4.0`) — วี dogfood ผ่านครบ 8 ข้อ ไม่มี DF เหลือ, ยังไม่เริ่ม phase

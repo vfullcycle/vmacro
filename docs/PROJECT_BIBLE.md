@@ -1,4 +1,4 @@
-# PROJECT_BIBLE — Vmacro v1.38
+# PROJECT_BIBLE — Vmacro v1.39
 
 > Single source of truth ของโปรเจกต์ ถ้าไฟล์อื่นขัดกับไฟล์นี้ ให้ยึดไฟล์นี้แล้วแจ้งวีเพื่อ sync
 
@@ -211,7 +211,9 @@ Automation (ใช้ per-user token ที่มีอยู่แล้วจ�
 Android รองรับมานานและเสถียรกว่ามาก, subscription หลุดได้ตอน re-install PWA, ของที่ต้องสร้างใหม่ทั้งหมด:
 service worker รองรับ push event (ตอนนี้มีแค่ cache shell), VAPID key pair, ตาราง+endpoint เก็บ push
 subscription ต่อ user/เครื่อง (1 คนอาจมีหลายเครื่อง), server-side logic ยิง push ตอนเกิด event จริง |
-| BL-16 | **FR-FRIEND-2 code-complete+deploy+migration รันแล้ว 2026-08-22 — รอวี dogfood** | | **Posts ใน Friends feed** — เปิดให้
+| BL-16 | **FR-FRIEND-2 dogfood ผ่านครบ 7 ข้อ (รวม SQL ยืนยัน RLS) 2026-08-22 — พบ design issue ระหว่าง
+dogfood (โพสต์ถูกดันตกจาก feed ที่ capped เวลามี bulk import เยอะ) แก้แล้วด้วยการแยก "โพสต์"
+(ถาวร)/"ความเคลื่อนไหว" (capped) — รอตี tag พร้อม FR-FRIEND-3 (P4e)** | | **Posts ใน Friends feed** — เปิดให้
 **ทุกคนโพสต์ได้** ไม่ใช่แค่ admin (ตัดสินใจสุดท้าย หลังเริ่มร่างเป็น admin-only broadcast ก่อน) — ตาราง
 `posts` (author_id, body, created_at) + RLS: อ่านได้ทุกคน, เขียนได้ทุกคน (`author_id = auth.uid()`),
 แก้/ลบเฉพาะเจ้าของ, admin ลบของใครก็ได้ (moderation ขั้นต่ำ) — ฟอร์มเขียนอยู่ในหน้า Friends เลย (ไม่ใช่หน้า
@@ -271,6 +273,9 @@ BL-13/Shortcut #2 ก่อนถึงมีข้อมูล) — หลั�
 
 ## Changelog
 
+- v1.39 (2026-08-22): BL-16/FR-FRIEND-2 dogfood ผ่านครบ 7 ข้อ+แก้ design issue ที่พบระหว่าง dogfood (แยก
+  โพสต์ถาวร/ความเคลื่อนไหว capped) — FR-FRIEND-3 (activity events) code-complete+deploy+migration รันแล้ว
+  รอวี dogfood — ทั้งสองรอตี tag รวมกันเป็น P4e (ดู SCOPE.md)
 - v1.38 (2026-08-22): เพิ่ม **BL-21** (achievement badges สไตล์ Apple Fitness, คำสั่งวี) — พร้อมทำหลัง
   FR-FRIEND-3, การ์ดใน Dashboard ไม่เพิ่ม toolbar, ยอดสะสมเป็นหลักไม่ใช้ streak เพิ่ม, ห้าม badge เกี่ยว
   kcal/น้ำหนัก — รอร่าง FR ตัดสินวิธีคำนวณ (live count vs `user_badges` table)

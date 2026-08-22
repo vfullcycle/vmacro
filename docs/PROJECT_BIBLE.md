@@ -1,4 +1,4 @@
-# PROJECT_BIBLE — Vmacro v1.34
+# PROJECT_BIBLE — Vmacro v1.35
 
 > Single source of truth ของโปรเจกต์ ถ้าไฟล์อื่นขัดกับไฟล์นี้ ให้ยึดไฟล์นี้แล้วแจ้งวีเพื่อ sync
 
@@ -210,7 +210,7 @@ Automation (ใช้ per-user token ที่มีอยู่แล้วจ�
 Android รองรับมานานและเสถียรกว่ามาก, subscription หลุดได้ตอน re-install PWA, ของที่ต้องสร้างใหม่ทั้งหมด:
 service worker รองรับ push event (ตอนนี้มีแค่ cache shell), VAPID key pair, ตาราง+endpoint เก็บ push
 subscription ต่อ user/เครื่อง (1 คนอาจมีหลายเครื่อง), server-side logic ยิง push ตอนเกิด event จริง |
-| BL-16 | **พร้อมทำ ไม่ต้องรอเกณฑ์ BL-09 ส่วนที่ 2** (2026-08-22) | | **Posts ใน Friends feed** — เปิดให้
+| BL-16 | **FR-FRIEND-2 code-complete+deploy+migration รันแล้ว 2026-08-22 — รอวี dogfood** | | **Posts ใน Friends feed** — เปิดให้
 **ทุกคนโพสต์ได้** ไม่ใช่แค่ admin (ตัดสินใจสุดท้าย หลังเริ่มร่างเป็น admin-only broadcast ก่อน) — ตาราง
 `posts` (author_id, body, created_at) + RLS: อ่านได้ทุกคน, เขียนได้ทุกคน (`author_id = auth.uid()`),
 แก้/ลบเฉพาะเจ้าของ, admin ลบของใครก็ได้ (moderation ขั้นต่ำ) — ฟอร์มเขียนอยู่ในหน้า Friends เลย (ไม่ใช่หน้า
@@ -234,6 +234,7 @@ BL-16 ตั้งใจ เพื่อไม่ให้ BL-16 บวมจน
 
 ## Changelog
 
+- v1.35 (2026-08-22): BL-16/FR-FRIEND-2 code-complete+deploy+migration รันแล้ว — รอวี dogfood
 - v1.34 (2026-08-22): ระบุวันเริ่มนับ+ประเมินเกณฑ์ BL-09 ส่วนที่ 2 ชัดเจน (2026-08-22 → 2026-09-19) — เพิ่ม
   **BL-16** (posts ใน Friends feed, เปิดทุกคนโพสต์ได้, คำสั่งวี) พร้อมทำทันที ไม่ต้องรอเกณฑ์, เพิ่ม BL-17
   (comment/reaction) รอเกณฑ์ BL-09 ส่วนที่ 2 เดียวกัน
